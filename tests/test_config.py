@@ -314,3 +314,60 @@ def test_parse_partial_date(text, as_of, raw):
 def test_parse_partial_date_rejects_garbage():
     with pytest.raises(ValueError):
         parse_partial_date("March 2025")
+
+
+# ------------------------------------------------------------ ir_sources --- #
+
+
+def test_ir_sources_configured_for_the_three_pilot_issuers(universe):
+    kinds = {i.id: [s.kind for s in i.ir_sources] for i in universe.issuers if i.ir_sources}
+    assert kinds == {
+        "VOLKSWAGEN": ["rss", "page", "page_links"],
+        "TRATON": ["rss"],
+        "OMV": ["sitemap", "sitemap", "page"],
+    }
+    vw = universe.by_id("VOLKSWAGEN")
+    assert vw.ir_sources[1].table_profile == "current_by_agency"
+    assert vw.ir_sources[2].content == "pdf" and vw.ir_sources[2].max_items == 10
+    omv = universe.by_id("OMV")
+    assert omv.ir_sources[0].path_prefix == "/en/investors/news-and-events/news/"
+    assert omv.ir_sources[2].table_profile == "dated_by_agency"
+    assert universe.by_id("TRATON").ir_sources[0].include_categories == ["Press releases"]
+
+
+@pytest.mark.parametrize(
+    "fields,message",
+    [
+        (dict(kind="sitemap"), "path_prefix"),
+        (dict(kind="page_links"), "link_pattern"),
+        (dict(kind="rss", table_profile="current_by_agency"), "table_profile"),
+        (dict(kind="page_links", link_pattern="(unclosed"), "unterminated|missing"),
+        (dict(kind="rss", id="Bad Id"), "pattern"),
+    ],
+)
+def test_ir_source_validation(fields, message):
+    from pydantic import ValidationError
+
+    from radar.config import IRSource
+
+    base = dict(
+        id="src_a", kind="rss", url="https://example.invalid/feed", document_type="press_release"
+    )
+    base.update(fields)
+    with pytest.raises((ValidationError, ValueError), match=message):
+        IRSource(**base)
+
+
+def test_duplicate_ir_source_ids_across_issuers_rejected(tmp_path: Path):
+    text = (CONFIG_DIR / "universe.yaml").read_text(encoding="utf-8")
+    broken = text.replace("id: omv_press_releases", "id: vw_press_rss")
+    p = tmp_path / "universe.yaml"
+    p.write_text(broken, encoding="utf-8")
+    with pytest.raises(ValueError, match="duplicate ir_sources"):
+        load_universe(p)
+
+
+def test_ir_settings(settings):
+    ir = settings.ingestion.ir
+    assert ir.user_agent_env == "IR_USER_AGENT" and ir.respect_robots is True
+    assert ir.min_interval_seconds >= 0.5

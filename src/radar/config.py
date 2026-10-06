@@ -97,11 +97,21 @@ class SecSettings(BaseModel):
     max_requests_per_second: int = Field(default=8, ge=1, le=10)
 
 
+class IRSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    user_agent_env: str = "IR_USER_AGENT"
+    min_interval_seconds: float = Field(default=2.0, ge=0.5)
+    respect_robots: bool = True
+    timeout_seconds: float = Field(default=30.0, ge=1.0)
+
+
 class IngestionSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     poll_interval_minutes: int = Field(ge=1)
     sec: SecSettings
+    ir: IRSettings = Field(default_factory=IRSettings)
 
 
 class AlertRoute(BaseModel):
@@ -149,11 +159,50 @@ def load_settings(path: Path = CONFIG_DIR / "settings.yaml") -> Settings:
 ISSUER_ID_RE = re.compile(r"^[A-Z0-9_]+$")
 
 
-class IRFeed(BaseModel):
+IRSourceKind = Literal["rss", "sitemap", "page_links", "page"]
+DocumentType = Literal["press_release", "ratings_page", "rating_report", "debt_page", "other"]
+TableProfile = Literal["sec_as_of", "current_by_agency", "dated_by_agency"]
+
+
+class IRSource(BaseModel):
+    """One official investor-relations source of an issuer and how to discover documents in it.
+
+    kind: rss (feed entries), sitemap (URLs under path_prefix with lastmod), page_links
+    (links of a page matching link_pattern), page (the page itself is the document).
+    """
+
     model_config = ConfigDict(extra="forbid")
 
+    id: str = Field(pattern=r"^[a-z0-9_]+$")
+    kind: IRSourceKind
     url: HttpUrl
-    type: Literal["rss", "html"]
+    document_type: DocumentType
+    content: Literal["html", "pdf"] = "html"
+    path_prefix: str | None = None
+    link_pattern: str | None = None
+    include_title: str | None = None
+    include_categories: list[str] = Field(default_factory=list)
+    table_profile: TableProfile | None = None
+    max_items: int = Field(default=50, ge=1, le=500)
+    note: str | None = None
+
+    @model_validator(mode="after")
+    def _kind_parameters(self) -> IRSource:
+        if self.kind == "sitemap" and not self.path_prefix:
+            raise ValueError(f"{self.id}: sitemap sources need path_prefix")
+        if self.kind == "page_links" and not self.link_pattern:
+            raise ValueError(f"{self.id}: page_links sources need link_pattern")
+        if self.kind != "page" and self.table_profile:
+            raise ValueError(f"{self.id}: table_profile only applies to kind page")
+        for pattern in (self.link_pattern, self.include_title):
+            if pattern:
+                try:
+                    re.compile(pattern)
+                except re.error as exc:
+                    raise ValueError(
+                        f"{self.id}: invalid regular expression {pattern!r}: {exc}"
+                    ) from exc
+        return self
 
 
 class Issuer(BaseModel):
@@ -167,7 +216,7 @@ class Issuer(BaseModel):
     country: str = Field(pattern=r"^[A-Z]{2}$")
     sec_cik: str | None = Field(default=None, pattern=r"^\d{10}$")
     ratings_page: HttpUrl | None = None
-    ir_feeds: list[IRFeed] = Field(default_factory=list)
+    ir_sources: list[IRSource] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
     rating_status: Literal["verified", "unverified"] = "verified"
     notes: str | None = None
@@ -192,6 +241,9 @@ class Universe(BaseModel):
         ids = [i.id for i in self.issuers]
         if len(ids) != len(set(ids)):
             raise ValueError("duplicate issuer ids")
+        source_ids = [s.id for i in self.issuers for s in i.ir_sources]
+        if len(source_ids) != len(set(source_ids)):
+            raise ValueError("duplicate ir_sources ids across issuers")
         seen: dict[str, str] = {}
         for issuer in self.issuers:
             for alias in [issuer.name, *issuer.aliases]:

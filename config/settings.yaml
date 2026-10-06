@@ -60,6 +60,12 @@ ingestion:
   sec:
     user_agent_env: SEC_USER_AGENT
     max_requests_per_second: 8
+  # Issuer investor-relations sites: declared User-Agent, robots.txt respected, polite cadence.
+  ir:
+    user_agent_env: IR_USER_AGENT
+    min_interval_seconds: 2.0
+    respect_robots: true
+    timeout_seconds: 30
 
 alerts:
   # SPEC 11.1. Local rendering is mandatory for every priority.

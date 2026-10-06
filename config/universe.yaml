@@ -4,8 +4,9 @@
 # aliases feed the deterministic issuer resolution (Phase 2). Nothing here is a rating:
 # ratings live in data/seeds/ratings_seed.csv with their sources.
 #
-# sec_cik is only filled when a source in the seed cites that CIK. ir_feeds are
-# completed by hand in Phase 2 after checking each site's terms of use and robots.txt.
+# sec_cik is only filled when a source in the seed cites that CIK. ir_sources lists the
+# official investor-relations sources checked by hand (robots.txt and terms of use, see
+# docs/ARCHITECTURE.md ADR-010) and how documents are discovered in them.
 
 name: Demo watchlist
 disclosure: >-
@@ -22,7 +23,26 @@ issuers:
     country: "DE"
     sec_cik: null
     ratings_page: https://www.volkswagen-group.com/en/ratings-15756
-    ir_feeds: []
+    ir_sources:
+      - id: vw_press_rss
+        kind: rss
+        url: https://www.volkswagen-group.com/en/feeds/press-releases
+        document_type: press_release
+        note: Official press release feed (robots.txt allows all, checked 2026-10-06)
+      - id: vw_ratings_page
+        kind: page
+        url: https://www.volkswagen-group.com/en/ratings-15756
+        document_type: ratings_page
+        table_profile: current_by_agency
+        note: Current ratings table without an as-of date, observations dated by retrieval
+      - id: vw_rating_releases
+        kind: page_links
+        url: https://www.volkswagen-group.com/en/ratings-15756
+        link_pattern: 'uploads\.vw-mms\.de/.*\.pdf'
+        document_type: rating_report
+        content: pdf
+        max_items: 10
+        note: Agency releases republished by the issuer, copyrighted, never committed (ADR-010)
     tags: [demo_watchlist]
 
   - id: TRATON
@@ -33,7 +53,13 @@ issuers:
     country: "DE"
     sec_cik: null
     ratings_page: https://ir.traton.com/en/rating
-    ir_feeds: []
+    ir_sources:
+      - id: traton_press_rss
+        kind: rss
+        url: https://traton.com/rss/?generatorName=elastic&locale=en
+        document_type: press_release
+        include_categories: ["Press releases"]
+        note: Official feed linked from the IR footer; the IR ratings page is JavaScript-only, ratings stay in the seed
     tags: [demo_watchlist]
 
   - id: MAGNA
@@ -44,7 +70,7 @@ issuers:
     country: "CA"
     sec_cik: "0000749098"
     ratings_page: null
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist, sec_filer]
 
   - id: BNP_PARIBAS_CARDIF
@@ -55,7 +81,7 @@ issuers:
     country: "FR"
     sec_cik: null
     ratings_page: null
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist]
 
   - id: DEUTSCHE_BANK
@@ -66,7 +92,7 @@ issuers:
     country: "DE"
     sec_cik: null
     ratings_page: https://investorrelations.db.com/creditors/ratings?language_id=1
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist, financials]
 
   - id: COMMERZBANK
@@ -77,7 +103,7 @@ issuers:
     country: "DE"
     sec_cik: null
     ratings_page: https://investor-relations.commerzbank.com/debt-holders-information/sp-global
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist, financials]
 
   - id: INTESA_SANPAOLO
@@ -88,7 +114,7 @@ issuers:
     country: "IT"
     sec_cik: null
     ratings_page: https://group.intesasanpaolo.com/en/investor-relations/ratings
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist, financials]
 
   - id: EFG_INTERNATIONAL
@@ -99,7 +125,7 @@ issuers:
     country: "CH"
     sec_cik: null
     ratings_page: https://www.efginternational.com/investors/rating-and-instruments
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist, financials]
 
   - id: DASSAULT_SYSTEMES
@@ -110,7 +136,7 @@ issuers:
     country: "FR"
     sec_cik: null
     ratings_page: https://investor.3ds.com/financing-information/
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist]
 
   - id: ROQUETTE
@@ -121,7 +147,7 @@ issuers:
     country: "FR"
     sec_cik: null
     ratings_page: null
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist]
     rating_status: unverified
     notes: The only rating source collected (S&P report download) sits behind a login. No public page found yet.
@@ -134,7 +160,24 @@ issuers:
     country: "AT"
     sec_cik: null
     ratings_page: https://www.omv.com/en/investors/omv-on-the-capital-markets/debt-and-ratings
-    ir_feeds: []
+    ir_sources:
+      - id: omv_ir_news
+        kind: sitemap
+        url: https://www.omv.com/sitemap.xml
+        path_prefix: /en/investors/news-and-events/news/
+        document_type: press_release
+        note: No RSS on omv.com; the official sitemap carries lastmod (robots.txt allows all)
+      - id: omv_press_releases
+        kind: sitemap
+        url: https://www.omv.com/sitemap.xml
+        path_prefix: /en/media/press-releases/
+        document_type: press_release
+      - id: omv_debt_ratings_page
+        kind: page
+        url: https://www.omv.com/en/investors/omv-on-the-capital-markets/debt-and-ratings
+        document_type: ratings_page
+        table_profile: dated_by_agency
+        note: Dated ratings tables per agency; terms allow personal and informative use only (ADR-010)
     tags: [demo_watchlist]
 
   - id: VAR_ENERGI
@@ -145,7 +188,7 @@ issuers:
     country: "NO"
     sec_cik: null
     ratings_page: https://varenergi.no/en/investor/credit-information/
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist, ig_hy_boundary]
 
   - id: MOEVE
@@ -156,7 +199,7 @@ issuers:
     country: "ES"
     sec_cik: null
     ratings_page: https://www.moeveglobal.com/en/investors/ratings-debt-issuances
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist, ig_hy_boundary]
 
   # Issuers kept in the watchlist without any seed rating: the ratings easily found
@@ -173,7 +216,7 @@ issuers:
     country: "US"
     sec_cik: null
     ratings_page: null
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist, financials]
     rating_status: unverified
     notes: Exact legal-entity rating not validated. Do not reuse General Motors Company ratings.
@@ -186,7 +229,7 @@ issuers:
     country: "US"
     sec_cik: null
     ratings_page: null
-    ir_feeds: []
+    ir_sources: []
     tags: [demo_watchlist, financials]
     rating_status: unverified
     notes: Exact legal-entity rating not validated. Do not reuse Harley-Davidson Inc. ratings.
@@ -203,7 +246,7 @@ issuers:
     country: "US"
     sec_cik: "0000793952"
     ratings_page: null
-    ir_feeds: []
+    ir_sources: []
     tags: [historical_control, sec_filer]
     rating_status: unverified
     notes: Historical control issuer for the end-to-end fixture. Ratings are read from the filing under test, never from the seed.
