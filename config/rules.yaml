@@ -7,8 +7,15 @@
 # Application policy: final priority = max(base rule, modifier effects), capped at P1.
 # No modifier ever lowers a priority. Every triggered rule and modifier is listed in
 # PriorityDecision.triggered_rules.
+#
+# ADR-001: agency-level ratings are authoritative for credit events. The composite rating
+# is analytical metadata only and never triggers a rule or a modifier. It may be shown in
+# rule_details as context.
 
-version: "1.0"
+version: "1.1"
+changelog:
+  - "1.0: initial matrix from docs/SPEC.md 9.3 and 9.4"
+  - "1.1 (2026-10-06): RAT-01, RAT-02, RAT-08 and MOD-01 rewritten on agency-level ratings; the composite no longer drives any rule (ADR-001)"
 
 thresholds:
   guidance_cut_p1_pct: 10          # ERN-02: guidance cut >= 10 % on revenue, EBITDA or FCF
@@ -21,14 +28,14 @@ rules:
   - id: RAT-01
     family: rating
     priority: P1
-    condition: composite_crosses_ig_to_hy
-    description: Composite rating moves from IG to HY (fallen angel)
+    condition: agency_rating_crosses_ig_to_hy
+    description: An agency rating moves from IG to HY (fallen angel at agency level)
 
   - id: RAT-02
     family: rating
     priority: P1
-    condition: agency_downgrade_from_boundary_to_hy_while_composite_ig
-    description: Agency downgrade from BBB-/Baa3 to HY while the composite stays IG (fallen-angel risk)
+    condition: agency_rating_crosses_to_hy_while_another_agency_stays_ig
+    description: An agency downgrades to HY while at least one other agency keeps the issuer IG (split rating, fallen-angel risk)
 
   - id: RAT-03
     family: rating
@@ -63,8 +70,8 @@ rules:
   - id: RAT-08
     family: rating
     priority: P2
-    condition: composite_crosses_hy_to_ig
-    description: Composite rating moves from HY to IG (rising star)
+    condition: agency_rating_crosses_hy_to_ig
+    description: An agency rating moves from HY to IG (rising star at agency level)
 
   - id: RAT-09
     family: rating
@@ -136,8 +143,8 @@ rules:
 modifiers:
   - id: MOD-01
     effect: "+1"
-    condition: negative_event_on_issuer_at_boundary
-    description: Negative event on an issuer whose composite is at BBB-/Baa3 (P3 to P2, P2 to P1)
+    condition: negative_event_with_weakest_agency_rating_at_boundary
+    description: Negative event on an issuer whose weakest agency rating is at BBB-/Baa3 (P3 to P2, P2 to P1)
 
   - id: MOD-02
     effect: set_P1

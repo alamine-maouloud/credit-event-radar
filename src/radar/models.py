@@ -27,7 +27,31 @@ Outlook = Literal["positive", "stable", "negative", "developing"]
 Watch = Literal["none", "negative", "positive", "developing"]
 RatingScope = Literal["issuer", "instrument"]
 Seniority = Literal["senior", "subordinated", "hybrid", "AT1", "T2"]
-VerificationStatus = Literal["VERIFIED", "UNVERIFIED"]
+RatingType = Literal[
+    "long_term_issuer",
+    "long_term_issuer_default",
+    "senior_unsecured",
+    "senior_preferred",
+    "senior_non_preferred",
+    "subordinated",
+    "instrument",
+]
+# Only issuer-level ratings feed the composite. Senior preferred, senior unsecured and
+# instrument ratings are kept in the seed but never stand in for an issuer rating.
+COMPOSITE_ELIGIBLE_RATING_TYPES: frozenset[str] = frozenset(
+    {"long_term_issuer", "long_term_issuer_default"}
+)
+# Seed validation ladder (docs/SEED_VALIDATION.md). Levels are cumulative.
+SeedVerification = Literal[
+    "SOURCE_VERIFIED", "ENTITY_VERIFIED", "TYPE_VERIFIED", "DATE_VERIFIED", "GOLDEN"
+]
+VERIFICATION_ORDER: dict[str, int] = {
+    "SOURCE_VERIFIED": 0,
+    "ENTITY_VERIFIED": 1,
+    "TYPE_VERIFIED": 2,
+    "DATE_VERIFIED": 3,
+    "GOLDEN": 4,
+}
 CompositeMethod = Literal["middle", "average"]
 CompositeRounding = Literal["nearest_weaker", "ceil", "floor"]
 
@@ -173,7 +197,7 @@ class AgencyRating(BaseModel):
     legal_entity: str | None = None
     scope: RatingScope = "issuer"
     agency: Agency
-    rating_type: str | None = None
+    rating_type: RatingType
     rating: str
     outlook: Outlook | None = None
     watch: Watch = "none"
@@ -182,11 +206,28 @@ class AgencyRating(BaseModel):
     source_url: HttpUrl
     source_title: str | None = None
     retrieved_at: date
-    verification_status: VerificationStatus = "VERIFIED"
+    verification_status: SeedVerification
+
+    @model_validator(mode="after")
+    def _scope_matches_type(self) -> AgencyRating:
+        if (self.scope == "instrument") != (self.rating_type == "instrument"):
+            raise ValueError("scope 'instrument' and rating_type 'instrument' go together")
+        return self
+
+    @property
+    def composite_eligible(self) -> bool:
+        return self.rating_type in COMPOSITE_ELIGIBLE_RATING_TYPES
+
+    def verified_at_least(self, level: SeedVerification) -> bool:
+        return VERIFICATION_ORDER[self.verification_status] >= VERIFICATION_ORDER[level]
 
 
 class CompositeRating(BaseModel):
-    """Result of the composite rating computation (SPEC 9.2)."""
+    """Result of the composite rating computation (SPEC 9.2).
+
+    Analytical metadata only: agency-level ratings are authoritative for credit events
+    and no deterministic rule may be triggered by the composite (ADR-001).
+    """
 
     notch: int = Field(ge=1, le=22)
     label: str = Field(description="Canonical S&P-style label for the notch")

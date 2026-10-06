@@ -269,6 +269,7 @@ class Rules(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     version: str
+    changelog: list[str] = Field(default_factory=list)
     thresholds: Thresholds
     rules: list[Rule]
     modifiers: list[Modifier]
@@ -379,7 +380,7 @@ def load_ratings_seed(
                 legal_entity=row["legal_entity"] or None,
                 scope=row["instrument_or_issuer_rating"],  # type: ignore[arg-type]
                 agency=agency,  # type: ignore[arg-type]
-                rating_type=row["rating_type"] or None,
+                rating_type=row["rating_type"],  # type: ignore[arg-type]
                 rating=normalize_rating(agency, row["rating"], scales),
                 outlook=outlook,
                 watch=watch,

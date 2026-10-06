@@ -173,20 +173,59 @@ def test_dedupe_without_dates_keeps_first(scales):
 def test_instrument_ratings_are_ignored(scales):
     ratings = [
         make_rating("SP", "A", scope="issuer"),
-        make_rating("SP", "BB", scope="instrument"),
+        make_rating("SP", "BB", scope="instrument", rating_type="instrument"),
     ]
     result = composite_rating(ratings, scales, method="middle")
     assert result.notch == 6
 
 
-def test_unverified_ratings_are_ignored(scales):
+@pytest.mark.parametrize(
+    "rating_type", ["senior_preferred", "senior_unsecured", "senior_non_preferred", "subordinated"]
+)
+def test_non_issuer_rating_types_are_ignored(scales, rating_type):
+    """A senior preferred or instrument-level rating never stands in for an issuer rating."""
     ratings = [
         make_rating("SP", "A"),
-        make_rating("MOODYS", "Caa1", verification_status="UNVERIFIED"),
+        make_rating("MOODYS", "Caa1", rating_type=rating_type),
     ]
     result = composite_rating(ratings, scales, method="middle")
     assert result.n_ratings == 1
     assert result.notch == 6
+
+
+def test_issuer_default_rating_is_eligible(scales):
+    ratings = [make_rating("FITCH", "A-", rating_type="long_term_issuer_default")]
+    assert composite_rating(ratings, scales, method="middle").notch == 7
+
+
+def test_scope_and_rating_type_must_agree():
+    with pytest.raises(ValueError):
+        make_rating("SP", "A", scope="instrument", rating_type="long_term_issuer")
+    with pytest.raises(ValueError):
+        make_rating("SP", "A", scope="issuer", rating_type="instrument")
+
+
+def test_below_golden_rows_are_ignored_by_default(scales):
+    ratings = [
+        make_rating("SP", "A"),
+        make_rating("MOODYS", "Caa1", verification_status="DATE_VERIFIED"),
+    ]
+    result = composite_rating(ratings, scales, method="middle")
+    assert result.n_ratings == 1
+    assert result.notch == 6
+
+
+def test_min_verification_can_be_lowered_explicitly(scales):
+    ratings = [
+        make_rating("SP", "A", verification_status="SOURCE_VERIFIED"),
+        make_rating("MOODYS", "A2", verification_status="ENTITY_VERIFIED"),
+        make_rating("FITCH", "A", verification_status="GOLDEN"),
+    ]
+    assert composite_rating(ratings, scales, method="middle").n_ratings == 1
+    low = composite_rating(ratings, scales, method="middle", min_verification="SOURCE_VERIFIED")
+    assert low.n_ratings == 3
+    mid = composite_rating(ratings, scales, method="middle", min_verification="ENTITY_VERIFIED")
+    assert mid.n_ratings == 2
 
 
 def test_unrated_tokens_are_ignored(scales):
@@ -206,8 +245,8 @@ def test_agencies_filter_excludes_dbrs_by_default(scales):
     assert result.notch == 10
 
 
-def test_only_unverified_returns_none(scales):
-    ratings = [make_rating("SP", "A", verification_status="UNVERIFIED")]
+def test_only_below_golden_returns_none(scales):
+    ratings = [make_rating("SP", "A", verification_status="SOURCE_VERIFIED")]
     assert composite_rating(ratings, scales, method="middle") is None
 
 

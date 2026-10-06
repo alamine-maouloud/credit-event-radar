@@ -25,6 +25,7 @@ Projet personnel d'Alamine (M2 Data & AI, ECE Paris) pour candidater au stage «
 8. **Respect des sources.** Conditions d'utilisation, robots.txt et limites de débit sont respectés. Pour la SEC, envoie un User-Agent déclaré avec contact et reste sous 10 requêtes par seconde. Aucun contournement de login ou de paywall.
 9. **Secrets dans `.env`**, jamais commités. `.env.example` reste à jour.
 10. **Périmètre MVP strict** (voir `docs/SPEC.md` §4). Toute idée hors périmètre va dans `docs/roadmap_180d.md`, pas dans le code.
+11. **Les notations par agence font foi.** La notation composite est une métadonnée analytique : elle peut être affichée, jamais utilisée pour déclencher ou modifier une règle P1/P2/P3 (ADR-001 dans `docs/ARCHITECTURE.md`). Un P1 « fallen angel » vient d'une agence qui passe de BBB-/Baa3 à HY, pas d'un composite maison.
 
 ## Stack
 
@@ -119,13 +120,15 @@ uv run pytest -q && uv run ruff check .
 - En cas de doute sur une source (accès, conditions d'utilisation, format), arrête-toi et demande plutôt que contourner.
 - N'invente jamais de notation, de date ou de montant pour remplir un seed ou un test réaliste. Utilise des fixtures explicitement fictives (`ISSUER_TEST_A`) ou demande la donnée.
 - Mets à jour la section « Statut » à la fin de chaque phase.
+- Ordre d'exécution : Phase 2 puis Phase 4 avant la Phase 3. Un P1 déterministe de bout en bout (source, événement, règle, priorité, audit) doit exister avant le premier appel LLM (ADR-004).
+- Le seed de notations suit l'échelle de validation de `docs/SEED_VALIDATION.md`. Seules les lignes GOLDEN entrent dans un composite, et la promotion en GOLDEN est une décision humaine.
 
 ## Statut
 
 - [x] Phase 1 · Fondations : repo, schémas, échelles de notation, notation composite, config, seeds (2026-10-06)
-- [ ] Phase 2 · Ingestion : EDGAR, flux IR, news RSS, snapshots, hash, déduplication
-- [ ] Phase 3 · Extraction : structurée (EDGAR) et LLM (schémas stricts + validation des spans)
-- [ ] Phase 4 · Moteur de matérialité : rules.yaml, modificateurs, explication « Why? »
+- [ ] Phase 2 · Ingestion : EDGAR, flux IR, news RSS, snapshots, hash, déduplication, extraction structurée déterministe
+- [ ] Phase 4 · Moteur de matérialité : rules.yaml, modificateurs, explication « Why? » (exécutée avant la Phase 3, ADR-004)
+- [ ] Phase 3 · Extraction LLM : schémas stricts + validation des spans
 - [ ] Phase 5 · Contexte, vérification des claims, notes de comité FR/EN
 - [ ] Phase 6 · Alertes (Teams, email, local) et viewer Streamlit
 - [ ] Phase 7 · Évaluation : jeu gold, métriques, comparaison de LLM, rapport auto-généré

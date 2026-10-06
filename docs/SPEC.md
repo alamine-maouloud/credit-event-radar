@@ -1,7 +1,9 @@
 # Credit Event Radar · Spécification complète
 
 **Auditable AI-assisted credit monitoring**
-Version 1.0 · octobre 2026 · Auteur : Al-Amine Sidick Maouloud
+Version 1.1 · octobre 2026 · Auteur : Al-Amine Sidick Maouloud
+
+> Amendement 1.1 (2026-10-06) : les notations par agence font foi pour les événements crédit. La notation composite (§9.2) devient une métadonnée analytique et ne déclenche plus aucune règle. RAT-01, RAT-02, RAT-08 et MOD-01 sont réécrites en conséquence (§9.3, §9.4). Les types de notation deviennent explicites et seuls les types émetteur alimentent le composite. Le seed suit une échelle de validation en cinq niveaux. Les phases s'exécutent dans l'ordre 2, 4, 3. Voir `docs/ARCHITECTURE.md`, ADR-001 à ADR-004.
 
 ---
 
@@ -313,18 +315,20 @@ Un émetteur ne devient pas forcément HY parce qu'une seule agence le dégrade.
 
 > Les grands fournisseurs d'indices utilisent ce type de composite, avec des méthodes différentes. Vérifie leurs méthodologies publiques avant de citer un fournisseur précis dans la case study.
 
+> Amendement 1.1 : le composite est une métadonnée analytique (tri, tableau de bord, en-tête de note). Il ne déclenche aucune règle de §9.3 ni aucun modificateur de §9.4 (ADR-001). Il n'est calculé qu'à partir de lignes GOLDEN du seed et de types de notation émetteur (ADR-002, ADR-003).
+
 ### 9.3 Règles de base
 
 | ID | Famille | Condition | Priorité |
 |---|---|---|---|
-| RAT-01 | Notation | Le composite passe de IG à HY (fallen angel) | P1 |
-| RAT-02 | Notation | Une agence dégrade de BBB-/Baa3 vers HY alors que le composite reste IG (risque de fallen angel) | P1 |
+| RAT-01 | Notation | Une notation d'agence passe de IG à HY (fallen angel au niveau agence) | P1 |
+| RAT-02 | Notation | Une agence dégrade vers HY alors qu'au moins une autre agence maintient l'émetteur en IG (notation partagée, risque de fallen angel) | P1 |
 | RAT-03 | Notation | Dégradation de 2 crans ou plus en une seule action | P1 |
 | RAT-04 | Notation | Mise sous surveillance négative d'une notation agence à BBB-/Baa3 | P1 |
 | RAT-05 | Notation | Dégradation d'un cran (hors RAT-02) | P2 |
 | RAT-06 | Notation | Perspective passant de stable ou positive à négative | P2 |
 | RAT-07 | Notation | Mise sous surveillance négative (hors RAT-04) | P2 |
-| RAT-08 | Notation | Le composite passe de HY à IG (rising star) | P2 |
+| RAT-08 | Notation | Une notation d'agence passe de HY à IG (rising star au niveau agence) | P2 |
 | RAT-09 | Notation | Amélioration de notation ou perspective positive | P3 |
 | RAT-10 | Notation | Affirmation sans changement | P3 |
 | ERN-01 | Résultats | Langage de liquidité, going concern, bris ou waiver de covenant (span vérifiée) | P1 |
@@ -343,7 +347,7 @@ Note : « EBITDA miss » face au consensus est exclu du MVP, car les données de
 
 | ID | Condition | Effet |
 |---|---|---|
-| MOD-01 | Événement négatif sur un émetteur dont le composite est à BBB-/Baa3 | +1 niveau (P3 → P2, P2 → P1) |
+| MOD-01 | Événement négatif sur un émetteur dont la notation d'agence la plus faible est à BBB-/Baa3 | +1 niveau (P3 → P2, P2 → P1) |
 | MOD-02 | Au moins 2 événements négatifs P2 sur le même émetteur en 30 jours | Le dernier passe en P1 |
 | MOD-03 | Levier vérifié au-dessus du seuil configuré (uniquement si la donnée est disponible et sourcée) | +1 niveau pour un événement négatif |
 

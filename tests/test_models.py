@@ -104,7 +104,23 @@ def test_agency_rating_rejects_unknown_agency():
         AgencyRating(
             issuer_id="ISSUER_TEST_A",
             agency="EGAN_JONES",
+            rating_type="long_term_issuer",
             rating="A",
             source_url="https://example.invalid/r",
             retrieved_at=date(2026, 1, 1),
+            verification_status="GOLDEN",
         )
+
+
+def test_agency_rating_rejects_unknown_rating_type_and_level():
+    base = dict(
+        issuer_id="ISSUER_TEST_A",
+        agency="SP",
+        rating="A",
+        source_url="https://example.invalid/r",
+        retrieved_at=date(2026, 1, 1),
+    )
+    with pytest.raises(ValidationError):
+        AgencyRating(**base, rating_type="senior_unsecured_bond", verification_status="GOLDEN")
+    with pytest.raises(ValidationError):
+        AgencyRating(**base, rating_type="long_term_issuer", verification_status="VERIFIED")

@@ -27,7 +27,8 @@ def make_rating(
     issuer_id: str = "ISSUER_TEST_A",
     as_of: date | None = None,
     scope: str = "issuer",
-    verification_status: str = "VERIFIED",
+    rating_type: str = "long_term_issuer",
+    verification_status: str = "GOLDEN",
     outlook: str | None = "stable",
     watch: str = "none",
 ) -> AgencyRating:
@@ -37,6 +38,7 @@ def make_rating(
         agency=agency,  # type: ignore[arg-type]
         rating=rating,
         scope=scope,  # type: ignore[arg-type]
+        rating_type=rating_type,  # type: ignore[arg-type]
         outlook=outlook,  # type: ignore[arg-type]
         watch=watch,  # type: ignore[arg-type]
         as_of=as_of,

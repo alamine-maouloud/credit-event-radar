@@ -22,10 +22,12 @@ from radar.models import (
     CompositeRating,
     CompositeRounding,
     RatingCategory,
+    SeedVerification,
 )
 
 DEFAULT_COMPOSITE_AGENCIES: tuple[str, ...] = ("SP", "MOODYS", "FITCH")
 DEFAULT_ROUNDING: CompositeRounding = "nearest_weaker"
+DEFAULT_MIN_VERIFICATION: SeedVerification = "GOLDEN"
 
 
 class UnknownRatingError(ValueError):
@@ -216,12 +218,17 @@ def _select_inputs(
     ratings: Iterable[AgencyRating],
     scales: RatingScales,
     agencies: Sequence[str] | None,
+    min_verification: SeedVerification,
 ) -> list[AgencyRating]:
-    """Keep issuer-level, verified, rated entries; one per agency (latest dated wins)."""
+    """Keep composite-eligible, sufficiently verified, rated entries; one per agency.
+
+    Eligible means an issuer-level rating type (see COMPOSITE_ELIGIBLE_RATING_TYPES).
+    When several rows exist for one agency, the latest fully dated one wins.
+    """
     allowed = set(agencies) if agencies is not None else None
     per_agency: dict[str, list[AgencyRating]] = {}
     for r in ratings:
-        if r.scope != "issuer" or r.verification_status != "VERIFIED":
+        if not r.composite_eligible or not r.verified_at_least(min_verification):
             continue
         if allowed is not None and r.agency not in allowed:
             continue
@@ -254,8 +261,9 @@ def composite_rating(
     method: CompositeMethod = "middle",
     rounding: CompositeRounding = DEFAULT_ROUNDING,
     agencies: Sequence[str] | None = DEFAULT_COMPOSITE_AGENCIES,
+    min_verification: SeedVerification = DEFAULT_MIN_VERIFICATION,
 ) -> CompositeRating | None:
-    """Compute the issuer composite rating (SPEC 9.2).
+    """Compute the issuer composite rating (SPEC 9.2). Analytical metadata only (ADR-001).
 
     ``middle``: the median notch. With one rating, that rating; with two, the weaker one;
     with an even count above two, the weaker of the two middle values.
@@ -265,8 +273,9 @@ def composite_rating(
     out of three agencies does not flip the composite. ``ceil`` is the strict reading
     (any fraction goes to the weaker notch), ``floor`` rounds toward the stronger notch.
 
-    Only issuer-level ``VERIFIED`` ratings from ``agencies`` are used (``None`` means all
-    agencies). Returns ``None`` when nothing usable remains.
+    Only issuer-level rating types from ``agencies`` (``None`` means all agencies) that
+    reached ``min_verification`` on the seed ladder are used. Returns ``None`` when nothing
+    usable remains.
     """
     if method not in ("middle", "average"):
         raise ValueError(f"unknown composite method: {method!r}")
@@ -278,7 +287,7 @@ def composite_rating(
     if len(issuers) > 1:
         raise ValueError(f"ratings belong to several issuers: {sorted(issuers)}")
 
-    inputs = _select_inputs(ratings, scales, agencies)
+    inputs = _select_inputs(ratings, scales, agencies, min_verification)
     if not inputs:
         return None
 

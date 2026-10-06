@@ -99,7 +99,8 @@ def test_universe_rejects_duplicate_alias(tmp_path: Path, universe):
 
 
 def test_rules_match_spec_matrix(rules):
-    assert rules.version == "1.0"
+    assert rules.version == "1.1"
+    assert any("1.1" in entry for entry in rules.changelog)
     assert {r.id: r.priority for r in rules.rules} == SPEC_RULE_IDS
     assert [m.id for m in rules.modifiers] == ["MOD-01", "MOD-02", "MOD-03"]
 
@@ -120,6 +121,16 @@ def test_mod03_requires_sourced_data(rules):
     assert rules.by_id("MOD-03").requires_sourced_data is True
 
 
+def test_no_rule_depends_on_the_composite(rules):
+    """ADR-001: agency-level ratings are authoritative; the composite never drives a rule."""
+    for item in [*rules.rules, *rules.modifiers]:
+        assert "composite" not in item.condition.lower(), item.id
+        assert "composite" not in item.description.lower(), item.id
+    assert rules.by_id("RAT-01").condition == "agency_rating_crosses_ig_to_hy"
+    assert rules.by_id("RAT-08").condition == "agency_rating_crosses_hy_to_ig"
+    assert "weakest_agency" in rules.by_id("MOD-01").condition
+
+
 # ----------------------------------------------------------------- seed --- #
 
 
@@ -128,9 +139,9 @@ def test_seed_columns():
     assert header.split(",") == SEED_COLUMNS
 
 
-def test_seed_loads_and_is_fully_verified(seed, universe):
+def test_seed_loads_and_every_row_has_a_verification_level(seed, universe):
     assert len(seed) == 30
-    assert all(r.verification_status == "VERIFIED" for r in seed)
+    assert all(r.verified_at_least("SOURCE_VERIFIED") for r in seed)
     assert {r.issuer_id for r in seed} <= universe.ids
     assert all(str(r.source_url).startswith("https://") for r in seed)
 
@@ -152,7 +163,28 @@ def test_seed_unverified_issuers_have_no_rows(seed):
     assert not [r for r in seed if r.issuer_id in {"GM_FINANCIAL", "HARLEY_DAVIDSON_FS"}]
 
 
-def test_seed_composites(seed, scales, settings):
+def test_seed_rating_types_are_explicit(seed):
+    intesa = [r for r in seed if r.issuer_id == "INTESA_SANPAOLO"]
+    assert intesa and all(r.rating_type == "senior_preferred" for r in intesa)
+    assert not any(r.composite_eligible for r in intesa)
+    omv_moodys = next(r for r in seed if r.issuer_id == "OMV" and r.agency == "MOODYS")
+    assert omv_moodys.rating_type == "senior_unsecured" and not omv_moodys.composite_eligible
+    dassault_bond = next(r for r in seed if r.scope == "instrument")
+    assert dassault_bond.rating_type == "instrument"
+
+
+def test_seed_composites_require_golden_by_default(seed, scales, settings):
+    """Until rows are promoted to GOLDEN, the composite returns nothing for every issuer."""
+    for issuer_id in {r.issuer_id for r in seed}:
+        rows = [r for r in seed if r.issuer_id == issuer_id]
+        golden = [r for r in rows if r.verification_status == "GOLDEN"]
+        result = composite_rating(rows, scales, agencies=settings.ratings.composite_agencies)
+        assert (result is None) == (not [r for r in golden if r.composite_eligible]), issuer_id
+
+
+def test_seed_composites_structural_check(seed, scales, settings):
+    """Structural check with the ladder lowered: eligibility and arithmetic only."""
+
     def comp(issuer_id):
         rows = [r for r in seed if r.issuer_id == issuer_id]
         return composite_rating(
@@ -160,6 +192,7 @@ def test_seed_composites(seed, scales, settings):
             scales,
             method=settings.ratings.composite_method,
             agencies=settings.ratings.composite_agencies,
+            min_verification="SOURCE_VERIFIED",
         )
 
     var = comp("VAR_ENERGI")  # Baa3, BBB, BBB -> median BBB
@@ -170,6 +203,9 @@ def test_seed_composites(seed, scales, settings):
     assert vw is not None and vw.n_ratings == 3 and vw.label == "BBB+"
     dassault = comp("DASSAULT_SYSTEMES")  # instrument row ignored
     assert dassault is not None and dassault.n_ratings == 1
+    assert comp("INTESA_SANPAOLO") is None  # senior preferred only: no issuer rating yet
+    omv = comp("OMV")  # Moody's row is senior unsecured: only the Fitch IDR counts
+    assert omv is not None and omv.n_ratings == 1 and omv.inputs[0].agency == "FITCH"
 
 
 def test_seed_rejects_unknown_agency(tmp_path: Path, scales, universe):
