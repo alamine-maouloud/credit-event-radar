@@ -31,10 +31,17 @@ def test_routing_names_a_default_and_a_challenger_per_benchmarked_family(setting
         "openai_sol",
         "openai_terra",
     )
-    assert routing["going_concern"].default == "TO_BENCHMARK"
-    assert routing["going_concern"].challenger is None
+    # going concern (Phase 3.4c, 2026-10-07): Terra alone, Sol deliberately not benchmarked
+    assert (routing["going_concern"].default, routing["going_concern"].challenger) == (
+        "openai_terra",
+        None,
+    )
+    assert (
+        "7/7" in routing["going_concern"].reason
+        and "not benchmarked" in routing["going_concern"].reason
+    )
     for route in routing.values():
-        assert route.reason and "2026-10-06" in route.reason or route.default == "TO_BENCHMARK"
+        assert route.reason and "2026-10-0" in route.reason
     # the covenant conclusion stays cautious: a holdout result, not a general claim
     assert "holdout" in routing["covenant"].reason and "always" not in routing["covenant"].reason
 
@@ -57,14 +64,30 @@ def test_an_explicit_alternative_overrides_the_route_and_says_so(settings):
         select_model(settings.llm, "guidance", alternative="nope")
 
 
+def _unbenchmarked(settings) -> LLMSettings:
+    """The settings with one family still TO_BENCHMARK, as going concern was before its run."""
+    data = settings.llm.model_dump()
+    data["routing"]["new_family"] = {
+        "default": "TO_BENCHMARK",
+        "challenger": None,
+        "reason": "no benchmark yet",
+    }
+    return LLMSettings.model_validate(data)
+
+
 def test_a_family_without_a_benchmark_refuses_the_default(settings):
+    llm = _unbenchmarked(settings)
     with pytest.raises(RoutingNotBenchmarked) as exc:
-        select_model(settings.llm, "going_concern")
-    assert "going_concern" in str(exc.value) and "--alternative" in str(exc.value)
+        select_model(llm, "new_family")
+    assert "new_family" in str(exc.value) and "--alternative" in str(exc.value)
+    with pytest.raises(RoutingNotBenchmarked):
+        select_model(llm, "new_family", challenger=True)
+    explicit = select_model(llm, "new_family", alternative="openai_terra")
+    assert explicit.role == "explicit" and explicit.model.model == "gpt-5.6-terra"
+    # a family with a default and no challenger refuses the challenger only
+    assert select_model(settings.llm, "going_concern").model.model == "gpt-5.6-terra"
     with pytest.raises(RoutingNotBenchmarked):
         select_model(settings.llm, "going_concern", challenger=True)
-    explicit = select_model(settings.llm, "going_concern", alternative="openai_terra")
-    assert explicit.role == "explicit" and explicit.model.model == "gpt-5.6-terra"
 
 
 def test_the_selection_is_a_plain_record_for_the_audit(settings):
@@ -84,13 +107,15 @@ def test_a_route_must_name_a_configured_alternative(settings):
         LLMSettings.model_validate(data)
 
 
-def test_the_cli_refuses_an_unbenchmarked_family_before_any_call(tmp_path):
+def test_the_cli_refuses_an_unbenchmarked_family_before_any_call(tmp_path, settings, monkeypatch):
     from typer.testing import CliRunner
 
-    from radar.cli import app
+    from radar import cli
 
+    unbenchmarked = settings.model_copy(update={"llm": _unbenchmarked(settings)})
+    monkeypatch.setattr(cli, "_settings", lambda: unbenchmarked)
     result = CliRunner().invoke(
-        app, ["llm-extract", "--events", "--kind", "going_concern", "--db", str(tmp_path / "r.db")]
+        cli.app, ["llm-extract", "--events", "--kind", "new_family", "--db", str(tmp_path / "r.db")]
     )
     assert result.exit_code != 0
-    assert "going_concern" in result.output and "--alternative" in result.output
+    assert "new_family" in result.output and "--alternative" in result.output

@@ -67,9 +67,9 @@ llm:
       challenger: openai_terra
       reason: "covenant gold V1 and its two holdouts (2026-10-06): Sol finds 4 of 4 breach cases at the decision level against 2 of 4 for Terra, with no false flag observed for either, at about twice the cost; a holdout result on this gold, not a general claim"
     going_concern:
-      default: TO_BENCHMARK
+      default: openai_terra
       challenger: null
-      reason: "no benchmark yet (Phase 3.4c): the default is chosen after the going concern gold set and its holdout"
+      reason: "Gold V1 DEV (2026-10-07): document flag precision=1.00, recall=1.00, 7/7 stress cases detected, 0 false flags, cost=$1.84. Sol not benchmarked to control evaluation cost"
 
 ratings:
   # middle: median notch (lowest of two, the single one if alone)
