@@ -1,0 +1,21 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Project data (raw snapshots and database are never committed)
+data/raw/*
+!data/raw/.gitkeep
+data/radar.db
+data/llm_cache/
+outputs/*
+!outputs/.gitkeep
+
+# OS
+.DS_Store

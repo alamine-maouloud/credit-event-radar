@@ -1,0 +1,135 @@
+# CLAUDE.md · Credit Event Radar
+
+> Auditable AI-assisted credit monitoring.
+> Detect → Prioritise → Explain → Source → Alert → **the human analyst decides.**
+
+## Le projet en une phrase
+
+Credit Event Radar détecte les événements crédit (notations, résultats, nouvelles émissions) sur une watchlist d'émetteurs obligataires IG/HY. Il les priorise avec un **moteur de règles déterministe** (P1/P2/P3), produit une synthèse **sourcée phrase par phrase** en FR et en EN, puis envoie une alerte (Teams, email ou rendu local). Il n'émet aucune recommandation d'investissement.
+
+## Contexte
+
+Projet personnel d'Alamine (M2 Data & AI, ECE Paris) pour candidater au stage « Gestion de projet / Intelligence Artificielle » (janvier 2027) du pôle Fixed Income de Rothschild & Co Asset Management. Le prototype reflète les missions publiées de ce stage : identifier des cas d'usage IA dans le workflow des analystes crédit et des gérants, construire une bibliothèque de prompts FR/EN normalisés, mettre en place des alertes intelligentes Teams/Email sur les événements de crédit, évaluer des solutions et documenter.
+
+**La spécification complète est dans `docs/SPEC.md`. Lis-la avant toute tâche structurante.**
+
+## Règles non négociables
+
+1. **Le LLM ne décide jamais de la priorité.** La priorité vient uniquement de `config/rules.yaml`, appliqué par `src/radar/materiality/`. Le LLM peut extraire des champs, toujours validés de façon déterministe, et rédiger des synthèses.
+2. **Chaque affirmation générée est reliée à un passage source** : id du document, URL, offsets, timestamp. Une affirmation non vérifiée est exclue de la note et journalisée.
+3. **Aucun chiffre inventé.** Les résultats affichés dans le README et la case study sont produits uniquement par `eval/`, à partir d'exécutions réelles. Aucune valeur de remplissage ne doit être présentée comme un résultat.
+4. **Aucun score de « confidence » auto-déclaré par un LLM.** Les seuls statuts de vérification sont `VERIFIED`, `PARTIAL` et `UNSUPPORTED`.
+5. **Le panneau « Why this priority? » décrit honnêtement le rôle du LLM**, par exemple : `LLM used for: field extraction (validated against source text)`. N'écris jamais `None` si un LLM a extrait un champ.
+6. **Traçabilité complète.** Chaque document brut est stocké avec son hash SHA-256, son URL, `published_at` et `retrieved_at`. Chaque appel LLM est journalisé : modèle, version de prompt, hash d'entrée et de sortie, coût, latence.
+7. **Aucune affiliation suggérée avec Rothschild & Co.** Pas de logo ni de charte graphique, et le disclaimer est obligatoire. L'univers de démo s'appelle « Demo watchlist ». Il est construit à partir d'informations publiques datées et n'est jamais présenté comme leur portefeuille.
+8. **Respect des sources.** Conditions d'utilisation, robots.txt et limites de débit sont respectés. Pour la SEC, envoie un User-Agent déclaré avec contact et reste sous 10 requêtes par seconde. Aucun contournement de login ou de paywall.
+9. **Secrets dans `.env`**, jamais commités. `.env.example` reste à jour.
+10. **Périmètre MVP strict** (voir `docs/SPEC.md` §4). Toute idée hors périmètre va dans `docs/roadmap_180d.md`, pas dans le code.
+
+## Stack
+
+- Python 3.11+, environnement géré avec `uv`
+- pydantic v2 (schémas), pandas, SQLite (sqlite3 ou SQLAlchemy Core), httpx, feedparser, trafilatura ou BeautifulSoup, PyMuPDF, rapidfuzz, Jinja2
+- Typer pour la CLI, Streamlit pour un viewer minimal, pytest et ruff
+- LLM via la couche `src/radar/llm/provider.py`, avec deux backends : Anthropic et OpenAI/Azure OpenAI. Les modèles sont définis dans `config/settings.yaml`, jamais en dur. Température 0 pour l'extraction et l'évaluation. Les réponses sont mises en cache par (modèle, version de prompt, hash d'entrée), ce qui garantit la reproductibilité et limite les coûts.
+
+## Arborescence cible
+
+```
+credit-event-radar/
+├── CLAUDE.md
+├── README.md
+├── pyproject.toml
+├── .env.example
+├── config/
+│   ├── settings.yaml          # modèles, seuils, intervalles, chemins
+│   ├── universe.yaml          # demo watchlist + alias + secteurs + identifiants
+│   ├── rating_scales.yaml     # échelles S&P / Moody's / Fitch → notches
+│   └── rules.yaml             # matrice de matérialité (IDs de règles)
+├── data/
+│   ├── seeds/ratings_seed.csv # notations initiales + URL source + date
+│   ├── raw/                   # snapshots bruts (gitignored)
+│   └── radar.db               # SQLite (gitignored)
+├── prompts/
+│   ├── STYLE_GUIDE.md
+│   ├── extraction/            # rating_action, issuance, earnings_signals
+│   ├── notes/                 # event_summary.{fr,en}, committee_note.{fr,en}
+│   └── verification/          # claim_support
+├── src/radar/
+│   ├── models.py              # schémas pydantic
+│   ├── db.py                  # schéma SQLite + accès
+│   ├── ratings.py             # échelles, notches, notation composite (pur)
+│   ├── connectors/            # base.py, edgar.py, ir_feeds.py, news_rss.py
+│   ├── resolve.py             # rattachement document → émetteur
+│   ├── extract/               # structured.py, llm_extract.py, spans.py
+│   ├── materiality/           # engine.py, explain.py (pur, sans I/O ni LLM)
+│   ├── llm/                   # provider.py, anthropic_client.py, openai_client.py, cache.py
+│   ├── context/               # fundamentals.py, summarize.py
+│   ├── verify/                # claims.py
+│   ├── notes/                 # committee.py + templates Jinja2
+│   ├── alerts/                # teams.py, email.py, local.py
+│   ├── audit.py
+│   └── cli.py
+├── app/viewer.py              # Streamlit : alertes, « Why? », citations cliquables
+├── eval/
+│   ├── LABELING_GUIDE.md
+│   ├── gold/events.jsonl
+│   ├── gold/noise.jsonl
+│   ├── run_eval.py
+│   └── reports/
+├── docs/
+│   ├── SPEC.md
+│   ├── ARCHITECTURE.md
+│   ├── MATERIALITY_MATRIX.md
+│   ├── roadmap_180d.md
+│   └── case_study/
+└── tests/
+```
+
+## Commandes
+
+```bash
+uv sync
+cp .env.example .env
+uv run radar init-db
+uv run radar seed                          # universe.yaml + ratings_seed.csv
+uv run radar ingest --since 2026-09-01
+uv run radar process                       # extraction → matérialité → contexte → vérification
+uv run radar alert --dry-run               # rendu local HTML/JSON, aucun envoi
+uv run radar note --event-id <id> --lang fr
+uv run radar eval --models extract_a,extract_b
+uv run radar live --interval 15m
+uv run streamlit run app/viewer.py
+uv run pytest -q && uv run ruff check .
+```
+
+## Conventions
+
+- Code, identifiants, commentaires, docstrings et README en anglais. Prompts et notes de comité en FR et en EN.
+- Type hints partout. `ratings.py` et `materiality/` sont des fonctions pures, sans I/O ni appel LLM.
+- Tests obligatoires pour : les échelles de notation, la notation composite, chaque règle de `rules.yaml`, chaque modificateur, la validation des spans, la vérification numérique des claims et la déduplication.
+- Les prompts vivent dans `prompts/` en YAML versionné. Toute modification incrémente la version et complète le changelog du fichier.
+- Petits commits, un par étape, au format `feat(scope): ...`, `fix(scope): ...`, `test(scope): ...`.
+
+## Façon de travailler
+
+- Commence chaque phase en mode plan : propose le plan, attends la validation, puis code.
+- Écris les tests du moteur de matérialité **avant** son implémentation.
+- En cas de doute sur une source (accès, conditions d'utilisation, format), arrête-toi et demande plutôt que contourner.
+- N'invente jamais de notation, de date ou de montant pour remplir un seed ou un test réaliste. Utilise des fixtures explicitement fictives (`ISSUER_TEST_A`) ou demande la donnée.
+- Mets à jour la section « Statut » à la fin de chaque phase.
+
+## Statut
+
+- [ ] Phase 1 · Fondations : repo, schémas, échelles de notation, notation composite, config, seeds
+- [ ] Phase 2 · Ingestion : EDGAR, flux IR, news RSS, snapshots, hash, déduplication
+- [ ] Phase 3 · Extraction : structurée (EDGAR) et LLM (schémas stricts + validation des spans)
+- [ ] Phase 4 · Moteur de matérialité : rules.yaml, modificateurs, explication « Why? »
+- [ ] Phase 5 · Contexte, vérification des claims, notes de comité FR/EN
+- [ ] Phase 6 · Alertes (Teams, email, local) et viewer Streamlit
+- [ ] Phase 7 · Évaluation : jeu gold, métriques, comparaison de LLM, rapport auto-généré
+- [ ] Phase 8 · Run live (5 à 7 jours), README, vidéo de démo
+
+## Disclaimer (à reprendre dans le README, le viewer et chaque note)
+
+> Independent student project. Not affiliated with, endorsed by, or using any proprietary data from Rothschild & Co. The demo watchlist is built exclusively from publicly available information retrieved as of [DATE]. Inspired by publicly available Rothschild & Co Asset Management Fixed Income research and the January 2027 AI Project Management internship description. AI-generated drafts must be validated by an analyst. Not investment advice.
