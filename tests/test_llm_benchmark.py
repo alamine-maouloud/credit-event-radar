@@ -222,7 +222,7 @@ def _run(tmp_path: Path, gold_path: Path, *, budget_usd: float = 5.0, dry_run: b
 
 def test_run_writes_outputs_and_run_json(tmp_path, gold_path):
     summary, provider, out, db = _run(tmp_path, gold_path)
-    rows = [json.loads(l) for l in (out / "outputs.jsonl").read_text().splitlines()]
+    rows = [json.loads(line) for line in (out / "outputs.jsonl").read_text().splitlines()]
     run = json.loads((out / "run.json").read_text())
     assert provider.calls == 2 and [r["gold_id"] for r in rows] == ["G-T-01", "G-T-02"]
     assert [r["run_status"] for r in rows] == ["ok", "ok"]
@@ -250,7 +250,7 @@ def test_run_writes_outputs_and_run_json(tmp_path, gold_path):
 
 def test_metrics_against_the_gold(tmp_path, gold_path):
     _, _, out, _ = _run(tmp_path, gold_path)
-    rows = [json.loads(l) for l in (out / "outputs.jsonl").read_text().splitlines()]
+    rows = [json.loads(line) for line in (out / "outputs.jsonl").read_text().splitlines()]
     m = score(load_gold(gold_path), rows)
     assert m["documents"]["n"] == 2 and m["documents"]["ok"] == 2
     assert m["behaviour"]["accuracy"] == 1.0
@@ -268,7 +268,7 @@ def test_metrics_against_the_gold(tmp_path, gold_path):
 
 def test_dry_run_calls_nothing_and_estimates(tmp_path, gold_path):
     summary, provider, out, db = _run(tmp_path, gold_path, dry_run=True)
-    rows = [json.loads(l) for l in (out / "outputs.jsonl").read_text().splitlines()]
+    rows = [json.loads(line) for line in (out / "outputs.jsonl").read_text().splitlines()]
     assert provider.calls == 0 and db.count("llm_calls") == 0
     assert all(r["run_status"] == "dry_run" for r in rows)
     assert all(r["estimated_input_tokens"] > 0 and r["estimated_cost_usd"] > 0 for r in rows)
@@ -277,7 +277,7 @@ def test_dry_run_calls_nothing_and_estimates(tmp_path, gold_path):
 
 def test_budget_refusal_is_recorded_not_raised(tmp_path, gold_path):
     summary, provider, out, _ = _run(tmp_path, gold_path, budget_usd=0.0001)
-    rows = [json.loads(l) for l in (out / "outputs.jsonl").read_text().splitlines()]
+    rows = [json.loads(line) for line in (out / "outputs.jsonl").read_text().splitlines()]
     assert provider.calls == 0
     assert {r["run_status"] for r in rows} == {"budget_refused"}
     m = score(load_gold(gold_path), rows)

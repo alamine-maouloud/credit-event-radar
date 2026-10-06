@@ -330,12 +330,16 @@ def _provider_for(name: str):
     raise typer.BadParameter(f"no provider implemented for {name!r}")
 
 
+GOLD_V1 = ROOT / "eval" / "gold" / "guidance_v1.jsonl"
+OUT_OPTION = typer.Option(..., "--out", help="Run directory, e.g. eval/runs/terra-2026-10-06")
+GOLD_OPTION = typer.Option(GOLD_V1, "--gold", help="Frozen gold JSONL")
+RUN_OPTION = typer.Option(..., "--run", help="Run directory written by llm-extract")
+
+
 @app.command("llm-extract")
 def llm_extract(
-    out: Path = typer.Option(..., "--out", help="Run directory, e.g. eval/runs/terra-2026-10-06"),
-    gold: Path = typer.Option(
-        ROOT / "eval" / "gold" / "guidance_v1.jsonl", "--gold", help="Frozen gold JSONL"
-    ),
+    out: Path = OUT_OPTION,
+    gold: Path = GOLD_OPTION,
     alternative: str | None = typer.Option(
         None, "--alternative", help="Benchmark alternative from settings (openai_sol, anthropic)"
     ),
@@ -401,10 +405,7 @@ def llm_extract(
 
 
 @app.command("llm-eval")
-def llm_eval(
-    run: Path = typer.Option(..., "--run", help="Run directory written by llm-extract"),
-    gold: Path = typer.Option(ROOT / "eval" / "gold" / "guidance_v1.jsonl", "--gold"),
-) -> None:
+def llm_eval(run: Path = RUN_OPTION, gold: Path = GOLD_OPTION) -> None:
     """Re-score a run directory against the gold set (metrics.json is rewritten)."""
     from radar.eval.gold import load_gold
     from radar.eval.metrics import score
@@ -432,8 +433,9 @@ def _echo_metrics(m: dict) -> None:
     )
     typer.echo(f"behaviour accuracy: {_fmt(b['accuracy'])} on {b['n_scored']} documents")
     typer.echo(
-        f"occurrences: gold {o['gold']}, predicted {o['predicted']} (valid {o['predicted_valid']}), "
-        f"matched {o['matched']}; precision {_fmt(o['precision_valid'])} (all statements "
+        f"occurrences: gold {o['gold']}, predicted {o['predicted']} "
+        f"(valid {o['predicted_valid']}), matched {o['matched']}; "
+        f"precision {_fmt(o['precision_valid'])} (all statements "
         f"{_fmt(o['precision_all'])}), recall {_fmt(o['recall'])}, F1 {_fmt(o['f1'])}"
     )
     typer.echo(
@@ -446,7 +448,8 @@ def _echo_metrics(m: dict) -> None:
         f"{c['on_no_guidance_documents']}"
     )
     typer.echo(
-        f"cost {m['cost']['total_usd']:.4f} USD, per document {_fmt(m['cost']['per_document_usd'])}, "
+        f"cost {m['cost']['total_usd']:.4f} USD, "
+        f"per document {_fmt(m['cost']['per_document_usd'])}, "
         f"latency ms mean {_fmt(m['latency_ms']['mean'])} median {_fmt(m['latency_ms']['median'])}"
     )
 

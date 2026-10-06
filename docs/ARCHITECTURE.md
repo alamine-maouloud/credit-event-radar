@@ -255,7 +255,7 @@ Benchmark models: gpt-5.6-terra (main) and gpt-5.6-sol (high-quality reference) 
 by the project owner on 2026-10-06; the Anthropic id stays TO_CONFIRM until the official
 catalogue is checked on the day of the first real call, which the providers enforce.
 
-### ADR-015 Benchmark protocol for the LLM extraction (Phase 3.2, 2026-10-06)
+## ADR-015 · Benchmark protocol for the LLM extraction (Phase 3.2, 2026-10-06)
 
 The guidance gold set V1 (30 documents, 57 occurrences, eval/gold/guidance_v1.yaml built
 into guidance_v1.jsonl) is frozen by eval/gold/guidance_v1.lock.json: hashes of the labeling
