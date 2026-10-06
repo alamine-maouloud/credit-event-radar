@@ -7,6 +7,7 @@ unsupported claim rate counts every statement that is invalid or matches no gold
 
 from __future__ import annotations
 
+import hashlib
 from collections import Counter, defaultdict
 from statistics import mean, median
 from typing import Any
@@ -81,6 +82,15 @@ def _match(
     return pairs
 
 
+def _quote_matches(entry: dict[str, Any], occ: GoldOccurrence) -> bool:
+    """Exact quote agreement, also on sanitised rows that carry only the hash."""
+    st = entry["statement"]
+    if "evidence_quote" in st:
+        return st["evidence_quote"] == occ.evidence_quote
+    digest = hashlib.sha256(occ.evidence_quote.encode("utf-8")).hexdigest()
+    return st.get("evidence_sha256") == digest
+
+
 def _overlaps(entry: dict[str, Any], occ: GoldOccurrence) -> bool:
     v = entry["validation"]
     a, b = v.get("matched_start"), v.get("matched_end")
@@ -124,7 +134,7 @@ def score(gold_rows: list[GoldDocument], output_rows: list[dict[str, Any]]) -> d
         for occ, entry in pairs:
             for f in FIELDS:
                 agreement[f] += _same(_predicted_value(entry, f), getattr(occ, f))
-            span_exact += entry["statement"]["evidence_quote"] == occ.evidence_quote
+            span_exact += _quote_matches(entry, occ)
             span_overlap += _overlaps(entry, occ)
         if g.behaviour == "no_guidance":
             on_no_guidance += len(statements)

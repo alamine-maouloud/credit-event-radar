@@ -328,3 +328,51 @@ def test_default_loader_checks_the_frozen_hashes():
     assert d.doc_id == manifest["normalized_sha256"]
     with pytest.raises(GoldMismatch):
         load_gold_document(row.model_copy(update={"normalized_sha256": "0" * 64}), universe, ROOT)
+
+
+def test_results_jsonl_is_sanitised(tmp_path, gold_path):
+    """results.jsonl is the committable copy: every verbatim excerpt is replaced by its hash
+    and length, offsets, validation and computed figures are kept, metrics are unchanged."""
+    import hashlib
+
+    from radar.eval.benchmark import sanitise_row, write_results
+
+    _, _, out, _ = _run(tmp_path, gold_path)
+    raw = [json.loads(line) for line in (out / "outputs.jsonl").read_text().splitlines()]
+    clean = [json.loads(line) for line in (out / "results.jsonl").read_text().splitlines()]
+    assert len(clean) == len(raw) == 2
+    first_raw, first_clean = raw[0], clean[0]
+    text = json.dumps(clean)
+    assert FULL_QUOTE not in text and "evidence_quote" not in text
+    st_raw = first_raw["statements"][0]["statement"]
+    st_clean = first_clean["statements"][0]["statement"]
+    assert st_clean["evidence_sha256"] == hashlib.sha256(FULL_QUOTE.encode()).hexdigest()
+    assert st_clean["evidence_chars"] == len(FULL_QUOTE)
+    assert st_clean["start_offset"] == st_raw["start_offset"]
+    assert st_clean["current_lower"] == 4.0 and st_clean["status"] == "cut"
+    assert first_clean["statements"][0]["validation"]["status"] == "VALID"
+    assert first_clean["statements"][0]["change"]["change_basis"] == "quantitative"
+    for key in (
+        "gold_id",
+        "run_status",
+        "cost_usd",
+        "latency_ms",
+        "resolved_model",
+        "has_guidance",
+    ):
+        assert first_clean[key] == first_raw[key]
+    # scoring the sanitised rows gives the same figures except the exact quote comparison
+    assert score(load_gold(gold_path), clean)["occurrences"]["recall"] == 0.5
+    # schema failures never leak the model's raw text into the sanitised file
+    failed = sanitise_row(
+        {
+            **first_raw,
+            "run_status": "schema_failure",
+            "error": "ValidationError: input_value='" + FULL_QUOTE + "'",
+        }
+    )
+    assert FULL_QUOTE not in json.dumps(failed) and failed["error"].startswith("ValidationError")
+    # write_results regenerates the file from the raw rows (llm-eval)
+    (out / "results.jsonl").unlink()
+    write_results(out, raw)
+    assert (out / "results.jsonl").exists()

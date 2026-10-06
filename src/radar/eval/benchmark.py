@@ -178,6 +178,7 @@ def run_benchmark(
         "\n".join(json.dumps(r, ensure_ascii=False, default=str) for r in rows) + "\n",
         encoding="utf-8",
     )
+    write_results(out_dir, rows)
     metrics = score(gold_rows, rows)
     statuses: dict[str, int] = {}
     for r in rows:
@@ -225,6 +226,34 @@ def run_benchmark(
         budget_remaining_usd=budget.remaining,
         metrics=metrics,
     )
+
+
+def sanitise_row(row: dict[str, Any]) -> dict[str, Any]:
+    """The committable form of an output row: verbatim excerpts of the private documents are
+    replaced by their hash and length; offsets, numbers, validation and figures are kept."""
+    out = dict(row)
+    statements = []
+    for entry in row.get("statements", []):
+        st = dict(entry["statement"])
+        quote = st.pop("evidence_quote", "")
+        st["evidence_sha256"] = hashlib.sha256(quote.encode("utf-8")).hexdigest()
+        st["evidence_chars"] = len(quote)
+        statements.append({**entry, "statement": st})
+    out["statements"] = statements
+    if row.get("run_status") == "schema_failure" and row.get("error"):
+        # pydantic messages echo the model's raw text; keep the error class only
+        out["error"] = str(row["error"]).split(":", 1)[0] + " (details in the local outputs.jsonl)"
+    return out
+
+
+def write_results(out_dir: Path, rows: list[dict[str, Any]]) -> Path:
+    path = out_dir / "results.jsonl"
+    path.write_text(
+        "\n".join(json.dumps(sanitise_row(r), ensure_ascii=False, default=str) for r in rows)
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
 
 
 def _sha256(path: Path | None) -> str | None:

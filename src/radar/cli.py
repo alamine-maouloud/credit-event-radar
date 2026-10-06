@@ -407,6 +407,7 @@ def llm_extract(
 @app.command("llm-eval")
 def llm_eval(run: Path = RUN_OPTION, gold: Path = GOLD_OPTION) -> None:
     """Re-score a run directory against the gold set (metrics.json is rewritten)."""
+    from radar.eval.benchmark import write_results
     from radar.eval.gold import load_gold
     from radar.eval.metrics import score
 
@@ -417,6 +418,7 @@ def llm_eval(run: Path = RUN_OPTION, gold: Path = GOLD_OPTION) -> None:
     ]
     metrics = score(load_gold(gold), rows)
     (run / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    write_results(run, rows)
     _echo_metrics(metrics)
 
 
