@@ -283,3 +283,17 @@ those models instead of sending null. Reasoning tokens count against max_output_
 had been cached as a schema failure. A response flagged incomplete by the API is now the
 status `truncated`, only complete and parseable answers enter the cache, and the benchmark
 reserves a ceiling of 32768 output tokens against the budget before each call.
+
+## ADR-016 · Deterministic scope guard on extracted statements (2026-10-06)
+
+The guidance prompt tells the model to report Group level figures only. On the frozen gold
+set Terra ignored that instruction on every OMV quarterly report and proposed segment CAPEX
+figures as faithful, validated quotes; Sol followed it. A prompt instruction is not a
+control, so the rule now lives in code: each issuer declares in universe.yaml its principal
+division (Volkswagen Automotive Division, TRATON Operations) and the segment names that
+never carry its guidance. The validator rejects a statement whose metric label names a
+segment, or whose metric sentence introduces one with "for", "of", "in" or "at", with the
+reason OUT_OF_SCOPE_SEGMENT. Re-scoring both runs from the cache showed the guard removing
+the whole precision gap between the models without touching recall. The pattern is the
+one of the whole project: the model proposes, the code validates, the rules decide, and a
+weakness found in a model becomes a deterministic check rather than a longer prompt.

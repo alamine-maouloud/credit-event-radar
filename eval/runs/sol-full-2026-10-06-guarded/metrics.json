@@ -1,0 +1,73 @@
+{
+  "documents": {
+    "n": 30,
+    "ok": 0,
+    "cached": 30,
+    "json_failures": 0,
+    "truncated": 0,
+    "budget_refused": 0,
+    "provider_errors": 0,
+    "dry_run": 0
+  },
+  "behaviour": {
+    "n_scored": 30,
+    "accuracy": 0.9666666666666667,
+    "confusion": {
+      "guidance_maintained": {
+        "guidance_maintained": 15
+      },
+      "guidance_changed": {
+        "guidance_changed": 5
+      },
+      "no_guidance": {
+        "no_guidance": 9
+      },
+      "guidance_mentioned_not_actionable": {
+        "no_guidance": 1
+      }
+    }
+  },
+  "occurrences": {
+    "gold": 57,
+    "predicted": 59,
+    "predicted_valid": 56,
+    "matched": 56,
+    "precision_valid": 1.0,
+    "precision_all": 0.9491525423728814,
+    "recall": 0.9824561403508771,
+    "f1": 0.9911504424778761,
+    "field_agreement": {
+      "status": 0.9642857142857143,
+      "basis": 1.0,
+      "unit": 1.0,
+      "previous_lower": 1.0,
+      "previous_upper": 1.0,
+      "current_lower": 1.0,
+      "current_upper": 1.0,
+      "change_basis": 1.0,
+      "metric_label": 0.9285714285714286
+    },
+    "span_exact_rate": 0.7857142857142857,
+    "span_overlap_rate": 1.0
+  },
+  "claims": {
+    "statements": 59,
+    "invalid": 3,
+    "invalid_span_rate": 0.05084745762711865,
+    "unsupported": 3,
+    "unsupported_claim_rate": 0.05084745762711865,
+    "on_no_guidance_documents": 0,
+    "no_guidance_documents_with_guidance": 0
+  },
+  "cost": {
+    "total_usd": 0.0,
+    "per_document_usd": 0.0,
+    "input_tokens": 266282,
+    "output_tokens": 44773
+  },
+  "latency_ms": {
+    "mean": null,
+    "median": null,
+    "max": null
+  }
+}

@@ -135,3 +135,52 @@ document behaviour on 29 of 30 documents and agree with the gold on every bound,
 change_basis of a matched occurrence. The decision between them is economic once a
 deterministic scope guard removes segment figures from both outputs (next step, re-scored
 from the cache at zero cost).
+
+## Raw model output versus model plus deterministic guardrails
+
+After the Terra versus Sol comparison, the scope rule of the guide was added to the code:
+issuers declare their principal division and their segment names in universe.yaml, and a
+statement whose metric label names a segment, or whose metric sentence introduces one
+("Organic CAPEX for Chemicals"), is rejected with OUT_OF_SCOPE_SEGMENT whatever the prompt
+said. Both runs were then re-scored from the cache, same answers, zero cost.
+
+| Metric | terra-full-2026-10-06-revalidated (gpt-5.6-terra) | terra-full-2026-10-06-guarded (gpt-5.6-terra) | sol-full-2026-10-06 (gpt-5.6-sol) | sol-full-2026-10-06-guarded (gpt-5.6-sol) |
+|---|---|---|---|---|
+| Gold occurrences found | 55/57 | 55/57 | 56/57 | 56/57 |
+| Recall (occurrences) | 0.965 | 0.965 | 0.982 | 0.982 |
+| Precision on validated statements | 0.833 | 1.000 | 1.000 | 1.000 |
+| Precision on all statements | 0.724 | 0.724 | 0.949 | 0.949 |
+| Documents with the correct behaviour | 29/30 | 29/30 | 29/30 | 29/30 |
+| No-guidance documents with a false guidance | 0/9 | 0/9 | 0/9 | 0/9 |
+| Statements proposed | 76 | 76 | 59 | 59 |
+| Supported (validated and in the gold) | 55 | 55 | 56 | 56 |
+| Scope violations (valid quote, outside the gold scope) | 11 | 0 | 0 | 0 |
+| Scope violations rejected by the guard | 0 | 12 | 0 | 0 |
+| Field inconsistencies (numbers, unit or metric not in the quote) | 9 | 8 | 3 | 3 |
+| Span failures (quote not in the document) | 1 | 1 | 0 | 0 |
+| Ungrounded (other entity or impossible date) | 0 | 0 | 0 | 0 |
+| Cost USD | 0.00 | 0.00 | 1.96 | 0.00 |
+| Mean latency s | n/a | n/a | 24.8 | n/a |
+
+Reading:
+
+- The guard closes the whole precision gap: Terra goes from 0.833 to 1.000 on validated
+  statements, Sol stays at 1.000. Twelve Terra statements are now refused by code (the 11
+  segment CAPEX figures and one Chemicals CAPEX line that the metric check had already
+  caught for another reason); none of Sol's.
+- Nothing else moves: recall, behaviour accuracy and the false positive count on
+  no-guidance documents are unchanged, because the guard only touches statements that
+  name a segment. Precision on all statements stays at 0.724 for Terra by construction:
+  the model still proposed 76 statements, the code simply discards 21 of them.
+- What remains between the models after the guard is one gold occurrence (Sol 56/57,
+  Terra 55/57, Terra's extra miss being a shortened quote) and the price: Terra 1.19 USD,
+  Sol 1.96 USD for the same 30 documents and the same latency.
+
+Conclusion for the pipeline: with the two level validator and the scope guard, the
+statements that reach the materiality rules are identical in quality for both models on
+this gold set, every bound, unit, status and change_basis of a matched occurrence agreeing
+with the gold. The remaining model errors are the two shared "mentioned" statements with a
+EUR unit (rejected), one exploration expenditure labelled capex (rejected) and one KPI page
+read as no guidance instead of mentioned. The cheaper model plus guardrails is the
+economic choice for the extraction role; the benchmark can be replayed on a new gold
+version or a new prompt with the same commands.
