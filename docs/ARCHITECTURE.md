@@ -188,3 +188,12 @@ explicit tap; redemptions, intentions to issue and amounts that also cover a loa
 become issuance events. A results release that recaps a past bond does not create a new
 issuance event. The consequence is accepted: many real documents end with no priority,
 which is the honest answer until Phase 3 adds validated extraction of quantities.
+
+Two more guards came out of the first live run on real issuer pages. Issuer web pages are
+normalised with `ir-html-1.0`, which drops navigation, footers, asides and "related
+content" teasers (a sports press release carried a teaser of an earlier hybrid issuance,
+which must not become an event of that page). Agency reports are read in report mode: a
+sentence dated differently from the report header (a "Related Research" bibliography
+entry, a criteria reference) is a reference to a past action, not the action of the
+document. DBRS actions are extracted and shown but trigger no rating rule, as DBRS is not
+an admissible agency in rules.yaml 1.x.
