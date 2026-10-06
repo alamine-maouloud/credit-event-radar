@@ -168,9 +168,12 @@ def validate_statement(
         reasons.append(f"numbers not in the quote: {missing}")
 
     currency_tokens, scale_tokens = _UNIT_TOKENS[st.unit]
-    unit_ok = any(t in low for t in scale_tokens) and (
-        not currency_tokens or any(t in low for t in currency_tokens)
-    )
+    if bounds:
+        unit_ok = any(t in low for t in scale_tokens) and (
+            not currency_tokens or any(t in low for t in currency_tokens)
+        )
+    else:
+        unit_ok = True  # a mentioned statement carries no number, so no unit to support
     checks["unit_match"] = unit_ok
     if not unit_ok:
         reasons.append(f"unit {st.unit} not supported by the quote")

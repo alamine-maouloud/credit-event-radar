@@ -76,7 +76,7 @@ def pipeline(tmp_path_factory) -> dict:
 
 
 def test_cli_outputs(pipeline):
-    assert "schema 6 ready" in pipeline["init"]
+    assert "schema 7 ready" in pipeline["init"]
     assert "issuers" in pipeline["seed"]
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest"]
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest_url"]
@@ -154,7 +154,7 @@ def test_audit_trail_covers_every_step(pipeline):
     assert db.document_status(doc_id)["outcome"] == "EVENTS"
     entries = db.audit_entries(event_id=ev.event_id)
     assert [e["step"] for e in entries] == ["extract", "materiality"]
-    assert entries[1]["rules_version"] == "1.4" and entries[1]["model_id"] is None
+    assert entries[1]["rules_version"] == "1.5" and entries[1]["model_id"] is None
     assert "P1 (DECIDED) via RAT-01, RAT-02" in entries[1]["message"]
     db.close()
 

@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, HttpUrl, JsonValue, model_validator
 # --------------------------------------------------------------------------- #
 
 SourceType = Literal["edgar", "ir_feed", "news_rss", "manual"]
-EvidenceType = Literal["sentence", "table_row", "footnote"]
+EvidenceType = Literal["sentence", "table_row", "footnote", "llm_statement"]
 EventFamily = Literal["rating", "earnings", "issuance", "other"]
 ExtractionMethod = Literal["structured", "llm_validated"]
 Priority = Literal["P1", "P2", "P3"]
@@ -149,6 +149,10 @@ class EarningsFields(BaseModel):
     guidance_old: float | None = None
     guidance_new: float | None = None
     guidance_change_pct: float | None = None
+    guidance_change_points: float | None = Field(
+        default=None,
+        description="Change of a growth-rate guidance in points, never compared to the threshold",
+    )
     guidance_qualified_significant: bool | None = Field(
         default=None, description="The issuer itself calls the guidance cut significant"
     )
@@ -190,6 +194,9 @@ class CreditEvent(BaseModel):
     evidence: list[EvidenceSpan] = Field(default_factory=list)
     extraction_method: ExtractionMethod
     source_doc_ids: list[str] = Field(default_factory=list)
+    # How the event was detected never changes; an enrichment by validated LLM statements
+    # is recorded separately so that the explanation can name both (lot 3.3b).
+    enrichment_method: Literal["llm_validated"] | None = None
 
 
 DecisionStatus = Literal["DECIDED", "NO_APPLICABLE_RULE"]

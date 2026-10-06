@@ -331,14 +331,25 @@ def _provider_for(name: str):
 
 
 GOLD_V1 = ROOT / "eval" / "gold" / "guidance_v1.jsonl"
-OUT_OPTION = typer.Option(..., "--out", help="Run directory, e.g. eval/runs/terra-2026-10-06")
+OUT_OPTION = typer.Option(
+    None, "--out", help="Benchmark run directory, e.g. eval/runs/terra-2026-10-06"
+)
+EVENTS_OPTION = typer.Option(
+    False, "--events", help="Extract on the documents behind stored earnings_release events"
+)
+ISSUER_OPTION = typer.Option(None, "--issuer", help="Restrict to one issuer id")
+DOC_OPTION = typer.Option(None, "--doc", help="Restrict to one document id")
+EVENT_OPTION = typer.Option(None, "--event", help="Restrict to one event id")
 GOLD_OPTION = typer.Option(GOLD_V1, "--gold", help="Frozen gold JSONL")
 RUN_OPTION = typer.Option(..., "--run", help="Run directory written by llm-extract")
 
 
 @app.command("llm-extract")
 def llm_extract(
-    out: Path = OUT_OPTION,
+    out: Path | None = OUT_OPTION,
+    events: bool = EVENTS_OPTION,
+    issuer: str | None = ISSUER_OPTION,
+    doc: str | None = DOC_OPTION,
     gold: Path = GOLD_OPTION,
     alternative: str | None = typer.Option(
         None, "--alternative", help="Benchmark alternative from settings (openai_sol, anthropic)"
@@ -349,8 +360,10 @@ def llm_extract(
     ),
     db: DbOption = None,
 ) -> None:
-    """Run the guidance extraction on the frozen gold set: cache, budget hard stop, two level
-    validation, derived figures and metrics. Separate from `process`, never touches events."""
+    """Guidance extraction with cache, budget hard stop and two level validation. With --out:
+    benchmark on the frozen gold set (run directory). With --events: the documents behind
+    the stored earnings_release events, statements stored, events never touched (apply them
+    with `radar llm-apply`)."""
     from radar.eval.benchmark import BenchmarkConfig, run_benchmark
     from radar.eval.gold import load_gold
     from radar.llm.budget import BudgetExceeded, RunBudget
@@ -374,6 +387,35 @@ def llm_extract(
         provider = _provider_for(role.provider)
     database = _db(db)
     database.init_schema()
+    if events == (out is not None):
+        raise typer.BadParameter("give exactly one of --out (benchmark) or --events (pipeline)")
+    if events:
+        from radar.enrich.extract import extract_events
+
+        if dry_run:
+            raise typer.BadParameter("--dry-run applies to the benchmark mode only")
+        result = extract_events(
+            database,
+            load_universe(),
+            provider=provider,
+            cache=LLMCache(database),
+            budget=budget,
+            prompt=load_prompt(ROOT / "prompts" / "extraction" / "guidance.v1.yaml"),
+            model_id=role.model,
+            reasoning_effort=role.reasoning_effort,
+            temperature=role.temperature,
+            issuer_id=issuer,
+            doc_id=doc,
+        )
+        typer.echo(
+            f"{result.documents} document(s): {result.calls} call(s), {result.cached} cached, "
+            f"{result.cost_usd:.4f} USD, {result.statements} statement(s) stored, "
+            f"{result.valid} valid; events untouched (run `radar llm-apply`)"
+        )
+        for source, status, error in result.skipped:
+            typer.echo(f"  skipped {source[:12]}: {status} {error or ''}")
+        return
+    assert out is not None
     config = BenchmarkConfig(
         model_id=role.model, reasoning_effort=role.reasoning_effort, temperature=role.temperature
     )
@@ -402,6 +444,37 @@ def llm_extract(
     )
     _echo_metrics(summary.metrics)
     typer.echo(f"written: {out / 'outputs.jsonl'}, {out / 'run.json'}, {out / 'metrics.json'}")
+
+
+@app.command("llm-apply")
+def llm_apply(
+    event: str | None = EVENT_OPTION,
+    issuer: str | None = ISSUER_OPTION,
+    db: DbOption = None,
+) -> None:
+    """Apply the stored VALID statements to the earnings_release events: fills only empty
+    deterministic fields, keeps the provenance, decides again and audits before/after.
+    Idempotent: a second run changes nothing."""
+    from radar.enrich.apply import apply_all, apply_event
+
+    database = _db(db)
+    database.init_schema()
+    rules = load_rules(CONFIG_DIR / "rules.yaml")
+    scales = load_rating_scales(CONFIG_DIR / "rating_scales.yaml")
+    results = (
+        [apply_event(database, event, rules, scales)]
+        if event
+        else apply_all(database, rules, scales, issuer)
+    )
+    for r in results:
+        line = f"{r.event_id[:12]} {r.status}: priority {r.priority_before} -> {r.priority_after}"
+        if r.conflicts:
+            line += f", deterministic conflicts {r.conflicts}"
+        typer.echo(line)
+    counts: dict[str, int] = {}
+    for r in results:
+        counts[r.status] = counts.get(r.status, 0) + 1
+    typer.echo(f"{len(results)} event(s): {counts}")
 
 
 @app.command("llm-eval")

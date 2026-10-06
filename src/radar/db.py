@@ -20,11 +20,12 @@ from radar.config import Universe
 from radar.materiality.engine import Decision
 from radar.models import AgencyRating, CreditEvent, EvidenceSpan, RatingObservation, RawDocument
 
-SCHEMA_VERSION = "6"
+SCHEMA_VERSION = "7"
 TABLES = frozenset(
     {
         "issuers", "issuer_aliases", "ratings", "documents", "events", "event_evidence",
         "audit_log", "rating_observations", "priority_decisions", "llm_calls", "llm_cache",
+        "llm_statements", "event_enrichments",
     }
 )  # fmt: skip
 
@@ -93,7 +94,8 @@ CREATE TABLE IF NOT EXISTS events (
     fields TEXT NOT NULL,
     extraction_method TEXT NOT NULL,
     source_doc_ids TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    enrichment_method TEXT
 );
 CREATE TABLE IF NOT EXISTS event_evidence (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -168,6 +170,34 @@ CREATE TABLE IF NOT EXISTS llm_cache (
     response_json TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS llm_statements (
+    statement_id TEXT PRIMARY KEY,
+    llm_call_id INTEGER,
+    doc_id TEXT NOT NULL,
+    issuer_id TEXT NOT NULL,
+    event_id TEXT,
+    model_id TEXT NOT NULL,
+    resolved_model TEXT,
+    prompt_version TEXT NOT NULL,
+    schema_version TEXT NOT NULL,
+    statement_json TEXT NOT NULL,
+    validation_json TEXT NOT NULL,
+    change_json TEXT NOT NULL,
+    validation_status TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS event_enrichments (
+    enrichment_id TEXT PRIMARY KEY,
+    event_id TEXT NOT NULL REFERENCES events(event_id),
+    enrichment_version TEXT NOT NULL,
+    statement_ids TEXT NOT NULL,
+    payload_hash TEXT NOT NULL,
+    fields_before TEXT NOT NULL,
+    fields_after TEXT NOT NULL,
+    priority_before TEXT,
+    priority_after TEXT,
+    applied_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp TEXT NOT NULL,
@@ -223,6 +253,9 @@ class Database:
     def init_schema(self) -> None:
         with self.transaction() as c:
             c.executescript(SCHEMA)
+            columns = {r["name"] for r in c.execute("PRAGMA table_info(events)")}
+            if "enrichment_method" not in columns:  # schema 6 to 7
+                c.execute("ALTER TABLE events ADD COLUMN enrichment_method TEXT")
             c.execute(
                 "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', ?)",
                 (SCHEMA_VERSION,),
@@ -468,6 +501,7 @@ class Database:
             ],
             extraction_method=r["extraction_method"],
             source_doc_ids=json.loads(r["source_doc_ids"]),
+            enrichment_method=r["enrichment_method"] if "enrichment_method" in r.keys() else None,
         )
 
     def list_events(self, issuer_id: str | None = None) -> list[CreditEvent]:
@@ -606,7 +640,7 @@ class Database:
 
     # --------------------------------------------------------------- llm --- #
 
-    def insert_llm_call(self, row: dict[str, Any]) -> None:
+    def insert_llm_call(self, row: dict[str, Any]) -> int:
         columns = [
             "doc_id", "event_id", "provider", "model_id", "resolved_model", "prompt_version",
             "schema_version", "reasoning_effort", "inputs_hash", "outputs_hash", "input_tokens",
@@ -614,11 +648,120 @@ class Database:
         ]  # fmt: skip
         values = [row.get(c) for c in columns] + [datetime.now(UTC).isoformat()]
         with self.transaction() as c:
-            c.execute(
+            cursor = c.execute(
                 f"INSERT INTO llm_calls ({', '.join(columns)}, created_at) VALUES "
                 f"({', '.join('?' for _ in columns)}, ?)",
                 values,
             )
+            return int(cursor.lastrowid)
+
+    # ------------------------------------------------------ enrichment --- #
+
+    STATEMENT_COLUMNS = (
+        "statement_id", "llm_call_id", "doc_id", "issuer_id", "event_id", "model_id",
+        "resolved_model", "prompt_version", "schema_version", "statement_json",
+        "validation_json", "change_json", "validation_status",
+    )  # fmt: skip
+
+    def insert_statements(self, rows: Iterable[dict[str, Any]]) -> int:
+        """Validated or rejected LLM statements, keyed by a deterministic statement id.
+        A replay with the same id keeps the first row (its real call is the provenance)."""
+        n = 0
+        with self.transaction() as c:
+            for row in rows:
+                values = [
+                    _json(row[k])
+                    if k.endswith("_json") and not isinstance(row[k], str)
+                    else row.get(k)
+                    for k in self.STATEMENT_COLUMNS
+                ]
+                cursor = c.execute(
+                    f"INSERT OR IGNORE INTO llm_statements ({', '.join(self.STATEMENT_COLUMNS)}, "
+                    f"created_at) VALUES ({', '.join('?' for _ in self.STATEMENT_COLUMNS)}, ?)",
+                    values + [datetime.now(UTC).isoformat()],
+                )
+                n += cursor.rowcount
+        return n
+
+    def statements_for_document(self, doc_id: str) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT * FROM llm_statements WHERE doc_id = ? ORDER BY created_at, statement_id",
+            (doc_id,),
+        )
+        out = []
+        for r in rows:
+            d = dict(r)
+            for k in ("statement_json", "validation_json", "change_json"):
+                d[k] = json.loads(d[k])
+            out.append(d)
+        return out
+
+    def update_event_enrichment(
+        self,
+        event_id: str,
+        fields: dict[str, Any],
+        spans: Iterable[EvidenceSpan],
+        enrichment_method: str | None,
+    ) -> None:
+        with self.transaction() as c:
+            c.execute(
+                "UPDATE events SET fields = ?, enrichment_method = ? WHERE event_id = ?",
+                (_json(fields), enrichment_method, event_id),
+            )
+            c.execute(
+                "DELETE FROM event_evidence WHERE event_id = ? AND evidence_type = 'llm_statement'",
+                (event_id,),
+            )
+            for span in spans:
+                c.execute(
+                    """INSERT INTO event_evidence (event_id, doc_id, char_start, char_end, quote,
+                       evidence_type, extractor_version, match_score, field)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        event_id,
+                        span.doc_id,
+                        span.char_start,
+                        span.char_end,
+                        span.quote,
+                        span.evidence_type,
+                        span.extractor_version,
+                        span.match_score,
+                        span.field,
+                    ),  # fmt: skip
+                )
+
+    def insert_enrichment(self, row: dict[str, Any]) -> None:
+        with self.transaction() as c:
+            c.execute(
+                """INSERT INTO event_enrichments (enrichment_id, event_id, enrichment_version,
+                   statement_ids, payload_hash, fields_before, fields_after, priority_before,
+                   priority_after, applied_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    row["enrichment_id"],
+                    row["event_id"],
+                    row["enrichment_version"],
+                    _json(row["statement_ids"]),
+                    row["payload_hash"],
+                    _json(row["fields_before"]),
+                    _json(row["fields_after"]),
+                    row.get("priority_before"),
+                    row.get("priority_after"),
+                    datetime.now(UTC).isoformat(),
+                ),  # fmt: skip
+            )
+
+    def enrichment_exists(self, enrichment_id: str) -> bool:
+        row = self.conn.execute(
+            "SELECT 1 FROM event_enrichments WHERE enrichment_id = ?", (enrichment_id,)
+        ).fetchone()
+        return row is not None
+
+    def enrichment_with_payload(self, event_id: str, payload_hash: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT enrichment_id FROM event_enrichments WHERE event_id = ? AND payload_hash = ?",
+            (event_id, payload_hash),
+        ).fetchone()
+        return row["enrichment_id"] if row else None
 
     def llm_cache_get(self, key: str) -> str | None:
         row = self.conn.execute(

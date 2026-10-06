@@ -28,6 +28,7 @@ class ExtractionRun(BaseModel):
     error: str | None = None
     cost_usd: float | None = None
     cache_key: str
+    llm_call_id: int | None = None
 
 
 def _parse(raw_json: str, schema_model: type[BaseModel]) -> tuple[BaseModel | None, str | None]:
@@ -80,7 +81,7 @@ def run_extraction(
     if hit is not None:
         parsed, error = _parse(hit.raw_json, schema_model)
         status: RunStatus = "cached" if parsed is not None else "schema_failure"
-        db.insert_llm_call(
+        call_id = db.insert_llm_call(
             {
                 **base_call,
                 "resolved_model": hit.resolved_model,
@@ -117,6 +118,7 @@ def run_extraction(
             error=error,
             cost_usd=0.0,
             cache_key=key,
+            llm_call_id=call_id,
         )
 
     try:
@@ -173,7 +175,7 @@ def run_extraction(
     if parsed is not None:
         cache.put(key, response)  # only complete, parseable answers are worth replaying
     outputs_hash = stable_hash(response.raw_json)
-    db.insert_llm_call(
+    call_id = db.insert_llm_call(
         {
             **base_call,
             "resolved_model": response.resolved_model,
@@ -214,6 +216,7 @@ def run_extraction(
         error=error,
         cost_usd=entry.actual_cost_after_call,
         cache_key=key,
+        llm_call_id=call_id,
     )
 
 

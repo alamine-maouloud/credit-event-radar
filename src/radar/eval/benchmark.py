@@ -20,10 +20,11 @@ from radar.eval.metrics import score
 from radar.llm.budget import RunBudget
 from radar.llm.cache import LLMCache
 from radar.llm.compute import compute_guidance_change
-from radar.llm.prompts import Prompt, render_prompt
+from radar.llm.prompts import Prompt
 from radar.llm.provider import ExtractionRequest, LLMProvider
+from radar.llm.requests import build_guidance_request
 from radar.llm.runner import run_extraction
-from radar.llm.schemas import GUIDANCE_SCHEMA_VERSION, GuidanceExtraction, guidance_json_schema
+from radar.llm.schemas import GUIDANCE_SCHEMA_VERSION, GuidanceExtraction
 from radar.llm.validate import validate_statement
 from radar.models import RawDocument
 from radar.pipeline import issuer_names
@@ -59,15 +60,11 @@ class RunSummary(BaseModel):
 def build_request(
     doc: RawDocument, issuer_name: str, document_date: str, prompt: Prompt, config: BenchmarkConfig
 ) -> ExtractionRequest:
-    system, user = render_prompt(
+    return build_guidance_request(
+        doc,
+        issuer_name,
+        document_date,
         prompt,
-        {"issuer_name": issuer_name, "document_date": document_date, "source_text": doc.text},
-    )
-    return ExtractionRequest(
-        system=system,
-        user=user,
-        schema_name="GuidanceExtraction",
-        json_schema=guidance_json_schema(),
         model_id=config.model_id,
         temperature=config.temperature,
         reasoning_effort=config.reasoning_effort,
