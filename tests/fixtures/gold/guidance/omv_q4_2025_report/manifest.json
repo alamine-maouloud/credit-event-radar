@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/downloads/2026/02/5f7aeb23-6871-ba44-74ea-e47b4ba8fbc9/OMV_Q4_25_EN.pdf",
+  "content_type": "application/pdf",
+  "retrieved_at": "2026-10-06T15:42:51.047435+00:00",
+  "raw_file": "document.pdf.gz",
+  "raw_sha256": "1167a0d1d4e2bca54c8880ef315650ce0716fe2a70f173a59bf518fff1aaefd9",
+  "raw_size_bytes": 1158405,
+  "normalizer_version": "pdf-text-1.1",
+  "normalized_sha256": "0df223fd432c68f0216c0067e5f765e893d68e5dae17614859401d5e0e38598b",
+  "normalized_chars": 116807,
+  "extra": {
+    "content_type": "application/pdf",
+    "source_id": "omv_quarterly_reports",
+    "kind": "page_links",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "pdf",
+    "published": "2026-02-04"
+  },
+  "title": "OMV Group Report January-December and Q4 2025",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-02-04",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "Q4"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

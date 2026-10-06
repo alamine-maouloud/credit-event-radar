@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/downloads/2026/07/574eef26-54e8-3953-f2c4-187f040663bb/OMV_Q2_26_EN.pdf",
+  "content_type": "application/pdf",
+  "retrieved_at": "2026-10-06T15:42:59.865541+00:00",
+  "raw_file": "document.pdf.gz",
+  "raw_sha256": "ef4a497c4572abaa92ad93e3cbf970a094b9c830fa7a0e4e452086ae3faaeab9",
+  "raw_size_bytes": 1632639,
+  "normalizer_version": "pdf-text-1.1",
+  "normalized_sha256": "a31d5cc2cd114687e861f9c8e25444049fd3358fd3969124ed8cec5a29c2ab8e",
+  "normalized_chars": 107444,
+  "extra": {
+    "content_type": "application/pdf",
+    "source_id": "omv_quarterly_reports",
+    "kind": "page_links",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "pdf",
+    "published": "2026-07-31"
+  },
+  "title": "OMV Group Report January-June and Q2 2026",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-07-31",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "Q2"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

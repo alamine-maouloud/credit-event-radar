@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/downloads/2026/04/ce46987f-f2e6-e1a3-5a8c-6d78110dc34f/OMV_Q1_26_EN.pdf",
+  "content_type": "application/pdf",
+  "retrieved_at": "2026-10-06T15:42:55.394340+00:00",
+  "raw_file": "document.pdf.gz",
+  "raw_sha256": "d1a8fb478597b94ec2a3477cbfa77532dc6e04d8bc7fdba5519a112edca9ab48",
+  "raw_size_bytes": 1132065,
+  "normalizer_version": "pdf-text-1.1",
+  "normalized_sha256": "ca3dd31e7b18c5ac60bed62a10a9535dbe688819320309bf3b6f38cda7f3c8b4",
+  "normalized_chars": 83007,
+  "extra": {
+    "content_type": "application/pdf",
+    "source_id": "omv_quarterly_reports",
+    "kind": "page_links",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "pdf",
+    "published": "2026-04-30"
+  },
+  "title": "OMV Group Report January-March and Q1 2026",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-04-30",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "Q1"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

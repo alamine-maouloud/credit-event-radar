@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/downloads/2025/10/68ccc9c0-47cc-b8c9-548a-e33ccd44f9da/OMV_Q3_25_EN.pdf",
+  "content_type": "application/pdf",
+  "retrieved_at": "2026-10-06T15:42:46.887686+00:00",
+  "raw_file": "document.pdf.gz",
+  "raw_sha256": "0fdbc135e26ce599a3e8c4e3ba4e07c072fe5f96187f3949788459f062936958",
+  "raw_size_bytes": 989076,
+  "normalizer_version": "pdf-text-1.1",
+  "normalized_sha256": "841eb561abe768cb156f30762a0beda365baad3eeb18a4339278acbd8b3e2551",
+  "normalized_chars": 93188,
+  "extra": {
+    "content_type": "application/pdf",
+    "source_id": "omv_quarterly_reports",
+    "kind": "page_links",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "pdf",
+    "published": "2025-10-29"
+  },
+  "title": "OMV Group Report January-September and Q3 2025",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2025-10-29",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "Q3"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

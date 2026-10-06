@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/downloads/2025/07/322ca954-58ae-24d7-79ec-0d6cb5e0dbd0/OMV_Q2_25_EN.pdf",
+  "content_type": "application/pdf",
+  "retrieved_at": "2026-10-06T15:42:42.645687+00:00",
+  "raw_file": "document.pdf.gz",
+  "raw_sha256": "c904e577c24074f60c5d28f9e71afe0445589ef5c2c4ba5ca63affd6cb5b3103",
+  "raw_size_bytes": 1826221,
+  "normalizer_version": "pdf-text-1.1",
+  "normalized_sha256": "ca788d3a29d8fba7a951b2333013e74e7db67b3b55606246ba68f9ba2baa6732",
+  "normalized_chars": 106673,
+  "extra": {
+    "content_type": "application/pdf",
+    "source_id": "omv_quarterly_reports",
+    "kind": "page_links",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "pdf",
+    "published": "2025-07-31"
+  },
+  "title": "OMV Group Report January-June and Q2 2025",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2025-07-31",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "Q2"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

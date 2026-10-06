@@ -39,6 +39,18 @@ _FORWARD_RE = re.compile(
 _NUMBER_RE = re.compile(r"\d")
 
 
+# Signs as printed by the issuers: hyphen, en dash, figure dash or minus, optionally spaced.
+_SIGNED_NUMBER_RE = re.compile("([-+\u2012\u2013\u2212])?\\s*(\\d+(?:[.,]\\d+)?)")
+
+
+def signed_numbers(quote: str) -> list[float]:
+    out = []
+    for sign, digits in _SIGNED_NUMBER_RE.findall(quote):
+        value = float(digits.replace(",", "."))
+        out.append(-value if sign and sign != "+" else value)
+    return out
+
+
 def load_document(directory: Path):
     universe = load_universe()
     with tempfile.TemporaryDirectory() as tmp:
@@ -100,7 +112,7 @@ def build(args) -> None:
                 problems.append(f"{item['fixture']}: quote found {count} times: {quote[:80]!r}")
                 continue
             start = doc.text.index(quote)
-            numbers = [float(x.replace(",", ".")) for x in re.findall(r"\d+(?:[.,]\d+)?", quote)]
+            numbers = signed_numbers(quote)
             for key in ("previous_lower", "previous_upper", "current_lower", "current_upper"):
                 value = occ.get(key)
                 if value is not None and not any(abs(n - float(value)) < 1e-9 for n in numbers):

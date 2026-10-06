@@ -169,6 +169,14 @@ issuers:
         note: No RSS on omv.com; the official sitemap carries lastmod (robots.txt allows all)
       # /en/media/press-releases/ pages render their body in JavaScript (only the title is in the
       # HTML, checked 2026-10-06): not usable, the investor news pages above carry the same results.
+      - id: omv_quarterly_reports
+        kind: page_links
+        url: https://www.omv.com/en/investors/publications-and-disclosures/quarterly-publications
+        link_pattern: '/downloads/.*OMV_Q[1-4]_\d\d_EN\.pdf'
+        document_type: press_release
+        content: pdf
+        max_items: 5
+        note: Quarterly group report PDF (results, outlook); the page redirects to the latest quarter, earlier quarters live under /en/investors/publications/quarterly-publications/<year>/<quarter>
       - id: omv_debt_ratings_page
         kind: page
         url: https://www.omv.com/en/investors/omv-on-the-capital-markets/debt-and-ratings
