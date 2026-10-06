@@ -123,6 +123,8 @@ issuers:
     ratings_page: null
     ir_feeds: []
     tags: [demo_watchlist]
+    rating_status: unverified
+    notes: The only rating source collected (S&P report download) sits behind a login. No public page found yet.
 
   - id: OMV
     name: OMV

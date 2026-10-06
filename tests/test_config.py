@@ -76,7 +76,7 @@ def test_universe_load(universe):
 
 def test_universe_unverified_issuers_have_notes(universe):
     unverified = [i for i in universe.issuers if i.rating_status == "unverified"]
-    assert {i.id for i in unverified} == {"GM_FINANCIAL", "HARLEY_DAVIDSON_FS"}
+    assert {i.id for i in unverified} == {"GM_FINANCIAL", "HARLEY_DAVIDSON_FS", "ROQUETTE"}
     assert all(i.notes for i in unverified)
 
 
@@ -140,7 +140,7 @@ def test_seed_columns():
 
 
 def test_seed_loads_and_every_row_has_a_verification_level(seed, universe):
-    assert len(seed) == 30
+    assert len(seed) == 28
     assert all(r.verified_at_least("SOURCE_VERIFIED") for r in seed)
     assert {r.issuer_id for r in seed} <= universe.ids
     assert all(str(r.source_url).startswith("https://") for r in seed)
@@ -159,8 +159,18 @@ def test_seed_partial_dates_are_not_completed(seed):
     assert str(traton_sp.as_of) == "2026-07-30"
 
 
-def test_seed_unverified_issuers_have_no_rows(seed):
-    assert not [r for r in seed if r.issuer_id in {"GM_FINANCIAL", "HARLEY_DAVIDSON_FS"}]
+def test_seed_unverified_issuers_have_no_rows(seed, universe):
+    unverified = {i.id for i in universe.issuers if i.rating_status == "unverified"}
+    assert not [r for r in seed if r.issuer_id in unverified]
+
+
+def test_seed_instrument_rows_have_no_outlook(seed):
+    assert all(r.outlook is None for r in seed if r.scope == "instrument")
+
+
+def test_seed_no_row_is_golden_without_sign_off(seed):
+    """GOLDEN is a human decision (ADR-003); the validation pass stops at DATE_VERIFIED."""
+    assert not [r for r in seed if r.verification_status == "GOLDEN"]
 
 
 def test_seed_rating_types_are_explicit(seed):
@@ -171,6 +181,7 @@ def test_seed_rating_types_are_explicit(seed):
     assert omv_moodys.rating_type == "senior_unsecured" and not omv_moodys.composite_eligible
     dassault_bond = next(r for r in seed if r.scope == "instrument")
     assert dassault_bond.rating_type == "instrument"
+    assert not [r for r in seed if r.issuer_id == "ROQUETTE"]
 
 
 def test_seed_composites_require_golden_by_default(seed, scales, settings):
