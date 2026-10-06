@@ -441,3 +441,13 @@ TO_BENCHMARK for this kind until its benchmark: `radar llm-extract --kind going_
 refuses the default and takes `--alternative`. Dry runs, no call: Terra 9.82 USD estimated
 (about 2 USD calibrated on the covenant V1 ratio), Sol 17.15 USD estimated (about 3.4 USD).
 
+Closed on 2026-10-07 after the Terra run on gold V1 (docs/BENCHMARK.md): seven of seven
+doubt cases on the dev split and two of two on the holdout split, no false flag on ten
+documents without a doubt, the OMV denial read as negated, no correction justified by the
+dev split, nothing changed after the holdout was read. Terra is the routed default of the
+family without a benchmarked challenger: Sol was deliberately not run, to control the
+evaluation cost, and no other paid benchmark follows. With this family the extraction
+layer is complete (ratings, guidance, liquidity, covenants, going concern); the effort
+moves to what an analyst sees, the alert, the explanation, the source proof and the
+interface.
+

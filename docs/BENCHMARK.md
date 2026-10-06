@@ -823,3 +823,40 @@ Limits of gold V1, recorded: no real "alleviated" conclusion in the corpus (offl
 only); the "significant uncertainty" wording outside the going concern (tariff refunds,
 litigation) is excluded by the topic check and never proposed by Terra.
 
+### Going concern V1: the holdout split read, Phase 3 closed (2026-10-07)
+
+The holdout split of gold V1 (five documents labelled with the dev split and never used for
+a rule) was scored by the same run and read after the dev decision; nothing was changed
+after reading it.
+
+| Document | expected | Terra | notes |
+|---|---|---|---|
+| GC-NFE-01 (New Fortress Energy) | FLAG | FLAG | six of six doubt statements found; the forward-looking bullet "adequately addressing the substantial doubt ..." read as mentioned where the gold says doubt, a defensible disagreement on a list item |
+| GC-SNBR-01 (Sleep Number) | FLAG | FLAG | three of four doubt statements found; two multi-sentence quotes at the repeated MD&A section scored as unlabelled (identical repeats labelled once) |
+| GC-DE-01 (Deere) | NO FLAG | NO FLAG | no statement |
+| GC-TR-H1-26 (TRATON) | NO FLAG | NO FLAG | no statement |
+| GC-GM-01 (General Motors) | NO FLAG | NO FLAG | no statement |
+
+Holdout numbers: document flag precision 1.000 and recall 1.000, false flag rate 0.000 on
+the three documents without a doubt, doubt statement precision 0.800 and recall 0.800,
+status accuracy 0.917 (one disagreement), no rejection, no ineligible passage proposed.
+
+Decision (validated 2026-10-07): Terra is the routed default for going concern, without a
+benchmarked challenger; Sol is deliberately not run on this family, to control the
+evaluation cost. Sum spent on going concern: 1.97 USD of the 5 USD cap. No other paid
+benchmark follows.
+
+Phase 3 is closed. The final routing, each line with its empirical reason in
+settings.llm.routing:
+
+| Family | Default | Challenger | Evidence |
+|---|---|---|---|
+| guidance | Terra | Sol | gold V1: precision 1.000, recall 0.965 with the guardrails, 1.19 USD against 1.96 |
+| liquidity | Terra | Sol | gold V1, holdouts V2 and V3: same stress cases found, lower cost |
+| covenant | Sol | Terra | gold V1 and two holdouts: 4 of 4 breach cases at the decision level against 2 of 4, no false flag observed for either, about twice the cost |
+| going_concern | Terra | none | gold V1 dev 7 of 7 and holdout 2 of 2, 0 false flags on 10 documents, 1.84 USD |
+
+Open limits carried into the product phase, not to be tuned: the covenant validator V2
+backlog; the scoring convention on identical repeats; no real alleviated going concern in
+the corpus; segment scope that depends on configuration.
+
