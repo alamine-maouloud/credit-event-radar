@@ -1,0 +1,31 @@
+{
+  "run_id": "terra-2026-10-06",
+  "started_at": "2026-10-06T17:04:38.140615+00:00",
+  "finished_at": "2026-10-06T17:04:53.838607+00:00",
+  "provider": "openai",
+  "model_id": "gpt-5.6-terra",
+  "resolved_models": [],
+  "reasoning_effort": "low",
+  "temperature": 0.0,
+  "max_output_tokens": 4096,
+  "prompt_id": "extraction.guidance",
+  "prompt_version": "1.1.0",
+  "prompt_content_hash": "e29ce3ad82a3251742460ce08f979a51a5245611d693281e5a58e9af21a3ddd4",
+  "schema_version": "guidance-1.0",
+  "extractor_version": "llm-guidance-1.0",
+  "gold_path": "/Users/al-aminemaouloud/credit-event-radar/eval/gold/guidance_v1.jsonl",
+  "gold_labels_sha256": "ef8d82413ae45fd96ae997e573e00dda65ce142326ccf48c1cb1bab5758e1553",
+  "gold_lock_sha256": "ee2670bd9af39275dae96b519934848118582ed194c9c0fe7a37abeb1fe0d283",
+  "n_documents": 30,
+  "statuses": {
+    "provider_error": 30
+  },
+  "total_cost_usd": 0.0,
+  "estimated_cost_usd": 2.1873699999999996,
+  "budget_limit_usd": 10.0,
+  "budget_remaining_usd": 10.0,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "dry_run": false,
+  "limit": null
+}

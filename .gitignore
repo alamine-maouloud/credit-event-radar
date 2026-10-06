@@ -26,3 +26,5 @@ tests/fixtures/gold/**/document.*
 
 # benchmark dry runs are estimates only, real runs are committed as evidence
 eval/runs/dry-*/
+# raw model outputs carry verbatim excerpts of private documents: local only, results.jsonl is the sanitised copy
+eval/runs/*/outputs.jsonl

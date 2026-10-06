@@ -1,0 +1,59 @@
+{
+  "documents": {
+    "n": 30,
+    "ok": 0,
+    "cached": 0,
+    "json_failures": 0,
+    "budget_refused": 0,
+    "provider_errors": 30,
+    "dry_run": 0
+  },
+  "behaviour": {
+    "n_scored": 0,
+    "accuracy": null,
+    "confusion": {}
+  },
+  "occurrences": {
+    "gold": 57,
+    "predicted": 0,
+    "predicted_valid": 0,
+    "matched": 0,
+    "precision_valid": null,
+    "precision_all": null,
+    "recall": 0.0,
+    "f1": null,
+    "field_agreement": {
+      "status": null,
+      "basis": null,
+      "unit": null,
+      "previous_lower": null,
+      "previous_upper": null,
+      "current_lower": null,
+      "current_upper": null,
+      "change_basis": null,
+      "metric_label": null
+    },
+    "span_exact_rate": null,
+    "span_overlap_rate": null
+  },
+  "claims": {
+    "statements": 0,
+    "invalid": 0,
+    "invalid_span_rate": null,
+    "unsupported": 0,
+    "unsupported_claim_rate": null,
+    "on_no_guidance_documents": 0,
+    "no_guidance_documents_with_guidance": 0
+  },
+  "cost": {
+    "total_usd": 0,
+    "per_document_usd": null,
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "latency_ms": {
+    "mean": null,
+    "median": null,
+    "max": null
+  }
+}
