@@ -428,6 +428,149 @@ def test_report_mode_skips_dated_references(scales):
         doc(text), "ISSUER_TEST_A", scales, default_agency="SP", report_mode=True
     )
     assert [e.event_type for e in result.events] == ["outlook_change"]
-    assert [s.reason for s in result.skipped] == ["dated_reference_in_report"]
+    assert [s.reason for s in result.skipped] == ["historical_reference"]
     without = extract_rating_actions(doc(text), "ISSUER_TEST_A", scales, default_agency="SP")
     assert sorted(e.event_type for e in without.events) == ["affirmation", "outlook_change"]
+
+
+# ------------------------------------------------ 2b.1 entity guard --- #
+
+ISSUER_NAMES = ["Issuer Test A", "Issuer Test A AG", "ITA"]
+
+
+def test_entity_guard_rejects_unresolved_subsidiary(scales):
+    """Real DBRS case: a sentence about a finance subsidiary must not become an issuer event."""
+    text = (
+        "In addition, we changed ITA Credit Canada, Inc.'s Senior Unsecured Debt credit rating "
+        "to BBB (high) from A (low) and its Commercial Paper credit rating to R-2 (high) from R-1 (low) "
+        "and changed both trends to Stable."
+    )
+    result = extract_rating_actions(
+        doc(text), "ISSUER_TEST_A", scales, default_agency="DBRS", issuer_names=ISSUER_NAMES
+    )
+    assert result.events == []
+    assert [s.reason for s in result.skipped] == ["unresolved_entity"]
+    assert "ITA Credit Canada, Inc." in result.skipped[0].detail
+
+
+def test_entity_guard_attaches_resolved_entity(scales):
+    text = "Moody's downgraded ITA Credit Canada, Inc.'s long-term rating to Baa2 from Baa1."
+    resolver = {"ITA Credit Canada, Inc.": "ISSUER_TEST_A_CANADA"}.get
+    result = extract_rating_actions(
+        doc(text), "ISSUER_TEST_A", scales, issuer_names=ISSUER_NAMES, resolve_entity=resolver
+    )
+    assert len(result.events) == 1
+    ev = result.events[0]
+    assert ev.issuer_id == "ISSUER_TEST_A_CANADA"
+    assert (
+        ev.fields["entity"] == "ITA Credit Canada, Inc."
+        and ev.fields["entity_attribution"] == "sentence"
+    )
+    assert (ev.fields["old_rating"], ev.fields["new_rating"]) == ("Baa1", "Baa2")
+
+
+def test_entity_guard_keeps_issuer_when_named_with_co_rated_entities(scales):
+    text = (
+        "On 30 July 2026, we downgraded the Issuer Rating on the Company and on "
+        "Issuer Test A International Finance N.V. to BBB (high) from A (low)."
+    )
+    result = extract_rating_actions(
+        doc(text), "ISSUER_TEST_A", scales, default_agency="DBRS", issuer_names=ISSUER_NAMES
+    )
+    assert [e.issuer_id for e in result.events] == ["ISSUER_TEST_A"]
+    assert result.events[0].fields["new_rating"] == "BBB (high)"
+
+
+def test_entity_guard_issuer_named_explicitly(scales):
+    text = (
+        "DBRS Ratings GmbH (Morningstar DBRS) downgraded the Issuer Rating on Issuer Test A AG "
+        "(ITA or the Company) to BBB (high) from A (low)."
+    )
+    result = extract_rating_actions(doc(text), "ISSUER_TEST_A", scales, issuer_names=ISSUER_NAMES)
+    assert [e.issuer_id for e in result.events] == ["ISSUER_TEST_A"]
+    assert result.skipped == []
+
+
+def test_entity_guard_applies_to_outlook_and_affirmation_sentences(scales):
+    text = "Fitch Ratings has revised the Outlook on ITA Bank GmbH's Long-Term IDR to Negative from Stable."
+    result = extract_rating_actions(doc(text), "ISSUER_TEST_A", scales, issuer_names=ISSUER_NAMES)
+    assert result.events == [] and [s.reason for s in result.skipped] == ["unresolved_entity"]
+
+
+def test_named_entities_detection(scales):
+    from radar.extract.structured import find_named_entities
+
+    text = "DBRS Ratings GmbH confirmed Issuer Test A AG and VW Credit Canada, Inc.'s ratings; Volkswagen International Finance N.V. too."
+    names = [e[0] for e in find_named_entities(text, scales)]
+    assert names == [
+        "Issuer Test A AG",
+        "VW Credit Canada, Inc.",
+        "Volkswagen International Finance N.V.",
+    ]
+
+
+# ------------------------------------- 2b.1 historical reference guard --- #
+
+
+def test_historical_reference_cue_without_document_date(scales):
+    """Real DBRS case: a rating-history line in a report must not become a 2025 affirmation."""
+    text = (
+        "Credit Rating Report Issuer Test A AG Credit Ratings Issuer Rating Trend\n"
+        "Rating History\n"
+        "Issuer Test A AG: “Morningstar DBRS Confirms Issuer Rating at A (low),” 31 July 2025.\n"
+    )
+    result = extract_rating_actions(
+        doc(text),
+        "ISSUER_TEST_A",
+        scales,
+        default_agency="DBRS",
+        issuer_names=ISSUER_NAMES,
+        report_mode=True,
+    )
+    assert result.events == []
+    assert [s.reason for s in result.skipped] == ["historical_reference"]
+
+
+def test_historical_reference_by_date_before_document_date(scales):
+    from datetime import UTC, datetime
+
+    text = "On 31 July 2025, we confirmed the Issuer Rating of Issuer Test A AG at A (low) with a Stable trend."
+    d = doc(text).model_copy(update={"published_at": datetime(2026, 8, 13, tzinfo=UTC)})
+    result = extract_rating_actions(
+        d,
+        "ISSUER_TEST_A",
+        scales,
+        default_agency="DBRS",
+        issuer_names=ISSUER_NAMES,
+        report_mode=True,
+    )
+    assert result.events == [] and [s.reason for s in result.skipped] == ["historical_reference"]
+    same_day = extract_rating_actions(
+        d.model_copy(update={"text": text.replace("31 July 2025", "13 August 2026")}),
+        "ISSUER_TEST_A", scales, default_agency="DBRS", issuer_names=ISSUER_NAMES, report_mode=True,
+    )  # fmt: skip
+    assert len(same_day.events) == 1
+
+
+def test_document_date_sources():
+    from datetime import UTC, date, datetime
+
+    from radar.extract.structured import document_date
+
+    header = doc("Fitch Ratings - Frankfurt - 07 Apr 2025: text.")
+    assert document_date(header) == date(2025, 4, 7)
+    published = header.model_copy(update={"published_at": datetime(2026, 1, 2, tzinfo=UTC)})
+    assert document_date(published) == date(2026, 1, 2)
+    by_url = doc("No date in the text at all.").model_copy(
+        update={
+            "url": "https://cdn.example.invalid/docs/2026-08-13-issuer-test-a-dbrs-rating-report-en.pdf?1786693701"
+        }
+    )
+    assert document_date(by_url) == date(2026, 8, 13)
+    by_url2 = doc("No date here either.").model_copy(
+        update={
+            "url": "https://cdn.example.invalid/x/RatingsDirect_Update_3495688_Dec-17-2025.pdf?1766048131"
+        }
+    )
+    assert document_date(by_url2) == date(2025, 12, 17)
+    assert document_date(doc("No date here either.")) is None

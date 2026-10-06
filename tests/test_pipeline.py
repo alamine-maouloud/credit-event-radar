@@ -209,3 +209,23 @@ def test_agency_report_without_agency_in_sentence_uses_document_agency(db, scale
     assert ev.fields["new_outlook"] == "negative" and ev.fields["rating"] == "BBB+"
     assert ev.effective_date == date(2025, 12, 17)
     assert db.get_decision(ev.event_id).final_priority == "P2"
+
+
+def test_agency_report_subsidiary_and_history_are_not_issuer_events(db, scales):
+    """Regression for the two DBRS false positives seen on the first live run."""
+    text = (
+        "Credit Rating Report Issuer Test A AG\n"
+        "On 30 July 2026, we downgraded the Issuer Rating on the Company to BBB (high) from A (low). "
+        "In addition, we changed ITA Credit Canada, Inc.'s Senior Unsecured Debt credit rating to BBB (high) from A (low) and changed both trends to Stable.\n"
+        "Rating History\n"
+        "Issuer Test A AG: “Morningstar DBRS Confirms Issuer Rating at A (low),” 31 July 2025.\n"
+        "Source: Morningstar DBRS."
+    )
+    d = doc(text, document_type="rating_report", kind="page_links", published=date(2026, 8, 13))
+    s = run(db, scales, d)
+    events = db.list_events("ISSUER_TEST_A")
+    assert [(e.event_type, e.fields["new_rating"]) for e in events] == [("downgrade", "BBB (high)")]
+    assert s.decisions == {"NONE": 1}  # DBRS is not an admissible agency for rules
+    reasons = " ".join(e["message"] or "" for e in db.audit_entries(doc_id=d.doc_id))
+    assert "unresolved_entity" in reasons and "historical_reference" in reasons
+    assert db.count("events") == 1
