@@ -1,0 +1,127 @@
+{
+  "dev": {
+    "documents": 13,
+    "statements": {
+      "gold": 36,
+      "predicted": 57,
+      "predicted_valid": 47,
+      "matched": 21,
+      "precision": 0.44680851063829785,
+      "recall": 0.5833333333333334,
+      "status_accuracy": 0.9047619047619048,
+      "resolution_accuracy": 0.8095238095238095
+    },
+    "negative_statements": {
+      "gold": 10,
+      "predicted_valid": 20,
+      "matched": 8,
+      "precision": 0.4,
+      "recall": 0.8
+    },
+    "document_flag": {
+      "gold_true": 2,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 11
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "STATUS_MISMATCH": 6,
+      "the passage does not speak of covenants or contractual compliance": 5,
+      "agreement '2022 Credit Facility' not in the quote": 4,
+      "OUT_OF_SCOPE_SEGMENT": 2
+    }
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 7,
+      "predicted": 13,
+      "predicted_valid": 4,
+      "matched": 3,
+      "precision": 0.75,
+      "recall": 0.42857142857142855,
+      "status_accuracy": 1.0,
+      "resolution_accuracy": 1.0
+    },
+    "negative_statements": {
+      "gold": 1,
+      "predicted_valid": 1,
+      "matched": 1,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "document_flag": {
+      "gold_true": 1,
+      "predicted_true": 1,
+      "true_positives": 1,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 4
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "STATUS_MISMATCH": 5,
+      "quote dated 2027-03-31, after the document date": 1,
+      "RESOLUTION_MISMATCH": 2,
+      "covenant_label 'Net Leverage Ratio; Liquidity financial covenant; Interest Coverage Ratio; quarterly minimum EBITDA covenant test' not in the quote": 1,
+      "quote dated 2027-12-03, after the document date": 1,
+      "quote dated 2026-06-30, after the document date": 2,
+      "agreement 'credit agreement' not in the quote": 1,
+      "the passage does not speak of covenants or contractual compliance": 1,
+      "quote is about another entity": 1
+    }
+  },
+  "all": {
+    "documents": 18,
+    "statements": {
+      "gold": 43,
+      "predicted": 70,
+      "predicted_valid": 51,
+      "matched": 24,
+      "precision": 0.47058823529411764,
+      "recall": 0.5581395348837209,
+      "status_accuracy": 0.9166666666666666,
+      "resolution_accuracy": 0.8333333333333334
+    },
+    "negative_statements": {
+      "gold": 11,
+      "predicted_valid": 21,
+      "matched": 9,
+      "precision": 0.42857142857142855,
+      "recall": 0.8181818181818182
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 3,
+      "true_positives": 3,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 15
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "STATUS_MISMATCH": 11,
+      "the passage does not speak of covenants or contractual compliance": 6,
+      "agreement '2022 Credit Facility' not in the quote": 4,
+      "OUT_OF_SCOPE_SEGMENT": 2,
+      "quote dated 2027-03-31, after the document date": 1,
+      "RESOLUTION_MISMATCH": 2,
+      "covenant_label 'Net Leverage Ratio; Liquidity financial covenant; Interest Coverage Ratio; quarterly minimum EBITDA covenant test' not in the quote": 1,
+      "quote dated 2027-12-03, after the document date": 1,
+      "quote dated 2026-06-30, after the document date": 2,
+      "agreement 'credit agreement' not in the quote": 1,
+      "quote is about another entity": 1
+    }
+  },
+  "cost": {
+    "total_usd": 0.0,
+    "input_tokens": 800031,
+    "output_tokens": 24114
+  }
+}
