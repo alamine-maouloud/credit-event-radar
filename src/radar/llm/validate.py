@@ -27,7 +27,11 @@ FUTURE_TOLERANCE_DAYS = 3
 PERIOD_PAST_YEARS = 1
 PERIOD_FUTURE_YEARS = 3
 
-_NUMBER_RE = re.compile(r"[-+]?\d+(?:[.,]\d+)?")
+# Numbers as issuers print them: optional sign (hyphen, en dash, figure dash or minus, possibly
+# spaced, "+ 0%"), thousands separators, decimal point or comma.
+_NUMBER_RE = re.compile(
+    r"(?<![\w.])([-+\u2012\u2013\u2212])?\s{0,2}(\d{1,3}(?:,\d{3})+|\d+)(?:[.,]\d+)?(?![\w])"
+)
 _METRIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     "revenue": ("revenue", "revenues", "sales", "turnover"),
     "ebitda": ("ebitda",),
@@ -68,7 +72,10 @@ class ValidationResult(BaseModel):
 
 
 def _parse_number(token: str) -> float | None:
-    cleaned = token.replace("+", "")
+    cleaned = re.sub(
+        r"^[-+\u2012\u2013\u2212]\s*", lambda m: "-" if m.group(0)[0] != "+" else "", token
+    )
+    cleaned = re.sub(r"(?<=\d),(?=\d{3}\b)", "", cleaned)  # thousands separator
     if "," in cleaned and "." not in cleaned:
         cleaned = cleaned.replace(",", ".")
     try:

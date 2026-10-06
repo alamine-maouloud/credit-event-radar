@@ -17,6 +17,7 @@ SKIP_DIRS = {
     ".ruff_cache",
     "eval/gold",
     "tests/fixtures",
+    "eval/runs",  # model outputs quote the documents verbatim
 }
 FORBIDDEN = {chr(0x2014): "em dash", chr(0x2013): "en dash"}
 

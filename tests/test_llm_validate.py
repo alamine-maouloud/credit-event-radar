@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import date
 
+import pytest
+
 from radar.llm.validate import validate_statement
 from tests.llm_helpers import FULL_QUOTE, ISSUER_NAMES, SHORT_QUOTE, VW_LIKE, doc, statement
 
@@ -203,3 +205,52 @@ def test_validation_result_is_serialisable_for_audit():
         "entity_match",
         "temporal_consistency",
     }
+
+
+@pytest.mark.parametrize(
+    "quote,lower,upper",
+    [
+        # TRATON writes the sign with a figure dash, sometimes spaced; VW with an en dash
+        (
+            "We continue to expect a range of "
+            + chr(0x2012)
+            + "5% to +5% for unit sales and sales revenue.",
+            -5,
+            5,
+        ),
+        (
+            "For 2025, the TRATON GROUP now expects a range of "
+            + chr(0x2012)
+            + " 10% to + 0% for unit sales and sales revenue.",
+            -10,
+            0,
+        ),
+        (
+            "The Volkswagen Group expects sales revenue in 2026 to develop within a range of "
+            + chr(0x2013)
+            + "3 to 0 percent compared with the previous year.",
+            -3,
+            0,
+        ),
+    ],
+)
+def test_negative_bounds_written_with_typographic_dashes_are_found(quote, lower, upper):
+    """First real run (2026-10-06): six correct extractions were rejected because the
+    validator read "" + chr(0x2012) + "5%" as 5 and reported -5 missing from the quote."""
+    text = "Outlook\n" + quote + "\nThe margin is expected between 6 and 7%."
+    st = statement(
+        text,
+        quote,
+        metric="revenue",
+        metric_label="sales revenue",
+        basis="yoy_change_pct",
+        unit="PCT",
+        previous_lower=None,
+        previous_upper=None,
+        current_lower=lower,
+        current_upper=upper,
+        status="new",
+    )
+    result = validate_statement(st, doc(text), ISSUER_NAMES, document_date=date(2026, 4, 28))
+    assert result.checks["numbers_match"] is True and result.checks["numbers_attached"] is True
+    assert result.status == "VALID", result.reasons
