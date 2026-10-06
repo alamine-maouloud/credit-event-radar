@@ -436,8 +436,8 @@ def alert(
                 rules_version=decision.rules_version,
                 status="ok",
                 message=(
-                    f"{built.priority or 'NONE'} alert {built.alert_id[:12]}: {len(paths)} files in "
-                    f"{paths[0].parent}; route {route}; {sent}"
+                    f"{built.priority or 'NONE'} alert {built.alert_id[:12]}: {len(paths)} "
+                    f"files in {paths[0].parent}; route {route}; {sent}"
                 ),
             )
         )
@@ -448,6 +448,49 @@ def alert(
         typer.echo(f"      route {route}; {sent}")
         rendered += 1
     typer.echo(f"{rendered} alert(s) rendered")
+
+
+@app.command("viewer")
+def viewer(
+    port: Annotated[int, typer.Option("--port", help="Streamlit port")] = 8501,
+    db: DbOption = None,
+) -> None:
+    """Start the Streamlit viewer (four screens: dashboard, watchlist, alerts, event detail
+    with "Why this priority?"). Reads the database only."""
+    import os
+    import subprocess
+    import sys
+
+    app_path = Path(__file__).resolve().parent / "viewer" / "app.py"
+    db_path = db if db is not None else ROOT / _settings().paths.db
+    env = {**os.environ, "RADAR_DB": str(db_path)}
+    typer.echo(f"Starting the Streamlit viewer on port {port} (database {db_path})")
+    argv = [
+        sys.executable, "-m", "streamlit", "run", str(app_path),
+        "--server.headless", "true", "--server.port", str(port),
+    ]  # fmt: skip
+    subprocess.run(argv, env=env, check=False)
+
+
+@app.command("export-html")
+def export_html(
+    out: Annotated[Path, typer.Option("--out", help="Site directory")] = ROOT / "outputs" / "site",
+    db: DbOption = None,
+) -> None:
+    """Static HTML export of the viewer (index with the two universes, the alerts and the
+    routing, one page per decided event): the portable fallback, no server needed."""
+    from radar.viewer.export import export_site
+
+    database = _db(db)
+    paths = export_site(
+        database,
+        load_universe(CONFIG_DIR / "universe.yaml"),
+        load_rules(CONFIG_DIR / "rules.yaml"),
+        _settings(),
+        out,
+    )
+    typer.echo(f"{len(paths)} file(s) written under {out}")
+    typer.echo(f"open {paths[0]}")
 
 
 @app.command("llm-extract")

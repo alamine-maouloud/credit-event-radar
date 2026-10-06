@@ -474,3 +474,23 @@ log; Teams and e-mail are sent only with `--send` and when .env names a webhook 
 host, never by default. The viewer (P2) and the committee note (P3) consume the same
 object.
 
+## ADR-023 · A minimal viewer over the Alert object, two universes never mixed (Phase P2, 2026-10-07)
+
+The viewer is Streamlit, four screens and no more: a dashboard (counts, latest alerts,
+the routed model per family with its reason), the watchlist, the alerts and the event
+detail. The event detail is the screen that matters: the badge, the title, "Why this
+priority?" with each triggered rule and its reason, the rating state after the action,
+the provenance lines (decided by the rules engine, composite never used, the LLM never
+decides), the evidence as verbatim passages opened in their source context with the
+passage highlighted, the sources with their hashes, the model provenance and the audit
+trail. It reads the database only, through one data layer shared with the static export
+(`radar export-html`), the portable fallback that needs no server and serves the README
+captures.
+
+The live watchlist (Volkswagen, TRATON, OMV) and the historical stress cases (public
+filings of issuers outside the watchlist, used as controls for the detectors) are two
+sections everywhere, from the universe tags, so that no control issuer can be read as a
+position. The composite shown on the watchlist is the structural one from the seed, with
+its basis ("seed, not signed off" until rows are GOLDEN); it is metadata and never a rule
+input (ADR-001).
+

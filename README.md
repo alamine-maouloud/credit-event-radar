@@ -67,6 +67,8 @@ radar llm-extract --events --kind covenant                  # covenant statement
 radar llm-extract --events --kind going_concern          # going concern (flag on a stated doubt only; routed to Terra)
 radar alert <event_id>                                      # Alert object rendered locally: outputs/alerts/<date>/<event_id>.{json,html,card.json}
 radar alert --all                                           # every decided event with a priority; --send posts Teams/e-mail only when .env is configured
+radar viewer                                                # Streamlit viewer: dashboard, watchlist (live apart from historical cases), alerts, event detail
+radar export-html --out outputs/site                        # static HTML fallback of the viewer, no server
 radar llm-apply                                             # apply VALID statements, decide again, audit before/after
 ```
 

@@ -172,7 +172,9 @@ class Alert(BaseModel):
         return UNIVERSE_LABELS[self.universe]
 
 
-def _universe(issuer: Issuer | None) -> IssuerUniverse:
+def universe_of(issuer: Issuer | None) -> IssuerUniverse:
+    """Live watchlist, historical stress case or other, from the universe tags; the two
+    universes are never mixed in what an analyst sees."""
     tags = set(issuer.tags) if issuer else set()
     if "demo_watchlist" in tags:
         return "live_watchlist"
@@ -373,7 +375,7 @@ def build_alert(
         decision_status=decision.decision_status,
         issuer_id=event.issuer_id,
         issuer_name=issuer.name if issuer else event.issuer_id,
-        universe=_universe(issuer),
+        universe=universe_of(issuer),
         event_id=event.event_id,
         family=event.family,
         event_type=event.event_type,
