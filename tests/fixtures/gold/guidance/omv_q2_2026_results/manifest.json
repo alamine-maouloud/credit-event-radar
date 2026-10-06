@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/en/media/press-releases/2026/260731-omv-achieves-a-strong-clean-ccs-operating-result-of-eur-1point7-bn-in-the-second-quarter-of-2026",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:08:31.693895+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "d737604ac35226c170bd6a840ffe2da70f2ed8c6d4b9ebb4f0a3c72ac9abd5d0",
+  "raw_size_bytes": 313792,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "092bc28614fb8407180276207b47403da64ec2841443f532983e7448eeeaf07d",
+  "normalized_chars": 179,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "omv_press_releases",
+    "kind": "sitemap",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-07-31"
+  },
+  "title": "OMV achieves a strong clean CCS Operating Result of EUR 1.7 bn in the second quarter of 2026",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-07-31",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "second quarter"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

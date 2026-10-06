@@ -1,0 +1,32 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://traton.com/en/newsroom/press-releases/traton-group-records-total-unit-sales-of-around-vehicles-in-a-weak-market-environment.html",
+  "content_type": "text/html;charset=UTF-8",
+  "retrieved_at": "2026-10-06T15:08:20.161869+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "5a7a26140fe885bc37b1ecd6a4b55dbf624ec543d2009b454deb5ccc19578252",
+  "raw_size_bytes": 77457,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "76dbc85fbf31a6fadaff6e46341f83d0ba7f74fb492d4ffa2ccdc6dbc1ec8319",
+  "normalized_chars": 3985,
+  "extra": {
+    "content_type": "text/html;charset=UTF-8",
+    "source_id": "traton_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-01-19"
+  },
+  "title": "TRATON GROUP records total unit sales of ...",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [],
+    "decisions": [],
+    "outcome": "NO_EVENT"
+  },
+  "issuer_id": "TRATON"
+}

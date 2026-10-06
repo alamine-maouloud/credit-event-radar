@@ -1,0 +1,52 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://traton.com/en/newsroom/press-releases/traton-group-performed-well-in-the-first-quarter-of-2026-despite-special-items-and-increased-incoming-orders.html",
+  "content_type": "text/html;charset=UTF-8",
+  "retrieved_at": "2026-10-06T15:08:11.651531+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "5dfb3233f35f9a81d08b153c30352027e6b13d19c55a1bc3e244f064335b838a",
+  "raw_size_bytes": 86870,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "6e29c259055f0e9f43185096a7fe9de7e0a626e16a86c9f03dcd16a0f02c2720",
+  "normalized_chars": 7788,
+  "extra": {
+    "content_type": "text/html;charset=UTF-8",
+    "source_id": "traton_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-04-28"
+  },
+  "title": "TRATON GROUP performed well in the first quarter",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-04-28",
+        "fields": {
+          "guidance_status": "reaffirmed",
+          "flags": [],
+          "period": "first quarter"
+        },
+        "n_spans": 2
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": "P3",
+        "triggered": [
+          "ERN-04"
+        ]
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "TRATON"
+}

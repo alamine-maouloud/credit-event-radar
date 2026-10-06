@@ -1,0 +1,32 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.volkswagen-group.com/en/press-releases/volkswagen-group-makes-decent-progress-in-a-difficult-environment-19924",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:07:49.502709+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "901ca9586b9873494909ab3c90911cd069ea17f4c62e4687bb6a6dc917aee2f8",
+  "raw_size_bytes": 118345,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "2b21149af26a3a38492b297145a05bf47fe4e1f3e2a23eab0140044900774e4b",
+  "normalized_chars": 11273,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "vw_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2025-10-30"
+  },
+  "title": "Volkswagen Group makes decent progress in a difficult environment",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [],
+    "decisions": [],
+    "outcome": "NO_EVENT"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

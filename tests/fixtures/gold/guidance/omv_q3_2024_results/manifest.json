@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/en/media/press-releases/2024/omv-records-group-sales-of-eur-8-6-bn-with-continuously-strong-cash-flow-in-q3-2024-amid-challenging-market-environment",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:08:48.653577+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "19a53847fde6ec00cd087fe21ac4ae20e09ce2981cf1621d28f818e13f90fa25",
+  "raw_size_bytes": 307747,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "6e3f27d304938970f856ff041c880660f54752fdb2ce6c7013582fbd632ffb52",
+  "normalized_chars": 317,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "omv_press_releases",
+    "kind": "sitemap",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": null
+  },
+  "title": "OMV records Group Sales of EUR 8.6 bn with continuously strong Cash Flow in Q3 2024 amid challenging market environment",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": null,
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "Q3"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

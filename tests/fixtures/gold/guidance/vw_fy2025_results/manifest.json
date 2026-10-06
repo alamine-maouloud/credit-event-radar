@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.volkswagen-group.com/en/press-releases/volkswagen-group-strengthens-financial-resilience-in-2025-strong-fourth-quarter-in-a-challenging-environment-20202",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:07:41.682683+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "dafb2f4235b52fc1a11ad28b71903712a2724c85ebf3ab10acf231cd9250f8a8",
+  "raw_size_bytes": 143586,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "c0e93a4d466fb5631645c22245797445877223aea58a58a436718dc9fbeb1c09",
+  "normalized_chars": 14015,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "vw_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-03-10"
+  },
+  "title": "Volkswagen Group strengthens financial resilience in 2025 – strong fourth quarter in a challenging environment",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-03-10",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "fourth quarter"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

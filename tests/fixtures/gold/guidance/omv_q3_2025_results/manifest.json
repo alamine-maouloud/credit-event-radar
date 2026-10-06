@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/en/media/press-releases/2025/251029-omv-increases-clean-ccs-operating-result-by-20percent-to-eur-1point3-bn-in-q3-2025",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:08:41.652216+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "2f55f80b0b4e1b74ca106efd24d3e479b220e8cf29f6c4ad0acfa951699bfa62",
+  "raw_size_bytes": 303082,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "87dd10b39451da6f773eaa3f4a1783f75dc56fa04b403db07646d7b44a8a43fe",
+  "normalized_chars": 247,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "omv_press_releases",
+    "kind": "sitemap",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2025-10-29"
+  },
+  "title": "OMV increases clean CCS Operating Result by 20% to EUR 1.3 bn in Q3 2025*",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2025-10-29",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "Q3"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

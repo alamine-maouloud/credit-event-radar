@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.volkswagen-group.com/en/press-releases/volkswagen-group-with-mixed-start-to-fy-2025-strong-product-momentum-and-focus-on-cost-discipline-19223",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:07:58.572453+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "fe4d5d9291d254cb4084a01f8e33e3952f56cfd0f5b5358517947c0c57dbf2fc",
+  "raw_size_bytes": 114112,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "fd92754c273153f001c461ae677f0844712b79123a22b00d318b3bcd44ff5e86",
+  "normalized_chars": 10271,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "vw_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2025-04-30"
+  },
+  "title": "Volkswagen Group with mixed start to FY 2025; strong product momentum and focus on cost discipline",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2025-04-30",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "FY 2025"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

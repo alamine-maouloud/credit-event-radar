@@ -170,7 +170,7 @@ def main() -> None:
             "extra": extra,
             "issuer_hint": issuer.id,
             "published_at": published_at,
-            "title": args.title or source.id,
+            "title": args.title or doc.title or source.id,
         }
     )
     expected = expected_extraction(doc, issuer, scales, universe, seed, rules)

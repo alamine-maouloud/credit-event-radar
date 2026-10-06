@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.volkswagen-group.com/en/press-releases/volkswagen-group-delivers-41-million-vehicles-in-the-first-half-of-the-year-order-book-for-all-electric-vehicles-in-europe-rises-by-more-than-50-percent-20515",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:07:37.300997+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "1dc14d953cfeafed63b72a1cd8550ba707534e8156aae9f9112dcb5fde45a55d",
+  "raw_size_bytes": 117175,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "34c35d575ef6a5b100923eaba4f2788b7605398ed87f750ac7bfdbbe51f96edd",
+  "normalized_chars": 10051,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "vw_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-07-10"
+  },
+  "title": "Volkswagen Group delivers 4.1 million vehicles in the first half of the year – Order book for all-electric vehicles in Europe rises by more than 50 percent",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-07-10",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "first half"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

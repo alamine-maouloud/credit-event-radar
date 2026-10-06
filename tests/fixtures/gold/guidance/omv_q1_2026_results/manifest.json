@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/en/media/press-releases/2026/260430-omv-achieves-a-clean-ccs-operating-result-of-around-eur-1-bn-in-q1-2026",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:08:34.732667+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "bccd881410fcf0533331355b0ae605831e5e51f0a4d232d448854ea19acbd701",
+  "raw_size_bytes": 313343,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "38aceb201fc06c4289ffdfa596d4f07c6fa9853f04186e673c7fbbdfd2c54bb5",
+  "normalized_chars": 241,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "omv_press_releases",
+    "kind": "sitemap",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-04-30"
+  },
+  "title": "OMV achieves a clean CCS Operating Result of around EUR 1 bn in Q1 2026",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-04-30",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "Q1"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

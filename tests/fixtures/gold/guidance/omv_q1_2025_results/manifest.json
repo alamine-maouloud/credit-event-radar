@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/en/media/press-releases/2025/250430-omv-generates-stable-group-sales-of-eur-6-2-bn-in-q1-2025-amid-a-challenging-market-environment",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:08:44.760358+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "cec64c1aef258bd9d5a631f6ceee7575b5cacee98fa767e4f3c0cefaa8e6d3d2",
+  "raw_size_bytes": 310668,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "07b73d072810d39bb6969051a6d12075666d3cc201878d3778bd1260a27da622",
+  "normalized_chars": 267,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "omv_press_releases",
+    "kind": "sitemap",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2025-04-30"
+  },
+  "title": "OMV generates stable Group Sales of EUR 6.2 bn in Q1 2025 amid a challenging market environment",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2025-04-30",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "Q1"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

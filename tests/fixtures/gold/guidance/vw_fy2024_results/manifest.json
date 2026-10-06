@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.volkswagen-group.com/en/press-releases/volkswagen-group-with-solid-fy-2024-results-and-a-robust-outlook-19043",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:08:03.605760+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "df7edfc7dd5085972da3450a1bd18f23c3bc48f5b6a887019547a4721f171367",
+  "raw_size_bytes": 166580,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "22ab34c7a036db917b31058db93c1f6bbfadb9f93821046674f949bc7b02f235",
+  "normalized_chars": 12509,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "vw_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2025-03-11"
+  },
+  "title": "Volkswagen Group with solid FY 2024 results and a robust outlook",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2025-03-11",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "FY 2024"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

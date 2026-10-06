@@ -22,3 +22,4 @@ outputs/*
 
 # Private golden fixtures (issuer and agency documents): manifests are committed, bytes are not (ADR-010)
 tests/fixtures/ir/*/document.*
+tests/fixtures/gold/**/document.*

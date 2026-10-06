@@ -1,0 +1,32 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.volkswagen-group.com/en/press-releases/volkswagen-group-deliveries-remain-stable-in-2025-20095",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:07:44.930989+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "b891d395e06ac17ed7d82dad3cf555770a137cabee5f48cea0949d487783290b",
+  "raw_size_bytes": 136691,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "27c36e7309d85910eed11924a5f3a62320b0fd5e0b2b9bbc8aaba12596f47075",
+  "normalized_chars": 10269,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "vw_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-01-20"
+  },
+  "title": "Volkswagen Group deliveries remain stable in 2025",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [],
+    "decisions": [],
+    "outcome": "NO_EVENT"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

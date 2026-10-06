@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/en/media/press-releases/2026/260204-omv-achieves-a-solid-clean-ccs-operating-result-of-eur-46-bn-for-the-full-year-2025",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:08:37.963376+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "ae8f903871e67c3894e4502e2dd690dc50eca40ddbf53e4d54c692d457faf7ce",
+  "raw_size_bytes": 313706,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "af5969d452b9a7e8b9a17a1719f8219d5f5e4f02356e315baa5ca1cf6da25e2d",
+  "normalized_chars": 268,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "omv_press_releases",
+    "kind": "sitemap",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-02-04"
+  },
+  "title": "OMV achieves a solid clean CCS Operating Result of EUR 4.6 bn for the full year 2025",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-02-04",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "full year"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

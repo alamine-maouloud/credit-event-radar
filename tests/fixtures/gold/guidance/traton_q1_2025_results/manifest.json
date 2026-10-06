@@ -1,0 +1,32 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://traton.com/en/newsroom/press-releases/after-a-modest-first-quarter-traton-group-expects-better-business-performance-in-the-second-half-of-the-year-and-remains-committed-to-targets-for-2025.html",
+  "content_type": "text/html;charset=UTF-8",
+  "retrieved_at": "2026-10-06T15:08:28.563681+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "c6499daea173132ff942f9c0423d010f2cde6f95c6ce7ae0e218d7f7ff7aa262",
+  "raw_size_bytes": 85845,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "cd4b47e48c2a7617fa3d458d9d048f9ab6320fa391017582f08458b3765fd898",
+  "normalized_chars": 7202,
+  "extra": {
+    "content_type": "text/html;charset=UTF-8",
+    "source_id": "traton_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": null
+  },
+  "title": "TRATON GROUP remains committed to targets for 2025",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [],
+    "decisions": [],
+    "outcome": "NO_EVENT"
+  },
+  "issuer_id": "TRATON"
+}

@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.volkswagen-group.com/en/press-releases/volkswagen-group-with-9-million-deliveries-after-strong-fourth-quarter-18965",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T15:08:08.573243+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "1af5f349823e879603c653b99d2cab3589588aa050911f3155be147bdcb39bf5",
+  "raw_size_bytes": 138855,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "a77e72997ed506c3c268b73516f271472aa2ce86545e0bc8b0c8db6ff59b00b3",
+  "normalized_chars": 8618,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "vw_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2025-01-14"
+  },
+  "title": "Volkswagen Group with 9 million deliveries after strong fourth quarter",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2025-01-14",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "fourth quarter"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

@@ -1,0 +1,32 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://traton.com/en/newsroom/press-releases/pm-traton-group-in-2025-with-robust-incoming-orders-in-europe.html",
+  "content_type": "text/html;charset=UTF-8",
+  "retrieved_at": "2026-10-06T15:08:17.392827+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "86b9ec4233fc1db56d419cbe6a192dd3b09ecce71eefceee5b5e50fb56d31b3e",
+  "raw_size_bytes": 96572,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "27fecf1a9544e11f7d116f1e9219c72475393994b957bef6c3fee0a3579ce242",
+  "normalized_chars": 18302,
+  "extra": {
+    "content_type": "text/html;charset=UTF-8",
+    "source_id": "traton_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-03-03"
+  },
+  "title": "TRATON GROUP in 2025 with robust incoming ...",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [],
+    "decisions": [],
+    "outcome": "NO_EVENT"
+  },
+  "issuer_id": "TRATON"
+}
