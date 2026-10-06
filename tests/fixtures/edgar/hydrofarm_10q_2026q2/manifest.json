@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/1695295/000143774926028012/hyfm20260630_10q.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T20:10:44.931727+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "a1dc6f6a700c7cc2501e24d1161f7ad466d9835f9c9e749da344c5958292f91c",
+  "raw_size_bytes": 1511924,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "180f3e871a9c7cb3464a0a5d674d16ecfc1eb241eaf1bb0b6847d5d59eb221b8",
+  "normalized_chars": 145333,
+  "extra": {
+    "cik": "0001695295",
+    "accession_number": "0001437749-26-028012",
+    "primary_document": "hyfm20260630_10q.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-14"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "HYDROFARM"
+}

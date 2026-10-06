@@ -366,3 +366,66 @@ issuers:
     principal_division: Company excluding Ford Credit
     segments: ["Ford Credit", "Ford Blue", "Ford Model e", "Ford Pro"]
     notes: Liquidity holdout V2 document only (10-Q 2026). Private fixture bytes.
+  # Liquidity holdout V3 (2026-10-06): the final blind test, chosen from EDGAR metadata only.
+  - id: COMPASS_DIVERSIFIED
+    name: Compass Diversified
+    legal_entity: Compass Diversified Holdings
+    aliases: ["Compass Diversified Holdings", "Compass Diversified", "CODI"]
+    sector: diversified
+    country: "US"
+    sec_cik: "0001345126"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v3]
+    rating_status: unverified
+    notes: Liquidity holdout V3 document only (10-Q 2026). Private fixture bytes.
+  - id: HYDROFARM
+    name: Hydrofarm
+    legal_entity: Hydrofarm Holdings Group, Inc.
+    aliases: ["Hydrofarm Holdings Group, Inc.", "Hydrofarm Holdings", "HYFM"]
+    sector: industrial
+    country: "US"
+    sec_cik: "0001695295"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v3]
+    rating_status: unverified
+    notes: Liquidity holdout V3 document only (10-Q 2026). Private fixture bytes.
+  - id: PACCAR
+    name: PACCAR
+    legal_entity: PACCAR Inc
+    aliases: ["PACCAR Inc", "Paccar", "PCAR"]
+    sector: automotive
+    country: "US"
+    sec_cik: "0000075362"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v3]
+    rating_status: unverified
+    segments: ["PACCAR Financial Services", "Financial Services"]
+    notes: Liquidity holdout V3 document only (10-Q 2026). Private fixture bytes.
+  - id: CUMMINS
+    name: Cummins
+    legal_entity: Cummins Inc.
+    aliases: ["Cummins Inc.", "Cummins Inc", "CMI"]
+    sector: industrial
+    country: "US"
+    sec_cik: "0000026172"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v3]
+    rating_status: unverified
+    notes: Liquidity holdout V3 document only (10-Q 2026). Private fixture bytes.
+  - id: GENERAL_MOTORS
+    name: General Motors
+    legal_entity: General Motors Company
+    aliases: ["General Motors Company", "General Motors Co", "GM"]
+    sector: automotive
+    country: "US"
+    sec_cik: "0001467858"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v3]
+    rating_status: unverified
+    segments: ["GM Financial", "Cruise", "GM International", "GM North America"]
+    notes: Liquidity holdout V3 document only (10-Q 2026). Private fixture bytes.

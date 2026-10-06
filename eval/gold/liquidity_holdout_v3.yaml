@@ -1,0 +1,108 @@
+# Liquidity holdout V3, the final blind test (2026-10-06). Five filings chosen from EDGAR
+# metadata only, never read before these labels; prompt, schema, validator, polarity rules and
+# labels are frozen with the set. After V3 the liquidity tuning stops: remaining errors are
+# documented as limits. Distribution as found: one real problem, two stable issuers, two
+# documents with stress vocabulary (forbearance, deleveraging, risk factors) but no current
+# liquidity deterioration statement.
+version: "1.0"
+documents:
+  - gold_id: H3-HYFM
+    fixture: tests/fixtures/edgar/hydrofarm_10q_2026q2
+    split: holdout
+    expected_flag: true
+    notes: Substantial doubt about the going concern, event of default on the term loan, $6.6 million of cash against a $108 million working capital deficit. The plans to improve liquidity assert nothing about the current state.
+    statements:
+      - status: concern
+        evidence_quote: "The Company has incurred recurring operating losses, negative cash flows from operations, significant debt obligations due within the next twelve months due to an event of default on the Company's outstanding Term Loan (as defined below) and is not currently in compliance with certain Nasdaq listing requirements, including the minimum stockholders' equity and minimum bid price requirements. These conditions and events, considered in the aggregate, raise substantial doubt about the Company’s ability to continue as a going concern."
+      - status: concern
+        evidence_quote: "We have incurred recurring operating losses, negative cash flows from operations, and have significant debt obligations due within the next twelve months. These conditions and events, considered in the aggregate, raise substantial doubt about our ability to continue as a going concern."
+      - status: mentioned
+        metric_label: "cash, cash equivalents and restricted cash"
+        value: 6.6
+        unit: USD_MN
+        evidence_quote: "As of June 30, 2026, we had $6.6 million in cash, cash equivalents and restricted cash and a working capital deficit of $108.1 million."
+      - status: mentioned
+        evidence_quote: "To improve liquidity the Company is negotiating with lenders and key vendors, and is pursuing additional financing or strategic alternatives"
+      - status: mentioned
+        evidence_quote: "To improve liquidity, we are negotiating with lenders and key vendors, and are pursuing additional financing or strategic alternatives including the sale of assets or businesses, or through an offering of equity securities."
+      - status: mentioned
+        evidence_quote: "Although we believe such plans, if executed, should provide us with liquidity to meet our needs, successful completion of such plans is dependent on numerous factors, many of which are beyond our control"
+      - status: mentioned
+        evidence_quote: "The Company and its Board of Directors are exploring strategic alternatives to strengthen the Company’s liquidity and capital structure."
+    ineligible:
+      - reason: not_liquidity
+        evidence_quote: "These requirements could severely limit the market liquidity of our common stock and the ability of our stockholders to sell our common stock in the secondary market."
+
+  - gold_id: H3-CODI
+    fixture: tests/fixtures/edgar/compass_diversified_10q_2026q2
+    split: holdout
+    expected_flag: false
+    notes: Stress vocabulary (2025 forbearance, deleveraging, amended covenants) but no statement of a current liquidity deterioration; the "ability to maintain adequate liquidity ... will depend on" sentence is a worry in substance that carries none of the frozen validator's markers, labelled mentioned and recorded as a limit.
+    statements:
+      - status: mentioned
+        evidence_quote: "Our near-term focus remains on strengthening the balance sheet, maintaining liquidity, and executing our day-to-day operating plan across our subsidiaries."
+      - status: mentioned
+        evidence_quote: "We believe the Sixth Amendment provides additional time and flexibility to execute our deleveraging and liquidity plans; however, our ability to maintain adequate liquidity and comply with the amended covenants will depend on our operating performance, cash generation, asset monetization activity and other factors discussed in this Form 10-Q."
+      - status: mentioned
+        evidence_quote: "These fair value adjustments do not impact the Company’s cash flows or liquidity."
+      - status: mentioned
+        evidence_quote: "Additional risks and uncertainties not currently known to us or that we currently believe are immaterial also may impair our business, including our results of operations, liquidity and financial condition."
+    ineligible: []
+
+  - gold_id: H3-PCAR
+    fixture: tests/fixtures/edgar/paccar_10q_2026q2
+    split: holdout
+    expected_flag: false
+    statements:
+      - status: stable
+        evidence_quote: "The Company believes its cash balances and investments, collections on existing finance receivables, committed bank facilities and current investment-grade credit ratings of A+/A1 will continue to provide it with sufficient resources"
+      - status: stable
+        evidence_quote: "The Company believes its various sources of liquidity, including committed bank facilities, would continue to provide it with sufficient funding resources to service its maturing debt obligations."
+      - status: mentioned
+        evidence_quote: "Total cash and marketable securities are primarily intended to provide liquidity while preserving capital."
+      - status: mentioned
+        evidence_quote: "These credit facilities are maintained primarily to provide backup liquidity for commercial paper borrowings and maturing medium-term notes."
+      - status: mentioned
+        evidence_quote: "In such circumstances, the Company would be exposed to liquidity risk to the degree that the timing of debt maturities differs from the timing of receivable collections from customers."
+    ineligible: []
+
+  - gold_id: H3-CMI
+    fixture: tests/fixtures/edgar/cummins_10q_2026q2
+    split: holdout
+    expected_flag: false
+    statements:
+      - status: stable
+        evidence_quote: "Our financial condition and liquidity remain strong."
+      - status: stable
+        evidence_quote: "As a result, we do not anticipate any local liquidity restrictions to preclude us from funding our operating needs with local resources."
+      - status: mentioned
+        evidence_quote: "We typically generate significant ongoing cash flow and cash provided by operations is generally our principal source of liquidity."
+      - status: mentioned
+        evidence_quote: "These revolving credit facilities are maintained primarily to provide backup liquidity for our commercial paper borrowings and general corporate purposes."
+      - status: mentioned
+        evidence_quote: "Various assets and liabilities, including short-term debt, can fluctuate significantly from month-to-month depending on short-term liquidity needs."
+    ineligible: []
+
+  - gold_id: H3-GM
+    fixture: tests/fixtures/edgar/general_motors_10q_2026q2
+    split: holdout
+    expected_flag: false
+    notes: Strong Company liquidity; GM Financial is a segment whose liquidity is not the Group's statement.
+    statements:
+      - status: stable
+        evidence_quote: "We believe our current levels of cash, cash equivalents, marketable debt securities, available borrowing capacity under our credit facilities, and other liquidity actions currently available to us are sufficient to meet our liquidity requirements in the short- and long-term."
+      - status: mentioned
+        evidence_quote: "We also maintain access to the capital markets and may issue debt or equity securities, which may provide an additional source of liquidity."
+      - status: mentioned
+        evidence_quote: "We have substantial cash requirements going forward, which we plan to fund through our total available liquidity, cash flows from operating activities, and additional liquidity measures, if determined to be necessary."
+      - status: mentioned
+        evidence_quote: "Our liquidity plans are subject to a number of risks and uncertainties"
+      - status: mentioned
+        evidence_quote: "We have not significantly changed the management of our liquidity, including our allocation of available liquidity, our portfolio composition, and our investment guidelines since December 31, 2025."
+    ineligible:
+      - reason: segment
+        evidence_quote: "At June 30, 2026, available liquidity exceeded GM Financial's liquidity targets."
+      - reason: segment
+        evidence_quote: "GM Financial continues to monitor and evaluate opportunities to optimize its liquidity position and the mix of its debt between secured and unsecured debt."
+      - reason: segment
+        evidence_quote: "GM Financial generally targets liquidity levels to support at least six months of GM Financial's expected net cash outflows, including new originations, without access to new debt financing transactions or other capital markets activity."

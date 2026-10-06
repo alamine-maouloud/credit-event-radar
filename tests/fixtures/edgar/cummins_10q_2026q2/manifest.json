@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/26172/000002617226000029/cmi-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T20:10:48.430853+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "742900b03f176fc00934b11a2c0c445f7c4dd2a2e6a3b71dccd66616375a8e98",
+  "raw_size_bytes": 2797413,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "ba7dd2d9801287a6e29eab9d383aeb8b5957d6e1e4f9e2616b95a2ff93abc821",
+  "normalized_chars": 170856,
+  "extra": {
+    "cik": "0000026172",
+    "accession_number": "0000026172-26-000029",
+    "primary_document": "cmi-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-04"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "CUMMINS"
+}

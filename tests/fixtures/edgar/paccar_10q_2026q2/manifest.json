@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/75362/000119312526323642/pcar-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T20:10:46.524572+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "9788f20fd5b954d8b04f82e31edf55a8ee2eb1ffe57f9e1aca0bd163dee10fee",
+  "raw_size_bytes": 7450616,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "03ab3b218ae449171edd32674ab9fa151bfbc6e3a9ce689ab14603b987aa5479",
+  "normalized_chars": 160939,
+  "extra": {
+    "cik": "0000075362",
+    "accession_number": "0001193125-26-323642",
+    "primary_document": "pcar-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-07-29"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "PACCAR"
+}

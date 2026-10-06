@@ -89,6 +89,11 @@ def test_universe_unverified_issuers_have_notes(universe):
         "CATERPILLAR",
         "DEERE",
         "FORD_MOTOR",
+        "COMPASS_DIVERSIFIED",
+        "HYDROFARM",
+        "PACCAR",
+        "CUMMINS",
+        "GENERAL_MOTORS",
     }
     assert all(i.notes for i in unverified)
 

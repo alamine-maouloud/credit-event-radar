@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/1467858/000146785826000051/gm-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T20:10:50.010963+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "fc648c8d881a898bf7fae42b620b44d355ed0fb507db835c9cd318debfa43115",
+  "raw_size_bytes": 3002145,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "a4d92e96ca45128211f043c2c1efa48211e2996505c09684869397175752447b",
+  "normalized_chars": 202265,
+  "extra": {
+    "cik": "0001467858",
+    "accession_number": "0001467858-26-000051",
+    "primary_document": "gm-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-07-21"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "GENERAL_MOTORS"
+}
