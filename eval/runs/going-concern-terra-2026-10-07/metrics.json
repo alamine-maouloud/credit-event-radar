@@ -1,0 +1,101 @@
+{
+  "dev": {
+    "documents": 14,
+    "statements": {
+      "gold": 107,
+      "predicted": 41,
+      "predicted_valid": 40,
+      "matched": 31,
+      "precision": 0.775,
+      "recall": 0.2897196261682243,
+      "status_accuracy": 1.0
+    },
+    "negative_statements": {
+      "gold": 56,
+      "predicted_valid": 28,
+      "matched": 21,
+      "precision": 0.75,
+      "recall": 0.375
+    },
+    "document_flag": {
+      "gold_true": 7,
+      "predicted_true": 7,
+      "true_positives": 7,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 7
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "HYPOTHETICAL_RISK": 1
+    }
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 19,
+      "predicted": 15,
+      "predicted_valid": 15,
+      "matched": 12,
+      "precision": 0.8,
+      "recall": 0.631578947368421,
+      "status_accuracy": 0.9166666666666666
+    },
+    "negative_statements": {
+      "gold": 10,
+      "predicted_valid": 10,
+      "matched": 8,
+      "precision": 0.8,
+      "recall": 0.8
+    },
+    "document_flag": {
+      "gold_true": 2,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 3
+    },
+    "ineligible_proposed": 0,
+    "rejections": {}
+  },
+  "all": {
+    "documents": 19,
+    "statements": {
+      "gold": 126,
+      "predicted": 56,
+      "predicted_valid": 55,
+      "matched": 43,
+      "precision": 0.7818181818181819,
+      "recall": 0.3412698412698413,
+      "status_accuracy": 0.9767441860465116
+    },
+    "negative_statements": {
+      "gold": 66,
+      "predicted_valid": 38,
+      "matched": 29,
+      "precision": 0.7631578947368421,
+      "recall": 0.4393939393939394
+    },
+    "document_flag": {
+      "gold_true": 9,
+      "predicted_true": 9,
+      "true_positives": 9,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 10
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "HYPOTHETICAL_RISK": 1
+    }
+  },
+  "cost": {
+    "total_usd": 1.837658,
+    "input_tokens": 858974,
+    "output_tokens": 20480
+  }
+}

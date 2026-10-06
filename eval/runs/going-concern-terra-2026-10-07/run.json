@@ -1,0 +1,43 @@
+{
+  "run_id": "going-concern-terra-2026-10-07",
+  "started_at": "2026-10-06T23:08:30.555752+00:00",
+  "finished_at": "2026-10-06T23:12:03.584696+00:00",
+  "provider": "openai",
+  "model_id": "gpt-5.6-terra",
+  "resolved_models": [
+    "gpt-5.6-terra"
+  ],
+  "reasoning_effort": "low",
+  "temperature": 0.0,
+  "max_output_tokens": 32768,
+  "prompt_id": "extraction.going_concern",
+  "prompt_version": "1.0.0",
+  "prompt_content_hash": "c03bef21404eae5af759992ee41e919e0ea5e94fa3070c5df0b278ece37319e9",
+  "kind": "going_concern",
+  "schema_version": "going_concern-1.0",
+  "extractor_version": "llm-going-concern-1.0",
+  "gold_path": "eval/gold/going_concern_v1.jsonl",
+  "gold_labels_sha256": "31051e2e42abd0f822f7453443ab2fcf78eadcd582c9d927e1c58f7de83e9928",
+  "gold_lock_sha256": "92aca3953cfa3d0f54ec59defebd6d7006a8d043dabf230f3acf131a28980719",
+  "n_documents": 19,
+  "statuses": {
+    "cached": 1,
+    "ok": 18
+  },
+  "total_cost_usd": 1.837658,
+  "estimated_cost_usd": 9.818859999999999,
+  "budget_limit_usd": 5.0,
+  "budget_remaining_usd": 3.1623419999999998,
+  "input_tokens": 858974,
+  "output_tokens": 20480,
+  "dry_run": false,
+  "limit": null,
+  "model_selection": {
+    "kind": "going_concern",
+    "role": "explicit",
+    "name": "openai_terra",
+    "model_id": "gpt-5.6-terra",
+    "provider": "openai",
+    "reason": "alternative 'openai_terra' requested on the command line, routing bypassed"
+  }
+}
