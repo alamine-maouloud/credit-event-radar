@@ -131,3 +131,41 @@ class SecHtmlNormalizer:
 
     def normalize(self, raw: bytes) -> str:
         return normalize_sec_html(raw)
+
+
+PDF_NORMALIZER_VERSION = "pdf-text-1.0"
+
+
+def pdf_to_text(raw: bytes) -> str:
+    """Page texts joined by newlines, before whitespace normalisation (PyMuPDF)."""
+    import pymupdf
+
+    with pymupdf.open(stream=raw, filetype="pdf") as document:
+        pages = [page.get_text("text") for page in document]
+    return "\n".join(pages)
+
+
+def normalize_pdf(raw: bytes) -> str:
+    return normalize_text(pdf_to_text(raw))
+
+
+class PdfNormalizer:
+    """Normaliser for PDF documents. Output depends on the PyMuPDF text extractor, so the
+    version string is bumped whenever the library or the rules change."""
+
+    version = PDF_NORMALIZER_VERSION
+
+    def normalize(self, raw: bytes) -> str:
+        return normalize_pdf(raw)
+
+
+def is_pdf(raw: bytes) -> bool:
+    return raw[:5] == b"%PDF-"
+
+
+def normalizer_for(content_type: str | None, raw: bytes) -> Normalizer:
+    """Pick the normaliser from the content type, falling back to sniffing the bytes."""
+    media = (content_type or "").split(";")[0].strip().lower()
+    if media == "application/pdf" or is_pdf(raw):
+        return PdfNormalizer()
+    return SecHtmlNormalizer()
