@@ -11,15 +11,22 @@ investment recommendation.
 
 ## Status
 
-Phase 1 (foundations) in progress. See `CLAUDE.md` for the phase checklist and `docs/SPEC.md`
-for the full specification.
+Phases 1 and 2 done: schemas, rating scales, hand-verified seed, EDGAR ingestion with raw
+snapshots and hashes, deterministic rating-action extraction and an audit trail. The
+historical control case (a real 10-Q where S&P moved an issuer from BBB- to BB+) runs end to
+end offline without any LLM. See `CLAUDE.md` for the phase checklist, `docs/SPEC.md` for the
+specification and `docs/ARCHITECTURE.md` for the decisions.
 
 ## Quick start
 
 ```bash
 uv sync
 cp .env.example .env
-uv run radar version
+uv run radar init-db
+uv run radar seed
+uv run radar ingest --since 2026-01-01 --source fixtures
+uv run radar process
+uv run radar events
 uv run pytest -q && uv run ruff check .
 ```
 

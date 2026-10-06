@@ -59,6 +59,10 @@ credit-event-radar/
 ├── src/radar/
 │   ├── models.py              # schémas pydantic
 │   ├── config.py              # chargement validé des YAML et du seed (seul I/O de la Phase 1)
+│   ├── normalize.py           # HTML SEC → texte, normaliseur versionné (offsets des spans)
+│   ├── snapshot.py            # brut sur disque, hash des octets et du texte, RawDocument
+│   ├── pipeline.py            # ingest / process, journal d'audit à chaque étape
+│   ├── dedup.py               # clé métier + fenêtre de dates
 │   ├── db.py                  # schéma SQLite + accès
 │   ├── ratings.py             # échelles, notches, notation composite (pur)
 │   ├── connectors/            # base.py, edgar.py, ir_feeds.py, news_rss.py
@@ -95,8 +99,11 @@ uv sync
 cp .env.example .env
 uv run radar init-db
 uv run radar seed                          # universe.yaml + ratings_seed.csv
-uv run radar ingest --since 2026-09-01
-uv run radar process                       # extraction → matérialité → contexte → vérification
+uv run radar ingest --since 2026-09-01     # EDGAR, User-Agent déclaré obligatoire dans .env
+uv run radar ingest --since 2026-01-01 --source fixtures   # rejoue les fixtures golden hors ligne
+uv run radar process                       # rattachement → extraction → dédup → audit (matérialité en Phase 4)
+uv run radar events                        # liste des événements stockés
+uv run radar show-event <id>               # champs, passages sources, hashes, trace d'audit
 uv run radar alert --dry-run               # rendu local HTML/JSON, aucun envoi
 uv run radar note --event-id <id> --lang fr
 uv run radar eval --models extract_a,extract_b
@@ -126,7 +133,7 @@ uv run pytest -q && uv run ruff check .
 ## Statut
 
 - [x] Phase 1 · Fondations : repo, schémas, échelles de notation, notation composite, config, seeds (2026-10-06)
-- [ ] Phase 2 · Ingestion : EDGAR, flux IR, news RSS, snapshots, hash, déduplication, extraction structurée déterministe
+- [x] Phase 2 · Ingestion : EDGAR, snapshots, hash, déduplication, extraction structurée déterministe, audit, P1 Harley de bout en bout sans LLM (2026-10-06). Flux IR et news RSS reportés en Phase 2b, après le moteur de matérialité (ADR-004)
 - [ ] Phase 4 · Moteur de matérialité : rules.yaml, modificateurs, explication « Why? » (exécutée avant la Phase 3, ADR-004)
 - [ ] Phase 3 · Extraction LLM : schémas stricts + validation des spans
 - [ ] Phase 5 · Contexte, vérification des claims, notes de comité FR/EN

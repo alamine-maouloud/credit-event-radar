@@ -67,3 +67,33 @@ The first end-to-end target is a real historical rating action ingested from a p
 filing, extracted deterministically, scored P1 by RAT-01, with its source attached and an
 audit log entry, without any LLM call. Model identifiers for the second LLM backend stay
 `TO_CONFIRM` until the benchmark is built.
+
+## ADR-005 · Evidence windows are typed, automatic extraction starts with sentences
+
+Date: 2026-10-06. Status: accepted.
+
+**Context.** Financial filings state rating actions in sentences, but also in tables with
+footnotes that refer to a row. A rule such as "agency, old rating and new rating in the
+same sentence" is precise but will miss table-plus-footnote cases.
+
+**Decision.** `EvidenceSpan` carries `evidence_type` (`sentence`, `table_row`, `footnote`)
+and `extractor_version`. Version `structured-rating-1.0` only emits `sentence` spans and
+requires the agency and the "from X to Y" transition inside one sentence, with labels
+validated against `rating_scales.yaml`, a direction-consistent verb, and no "short-term"
+wording between the verb and the transition. Table rows and footnotes are future
+extractor versions, not a model change.
+
+**Consequences.** Every rejected candidate is written to the audit log with its reason
+(`no_action_verb`, `short_term_rating`, `label_not_in_scale`, `verb_direction_mismatch`),
+so misses are visible instead of silent. The Harley-Davidson 10-Q, whose action sits in a
+footnote sentence under the ratings table, is extracted by the sentence rule.
+
+## ADR-006 · Two hashes per document
+
+Date: 2026-10-06. Status: accepted.
+
+`content_hash` is the SHA-256 of the raw bytes exactly as delivered; `doc_id` is the
+SHA-256 of the normalised text produced by `normalizer_version`. Deduplication of
+documents uses the raw hash. A change of normaliser changes `doc_id` and every stored
+offset, which is why `normalizer_version` is recorded on each document and checked by the
+fixture tests.
