@@ -167,11 +167,8 @@ issuers:
         path_prefix: /en/investors/news-and-events/news/
         document_type: press_release
         note: No RSS on omv.com; the official sitemap carries lastmod (robots.txt allows all)
-      - id: omv_press_releases
-        kind: sitemap
-        url: https://www.omv.com/sitemap.xml
-        path_prefix: /en/media/press-releases/
-        document_type: press_release
+      # /en/media/press-releases/ pages render their body in JavaScript (only the title is in the
+      # HTML, checked 2026-10-06): not usable, the investor news pages above carry the same results.
       - id: omv_debt_ratings_page
         kind: page
         url: https://www.omv.com/en/investors/omv-on-the-capital-markets/debt-and-ratings

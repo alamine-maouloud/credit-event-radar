@@ -6,7 +6,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTENSIONS = {".py", ".md", ".yaml", ".yml", ".csv", ".toml", ".txt", ".jsonl", ".json", ".html"}
-SKIP_DIRS = {".git", ".venv", "data/raw", "outputs", ".pytest_cache", ".ruff_cache"}
+# eval/gold holds verbatim quotes of source documents (gold labels): their punctuation is the
+# source's, not ours, so the style rule does not apply there.
+SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "data/raw",
+    "outputs",
+    ".pytest_cache",
+    ".ruff_cache",
+    "eval/gold",
+    "tests/fixtures",
+}
 FORBIDDEN = {chr(0x2014): "em dash", chr(0x2013): "en dash"}
 
 
