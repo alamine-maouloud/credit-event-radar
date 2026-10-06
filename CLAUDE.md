@@ -69,7 +69,7 @@ credit-event-radar/
 │   ├── resolve.py             # rattachement document → émetteur
 │   ├── extract/               # structured.py (phrases), ratings_table.py, issuance.py, earnings.py, dates.py, spans.py ; llm_extract.py en Phase 3
 │   ├── materiality/           # engine.py, state.py, explain.py (pur, sans I/O ni LLM)
-│   ├── llm/                   # provider.py, anthropic_client.py, openai_client.py, cache.py
+│   ├── llm/                   # provider.py, openai_client.py, anthropic_client.py, schemas.py, validate.py, compute.py, budget.py, pricing.py, cache.py, prompts.py, runner.py
 │   ├── context/               # fundamentals.py, summarize.py
 │   ├── verify/                # claims.py
 │   ├── notes/                 # committee.py + templates Jinja2
@@ -140,7 +140,7 @@ uv run pytest -q && uv run ruff check .
 - [x] Phase 2 · Ingestion : EDGAR, snapshots, hash, déduplication, extraction structurée déterministe, audit, P1 Harley de bout en bout sans LLM (2026-10-06). Flux IR et news RSS reportés en Phase 2b, après le moteur de matérialité (ADR-004)
 - [x] Phase 4 · Moteur de matérialité : rules.yaml v1.2, 19 règles et 3 modificateurs testés avant implémentation, état des notations à D anti look-ahead, observations de tableaux, `show-event --explain`, Harley P1 par RAT-01 et RAT-02 (2026-10-06)
 - [x] Phase 2b · Sources IR réelles (Volkswagen, TRATON, OMV) : adaptateur générique configuré par émetteur (rss, sitemap, liens, page), robots.txt et cadence, PDF, profils de tableaux, extracteurs émissions et résultats, NO_EVENT et UNREADABLE_TEXT, fixtures privées à manifeste public (2026-10-06) ; 2b.1 : garde d'entité et références historiques (ADR-013), phase gelée
-- [ ] Phase 3 · Extraction LLM : schémas stricts + validation des spans
+- [~] Phase 3 · Extraction LLM : 3.1 socle fait (provider à deux backends, schéma strict guidance, validateur à deux niveaux, budget à arrêt dur, cache complet, bibliothèque de prompts, ADR-014, 2026-10-06, aucun appel réel) ; 3.2 guidance sur jeu gold figé, 3.3 benchmark, 3.4 autres champs
 - [ ] Phase 5 · Contexte, vérification des claims, notes de comité FR/EN
 - [ ] Phase 6 · Alertes (Teams, email, local) et viewer Streamlit
 - [ ] Phase 7 · Évaluation : jeu gold, métriques, comparaison de LLM, rapport auto-généré

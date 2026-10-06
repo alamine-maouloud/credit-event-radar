@@ -218,3 +218,35 @@ ninety days before the document date, is classified ``historical_reference`` and
 becomes an event; a report may legitimately describe an action taken a few weeks earlier.
 The document date comes from the publication date, else the header, else the URL.
 Normalisers and hashes are unchanged.
+
+## ADR-014 · LLM proposes, code validates, rules decide
+
+Date: 2026-10-06. Status: accepted (Phase 3.1).
+
+**Context.** Deterministic extractors leave real documents without priority when the
+information is unstructured (a guidance range in prose). An LLM can read it, but must not
+become a second engine, and a false extraction must be traceable to its layer.
+
+**Decision.** The LLM only extracts fields that the deterministic layer could not, with
+verbatim evidence and offsets, under a strict closed JSON schema (no confidence field, no
+priority, no summary). The model reads raw bounds and units; Python computes midpoints,
+deltas and direction, and the model's own direction claim is recorded for comparison only.
+Every statement passes a two-level validator: text match (exact at the offsets, exact
+unique elsewhere, or rapidfuzz partial ratio of at least 90, which is never sufficient
+alone) and semantic field validation (every number in the quote, unit tokens consistent,
+metric label present and consistent with the metric, numbers in the sentence that names
+the metric, no other legal entity as subject, no date after the document, plausible
+period). Any failed check rejects and is written to the audit log.
+
+Providers implement one interface (``complete(request)``) and record the id used and the
+model name the API resolved to. Prices live in ``config/llm_pricing.yaml`` (versioned);
+the run budget (``LLM_RUN_BUDGET_USD``) reserves the estimated cost before each call and
+refuses the call when it would exceed the limit, then settles the actual cost in a ledger
+(estimated before, actual after, cumulative, remaining). The cache key covers the
+normalised document hash, extractor version, provider, exact model id, prompt version,
+schema version and reasoning effort. The document text is passed to the model as data and
+the prompt says so; nothing the model returns is executed.
+
+Benchmark models: gpt-5.6-terra (main) and gpt-5.6-sol (high-quality reference) as given
+by the project owner on 2026-10-06; the Anthropic id stays TO_CONFIRM until the official
+catalogue is checked on the day of the first real call, which the providers enforce.
