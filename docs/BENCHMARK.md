@@ -384,3 +384,64 @@ affect or impact" with no present-tense deterioration is not a worry, and the se
 splitter must not cut at a line break inside a wrapped sentence. Both go in with tests, both
 runs of V1 and V2 are re-scored from the cache, and a fresh blind holdout V3 gives the final
 test. V1 and V2 results stay as they are.
+
+### Closing rules and holdout V3, the final test (2026-10-06)
+
+Two rules were added after V2, with tests first and no prompt change: a window whose only
+negative wording is a conditional "may, could, might or would adversely affect or impact"
+is a HYPOTHETICAL_RISK (the statement stays valid as mentioned, never a flag), the
+reduction marker requires liquidity as its object, and sentence-window-1.1 no longer ends a
+window at a line break inside a wrapped sentence (text and hashes unchanged). V1 and V2
+re-scored from the cache under these rules (runs suffixed closing-rules): V2 is 5 of 5 for
+both models, V1 keeps 3 of 3 with no false flag on 17 documents for both, Sol's false flag
+on Harley-Davidson is gone. Negative statement recall drops (Terra 0.39, Sol 0.61) because
+the GoPro and Microvast sentences "would further adversely impact liquidity", labelled
+concern in gold V1, are hypothetical under the rule; the gold is not edited.
+
+Holdout V3, five filings chosen from EDGAR metadata, labelled before any call, lock
+10c407c6, distribution as found: one real problem, two stable issuers, two documents with
+stress vocabulary and no current deterioration statement.
+
+| Document | Expected | Terra | Sol |
+|---|---|---|---|
+| Hydrofarm, 10-Q 2026-08-14 (substantial doubt, event of default) | FLAG | FLAG | FLAG |
+| Compass Diversified, 10-Q 2026-08-10 (2025 forbearance, amended covenants) | NO FLAG | NO FLAG | not run |
+| PACCAR, 10-Q 2026-07-29 | NO FLAG | NO FLAG | not run |
+| Cummins, 10-Q 2026-08-04 | NO FLAG | NO FLAG | not run |
+| General Motors, 10-Q 2026-07-21 (GM Financial segment) | NO FLAG | FLAG | not run |
+
+Terra: 0.62 USD, statement precision 0.61, recall 0.42, status accuracy 0.73. Sol: the
+OpenAI account ran out of credits after the first document (HTTP 429, insufficient quota);
+the four remaining documents are provider errors in the run directory and will be run when
+credits are available, without any change in between.
+
+Reading:
+
+- The real stress case is found by both models on the right sentences (substantial doubt
+  tied to cash flows and debt due within twelve months).
+- Terra's false flag on General Motors is boilerplate: "Our liquidity plans are subject to a
+  number of risks and uncertainties, including those described in the Forward-Looking
+  Statements section", read as concern and accepted because "uncertainties" is a negative
+  marker. The closing rule handles conditional adverse effects, not this cross-reference
+  wording. By the protocol agreed before V3, it is not corrected: it is the first recorded
+  limit of Liquidity V1.
+- The Compass Diversified sentence "our ability to maintain adequate liquidity and comply
+  with the amended covenants will depend on our operating performance" is a worry in
+  substance that carries none of the validator's markers; both the gold (mentioned) and the
+  models leave it without a flag. Second recorded limit: a worry expressed as a dependency,
+  without negation or deterioration words, is invisible to the polarity check.
+
+### Liquidity V1 closed, with its limits
+
+Across V1 dev, V1 holdout, V2 and V3 under the closing rules, Terra plus the guardrails finds
+every real stress case (3 of 3, 2 of 2, 1 of 1) and sets one false flag on 24 documents
+without a problem (General Motors, boilerplate cross-reference); Sol finds every stress
+case it was run on and sets no false flag under the closing rules, at about twice the
+price, with four V3 documents still to run. The decision of Phase 3.4a stands: Terra plus
+guardrails is the default backend for liquidity_flag, Sol the challenger. Known limits,
+documented rather than tuned away: boilerplate "risks and uncertainties" cross-references
+can pass as a worry; a worry expressed as a dependency without negative words is not seen;
+quotes that include a "Going Concern" heading pass the polarity check on the heading's
+word; the per-statement precision figures understate both models because gold V1 omits
+several true worries. Further changes to the liquidity rules belong to a V2 of the gold and
+of the rules, not to this phase.
