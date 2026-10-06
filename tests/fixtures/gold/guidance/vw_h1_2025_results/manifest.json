@@ -40,8 +40,10 @@
     "decisions": [
       {
         "event_type": "earnings_release",
-        "final_priority": null,
-        "triggered": []
+        "final_priority": "P2",
+        "triggered": [
+          "ERN-03"
+        ]
       }
     ],
     "outcome": "EVENTS"

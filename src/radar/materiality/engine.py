@@ -519,6 +519,18 @@ def ern03(ctx: _Context) -> Outcome:
     reasons = []
     if metric and pct is not None and -threshold < pct < 0:
         reasons.append(f"{metric} guidance {pct:+.2f} % (below the {threshold} % threshold)")
+    raw_metric = ctx.fields.get("guidance_metric")
+    if (
+        ctx.fields.get("guidance_status") == "cut"
+        and pct is None
+        and (raw_metric is None or metric is not None)
+    ):
+        # rules 1.5: an explicit cut whose magnitude is not comparable to the percent
+        # threshold (qualitative wording, or a growth-rate range given in points)
+        reasons.append(
+            "explicit guidance cut without a comparable magnitude"
+            + (f" on {metric}" if metric else "")
+        )
     if "impairment" in ctx.flags():
         reasons.append("significant impairment flag")
     if reasons:

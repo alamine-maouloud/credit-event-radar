@@ -18,7 +18,7 @@
 # events or fundamentals only uses data whose as_of / effective_date is on or before the
 # event's effective date D. Ingestion timestamps are never used for decisions.
 
-version: "1.4"
+version: "1.5"
 changelog:
   - "1.0: initial matrix from docs/SPEC.md 9.3 and 9.4"
   - "1.1 (2026-10-06): RAT-01, RAT-02, RAT-08 and MOD-01 rewritten on agency-level ratings; the composite no longer drives any rule (ADR-001)"
@@ -177,10 +177,17 @@ rules:
     priority: P2
     direction: negative
     condition: guidance_cut_below_threshold_or_significant_impairment
-    description: Guidance cut below the threshold, or significant impairment
+    description: Guidance cut below the threshold, explicit cut without a comparable magnitude, or significant impairment
     definition: >-
       family = earnings and ((guidance_metric in {revenue, ebitda, fcf} and
-      -guidance_cut_p1_pct < guidance_change_pct < 0) or impairment in flags).
+      -guidance_cut_p1_pct < guidance_change_pct < 0) or (guidance_status = cut and
+      guidance_change_pct is null and (guidance_metric is null or guidance_metric in
+      {revenue, ebitda, fcf})) or impairment in flags). The second clause (rules 1.5) covers
+      an explicit cut whose magnitude cannot be compared to the percent threshold: a
+      qualitative wording ("in line with the previous year" after "up to 5 percent") or a
+      growth-rate range given in points (-5..+5 to -10..0). ERN-02 stays reserved to
+      relative cuts of absolute amounts at or above the threshold, or cuts the issuer
+      itself qualifies as significant.
 
   - id: ERN-04
     family: earnings

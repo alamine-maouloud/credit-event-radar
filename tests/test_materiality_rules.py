@@ -53,7 +53,7 @@ def test_decision_lists_every_rule_and_modifier(rules, scales):
     d = decide(rules, scales, rating_event("SP", "BBB-", "BB+"))
     assert [r.id for r in d.rules] == [r.id for r in rules.rules]
     assert [m.id for m in d.modifiers] == [m.id for m in rules.modifiers]
-    assert d.rules_version == "1.4"
+    assert d.rules_version == "1.5"
 
 
 # ------------------------------------------------- RAT-01 / 03 / 05 / 08 --- #
@@ -470,7 +470,7 @@ def test_provenance_fields(rules, scales):
     assert d.provenance.composite_used is False
     assert d.provenance.llm_used == "none"
     pd = d.to_priority_decision()
-    assert pd.llm_role == "none" and pd.rules_version == "1.4"
+    assert pd.llm_role == "none" and pd.rules_version == "1.5"
     assert pd.triggered_rules == ["RAT-01", "RAT-02"]
     assert any("S&P" in line or "SP" in line for line in pd.rule_details)
 
@@ -513,3 +513,21 @@ def test_non_admissible_agency_events_trigger_no_rating_rule(rules, scales):
         ev("rating", "outlook_change", agency="DBRS", old_outlook="stable", new_outlook="negative"),
     )
     assert "RAT-06" not in triggered(d2)
+
+
+@pytest.mark.parametrize(
+    "fields,expected",
+    [
+        ({"guidance_status": "cut"}, {"ERN-03"}),  # deterministic "lowers its outlook", no figure
+        ({"guidance_status": "cut", "guidance_metric": "revenue"}, {"ERN-03"}),  # qualitative cut
+        ({"guidance_status": "cut", "guidance_metric": "margin"}, set()),  # outside the scope
+        (
+            {"guidance_status": "cut", "guidance_metric": "fcf", "guidance_change_pct": -12.0},
+            {"ERN-02"},
+        ),
+        ({"guidance_status": "reaffirmed"}, {"ERN-04"}),
+    ],
+)
+def test_explicit_cut_without_comparable_magnitude_is_ern03(rules, scales, fields, expected):
+    d = decide(rules, scales, ev("earnings", "earnings_release", **fields))
+    assert triggered(d) == expected
