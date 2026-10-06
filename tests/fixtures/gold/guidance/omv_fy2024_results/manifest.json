@@ -1,15 +1,15 @@
 {
   "role": "demo_watchlist",
   "source_type": "ir_feed",
-  "source_url": "https://www.omv.com/en/investors/news-and-events/news/2025/q4-2025",
+  "source_url": "https://www.omv.com/en/investors/news-and-events/news/2025/omv-group-report-january-december-and-q4-2024",
   "content_type": "text/html; charset=utf-8",
-  "retrieved_at": "2026-10-06T15:15:55.875176+00:00",
+  "retrieved_at": "2026-10-06T15:15:44.196025+00:00",
   "raw_file": "document.htm.gz",
-  "raw_sha256": "d5502abb03418693d4836ef5804f9c3c14f7b8d1500f962145958ef7c3f7dc05",
-  "raw_size_bytes": 276660,
+  "raw_sha256": "db459d105adad5adadce6b50168a7983d0ed20ab9af783b53ec0474138910b62",
+  "raw_size_bytes": 275217,
   "normalizer_version": "ir-html-1.1",
-  "normalized_sha256": "be4a1b008df03861c45291e2d76749b2377fd6bcceb6febad58b78aba6bb172e",
-  "normalized_chars": 2385,
+  "normalized_sha256": "0d9ad11196c0c8f245d6d24769caa23c457483cc76c288d41a86d5cca658e43d",
+  "normalized_chars": 1738,
   "extra": {
     "content_type": "text/html; charset=utf-8",
     "source_id": "omv_ir_news",
@@ -19,7 +19,7 @@
     "expected_content": "html",
     "published": null
   },
-  "title": "OMV Group Report January-December and Q4 2025",
+  "title": "OMV Group Report January-December and Q4 2024",
   "anchors": [],
   "expected": {
     "table_profile": null,

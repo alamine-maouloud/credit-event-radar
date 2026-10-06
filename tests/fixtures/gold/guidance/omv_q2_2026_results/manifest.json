@@ -1,50 +1,32 @@
 {
   "role": "demo_watchlist",
   "source_type": "ir_feed",
-  "source_url": "https://www.omv.com/en/media/press-releases/2026/260731-omv-achieves-a-strong-clean-ccs-operating-result-of-eur-1point7-bn-in-the-second-quarter-of-2026",
+  "source_url": "https://www.omv.com/en/investors/news-and-events/news/2026/q2",
   "content_type": "text/html; charset=utf-8",
-  "retrieved_at": "2026-10-06T15:08:31.693895+00:00",
+  "retrieved_at": "2026-10-06T15:16:01.743468+00:00",
   "raw_file": "document.htm.gz",
-  "raw_sha256": "d737604ac35226c170bd6a840ffe2da70f2ed8c6d4b9ebb4f0a3c72ac9abd5d0",
-  "raw_size_bytes": 313792,
-  "normalizer_version": "ir-html-1.0",
-  "normalized_sha256": "092bc28614fb8407180276207b47403da64ec2841443f532983e7448eeeaf07d",
-  "normalized_chars": 179,
+  "raw_sha256": "9fecdf107a5695ad2ea2c43f134708d66f8a051e1c7104d6210f4d449cf95729",
+  "raw_size_bytes": 274876,
+  "normalizer_version": "ir-html-1.1",
+  "normalized_sha256": "5c4306aa3905fc87f63b5e6ac15e240307721f7341689029f834a892f6a6c04f",
+  "normalized_chars": 1899,
   "extra": {
     "content_type": "text/html; charset=utf-8",
-    "source_id": "omv_press_releases",
+    "source_id": "omv_ir_news",
     "kind": "sitemap",
     "document_type": "press_release",
     "table_profile": null,
     "expected_content": "html",
-    "published": "2026-07-31"
+    "published": null
   },
-  "title": "OMV achieves a strong clean CCS Operating Result of EUR 1.7 bn in the second quarter of 2026",
+  "title": "OMV Group Report January–June 2026",
   "anchors": [],
   "expected": {
     "table_profile": null,
     "observations": [],
-    "events": [
-      {
-        "family": "earnings",
-        "event_type": "earnings_release",
-        "effective_date": "2026-07-31",
-        "fields": {
-          "guidance_status": null,
-          "flags": [],
-          "period": "second quarter"
-        },
-        "n_spans": 1
-      }
-    ],
-    "decisions": [
-      {
-        "event_type": "earnings_release",
-        "final_priority": null,
-        "triggered": []
-      }
-    ],
-    "outcome": "EVENTS"
+    "events": [],
+    "decisions": [],
+    "outcome": "NO_EVENT"
   },
   "issuer_id": "OMV"
 }

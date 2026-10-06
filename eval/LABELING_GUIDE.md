@@ -38,12 +38,14 @@ One occurrence per metric and per period stated. A document may hold several occ
 | `period` | the fiscal period as written, normalised to the year (`2026`) or the year and half (`H2 2026`). |
 | `current_lower`, `current_upper` | the range now stated, both equal for a point estimate; `null` when the text gives no number (then the occurrence does not exist, see section 1). |
 | `previous_lower`, `previous_upper` | the earlier range only when the same document states it; otherwise `null`. Never filled from memory or from another document. |
-| `status` | `raised`, `cut`, `reaffirmed`, `new`, `withdrawn`, `mentioned`. `new` when the text gives a range without saying it changed or was maintained. `reaffirmed` requires words such as confirms, maintains, reaffirms, unchanged, in line with the previous forecast. `raised`/`cut` require either explicit words or a stated earlier range that differs. |
+| `status` | `raised`, `cut`, `reaffirmed`, `new`, `withdrawn`, `mentioned`. `new` when the text gives a range without saying it changed or was maintained. `reaffirmed` requires words such as confirms, maintains, reaffirms, unchanged, still expected, continues to expect, in line with the previous forecast; the wording may sit in an adjacent sentence of the same outlook paragraph. `raised`/`cut` require either explicit words or a stated earlier range that differs. |
 | `evidence_quote` | verbatim sentence or sentences from the normalised text that contain the metric label, every number of the occurrence and the unit. Prefer the shortest span that holds them all. Copy characters exactly, including typographic quotes and signs such as `+3`. |
 | `start_offset`, `end_offset` | character offsets of `evidence_quote` in the normalised text of the document (the text stored by the pipeline, `normalizer_version` recorded). Computed by `scripts/gold_guidance.py`, never by hand. |
 
 Numbers: `0 and +3 percent` gives `current_lower 0`, `current_upper 3`, `basis yoy_change_pct`,
-`unit PCT`. `between EUR 3 billion and EUR 6 billion` gives `3` and `6`, `EUR_BN`. `around
+`unit PCT`. Signs come from the text (a dash before 10% gives `-10`, `+ 0%` gives `0`); the build script compares
+absolute values against the quote. `in line with the previous year` for revenue is an occurrence
+with both current bounds `null`: the statement is explicit but carries no written number. `between EUR 3 billion and EUR 6 billion` gives `3` and `6`, `EUR_BN`. `around
 EUR 1 bn` gives `1` and `1`. `at least 5 percent` gives lower `5` and upper `null`.
 `approximately`, `around`, `about` do not change the numbers. Percent signs and the words
 percent, per cent are equivalent.

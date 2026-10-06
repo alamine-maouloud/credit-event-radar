@@ -1,25 +1,25 @@
 {
   "role": "demo_watchlist",
   "source_type": "ir_feed",
-  "source_url": "https://www.omv.com/en/media/press-releases/2024/omv-records-group-sales-of-eur-8-6-bn-with-continuously-strong-cash-flow-in-q3-2024-amid-challenging-market-environment",
+  "source_url": "https://www.omv.com/en/investors/news-and-events/news/2026/2q26-tu",
   "content_type": "text/html; charset=utf-8",
-  "retrieved_at": "2026-10-06T15:08:48.653577+00:00",
+  "retrieved_at": "2026-10-06T15:16:04.653589+00:00",
   "raw_file": "document.htm.gz",
-  "raw_sha256": "19a53847fde6ec00cd087fe21ac4ae20e09ce2981cf1621d28f818e13f90fa25",
-  "raw_size_bytes": 307747,
-  "normalizer_version": "ir-html-1.0",
-  "normalized_sha256": "6e3f27d304938970f856ff041c880660f54752fdb2ce6c7013582fbd632ffb52",
-  "normalized_chars": 317,
+  "raw_sha256": "58c3c6874d649d76832b02fd3897460fcade4e4ad6b413b8f989271ad3f57405",
+  "raw_size_bytes": 275463,
+  "normalizer_version": "ir-html-1.1",
+  "normalized_sha256": "e86729904e4d0c0f1a85c6bb6c63592c7cee8ebf688051518fed4125d117654d",
+  "normalized_chars": 1121,
   "extra": {
     "content_type": "text/html; charset=utf-8",
-    "source_id": "omv_press_releases",
+    "source_id": "omv_ir_news",
     "kind": "sitemap",
     "document_type": "press_release",
     "table_profile": null,
     "expected_content": "html",
     "published": null
   },
-  "title": "OMV records Group Sales of EUR 8.6 bn with continuously strong Cash Flow in Q3 2024 amid challenging market environment",
+  "title": "OMV Q2/26 Trading Update: Key Performance Indicators",
   "anchors": [],
   "expected": {
     "table_profile": null,
@@ -32,7 +32,7 @@
         "fields": {
           "guidance_status": null,
           "flags": [],
-          "period": "Q3"
+          "period": "Q2"
         },
         "n_spans": 1
       }
