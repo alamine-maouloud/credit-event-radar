@@ -14,12 +14,12 @@ GUIDANCE = PROMPTS_DIR / "extraction" / "guidance.v1.yaml"
 def test_guidance_prompt_metadata():
     prompt = load_prompt(GUIDANCE)
     assert (
-        prompt.id == "extraction.guidance" and prompt.version == "1.0.0" and prompt.language == "en"
+        prompt.id == "extraction.guidance" and prompt.version == "1.1.0" and prompt.language == "en"
     )
     assert prompt.model_role == "extraction" and prompt.temperature == 0
     assert prompt.output_schema == "GuidanceExtraction"
     assert set(prompt.input_variables) == {"issuer_name", "document_date", "source_text"}
-    assert prompt.changelog and prompt.changelog[0].startswith("1.0.0")
+    assert prompt.changelog and prompt.changelog[0].startswith("1.1.0")
     assert len(prompt.content_hash) == 64
 
 
