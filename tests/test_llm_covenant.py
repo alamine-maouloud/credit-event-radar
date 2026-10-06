@@ -589,3 +589,44 @@ def test_a_configured_segment_as_holder_of_the_ratio_is_out_of_scope(quote):
 
 def test_the_group_sentence_is_not_caught_by_the_segment_guard():
     assert _cat(CAT_GROUP, "compliant", segments=["Cat Financial"]).checks["scope_match"] is True
+
+
+# Found on the DEV split with both models: "we were not in compliance" was read as
+# hypothetical because "were" sat in the hypothetical prefixes; "anticipate non-compliance"
+# is an anticipation.
+WE_WERE = "Additionally, as of March 31, 2026, we were not in compliance with the financial covenants under our 2025 Credit Agreement."
+IF_WERE = (
+    "If the Company were to breach the leverage covenant, the lenders could accelerate the loans."
+)
+ANTICIPATE = "In future quarters, we anticipate non-compliance with the restrictive covenants of the Credit Agreement."
+WERE_TEXT = "Issuer Test A AG report\n" + WE_WERE + "\n" + IF_WERE + "\n" + ANTICIPATE
+
+
+def _were(quote, status):
+    start = WERE_TEXT.index(quote)
+    st = CovenantStatement(
+        risk_type="covenant",
+        status=status,
+        evidence_quote=quote,
+        start_offset=start,
+        end_offset=start + len(quote),
+    )
+    return validate_covenant_statement(
+        st, doc(WERE_TEXT), ISSUER_NAMES, document_date=date(2026, 5, 11)
+    )
+
+
+def test_we_were_not_in_compliance_is_a_stated_breach():
+    result = _were(WE_WERE, "breached")
+    assert result.status == "VALID", result.reasons
+
+
+def test_a_conditional_breach_stays_hypothetical():
+    result = _were(IF_WERE, "breached")
+    assert result.status == "INVALID" and any("STATUS_MISMATCH" in r for r in result.reasons)
+    assert _were(IF_WERE, "mentioned").status == "VALID"
+
+
+def test_anticipated_non_compliance_is_a_risk_of_breach():
+    assert _were(ANTICIPATE, "risk_of_breach").status == "VALID"
+    assert _were(ANTICIPATE, "breached").checks["status_match"] is False

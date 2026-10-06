@@ -378,9 +378,12 @@ _RISK_RE = re.compile(
     r"\b(?:does|do)\s+not\s+expect\s+to\s+be\s+able\b|\bexpects?\s+(?:to\s+be\s+unable|not\s+to\s+be\s+able)\b|"
     r"\bmay\s+(?:not\s+)?(?:breach|comply|be\s+able\s+to\s+(?:meet|comply|maintain))\b|"
     r"\bcould\s+(?:breach|result\s+in)\b|\brisk\s+of\s+(?:a\s+)?(?:breach|non-?compliance|default)\b|"
-    r"\b(?:future|potential)\s+non-?compliance\b|\bunable\s+to\s+(?:meet|comply|maintain)\b"
+    r"\b(?:future|potential)\s+non-?compliance\b|\bunable\s+to\s+(?:meet|comply|maintain)\b|"
+    r"\banticipat(?:e|es|ed|ing)\s+(?:a\s+)?(?:non-?compliance|breach)\b"
 )
-_HYPOTHETICAL_PREFIX_RE = re.compile(r"(?i)\b(?:future|potential|any|if|should|were)\b")
+# "were" is not here: "we were not in compliance" is a stated breach; the subjunctive "if
+# ... were" is caught by "if" earlier in the window
+_HYPOTHETICAL_PREFIX_RE = re.compile(r"(?i)\b(?:future|potential|any|if|should)\b")
 # wording of a forward-looking passage (a future covenant test period is then legitimate)
 _PROSPECTIVE_RE = re.compile(
     r"(?i)\b(?:expects?|expected|anticipates?|anticipated|will|would|may|might|could|shall|"
@@ -423,6 +426,8 @@ def _actual_breach(sentence: str) -> bool:
         words = before.split()[-4:]
         if any(_HYPOTHETICAL_PREFIX_RE.fullmatch(w.strip(",;:()")) for w in words):
             continue
+        if re.match(r"(?i)\s*(?:if|should|were)\b", before):
+            continue  # a conditional clause opens the window
         if _HYPOTHETICAL_MODAL_RE.search(before) and not re.search(
             r"(?i)\b(?:was|were|is|are|has|have|had|received|obtained|occurred|arose|"
             r"entered|remained|failed|did)\b",
