@@ -1,0 +1,131 @@
+# Rating scales mapped to a common notch scale (docs/SPEC.md, section 9.1).
+# Notch 1 is the strongest rating, notch 22 is default. The IG/HY boundary sits
+# between notch 10 (BBB-, Baa3, BBB (low)) and notch 11 (BB+, Ba1, BB (high)).
+#
+# DBRS is not in the SPEC table but appears in the hand-verified seed. It is mapped
+# to the same notches so that any agency can be compared, but the composite rating
+# only uses the agencies listed in settings.yaml (ratings.composite_agencies).
+
+version: "1.0"
+
+boundary:
+  last_ig_notch: 10
+  first_hy_notch: 11
+
+categories:
+  IG: { min: 1, max: 10 }
+  HY: { min: 11, max: 21 }
+  DEFAULT: { min: 22, max: 22 }
+
+# Tokens meaning "not rated" or "withdrawn": excluded from any computation.
+unrated_tokens: ["NR", "WD", "WR", "N/A", "NOT RATED", "WITHDRAWN"]
+
+agencies:
+  SP:
+    display_name: "S&P Global Ratings"
+    aliases: ["S&P", "S&P Global", "S&P Global Ratings", "Standard & Poor's", "Standard and Poor's"]
+    scale:
+      AAA: 1
+      AA+: 2
+      AA: 3
+      AA-: 4
+      A+: 5
+      A: 6
+      A-: 7
+      BBB+: 8
+      BBB: 9
+      BBB-: 10
+      BB+: 11
+      BB: 12
+      BB-: 13
+      B+: 14
+      B: 15
+      B-: 16
+      CCC+: 17
+      CCC: 18
+      CCC-: 19
+      CC: 20
+      C: 21
+      D: 22
+      SD: 22
+
+  MOODYS:
+    display_name: "Moody's Ratings"
+    aliases: ["Moody's", "Moodys", "Moody's Investors Service", "Moody's Ratings"]
+    scale:
+      Aaa: 1
+      Aa1: 2
+      Aa2: 3
+      Aa3: 4
+      A1: 5
+      A2: 6
+      A3: 7
+      Baa1: 8
+      Baa2: 9
+      Baa3: 10
+      Ba1: 11
+      Ba2: 12
+      Ba3: 13
+      B1: 14
+      B2: 15
+      B3: 16
+      Caa1: 17
+      Caa2: 18
+      Caa3: 19
+      Ca: 20
+      C: 21
+
+  FITCH:
+    display_name: "Fitch Ratings"
+    aliases: ["Fitch", "Fitch Ratings"]
+    scale:
+      AAA: 1
+      AA+: 2
+      AA: 3
+      AA-: 4
+      A+: 5
+      A: 6
+      A-: 7
+      BBB+: 8
+      BBB: 9
+      BBB-: 10
+      BB+: 11
+      BB: 12
+      BB-: 13
+      B+: 14
+      B: 15
+      B-: 16
+      CCC+: 17
+      CCC: 18
+      CCC-: 19
+      CC: 20
+      C: 21
+      RD: 22
+      D: 22
+
+  DBRS:
+    display_name: "Morningstar DBRS"
+    aliases: ["DBRS", "Morningstar DBRS", "DBRS Morningstar"]
+    scale:
+      AAA: 1
+      AA (high): 2
+      AA: 3
+      AA (low): 4
+      A (high): 5
+      A: 6
+      A (low): 7
+      BBB (high): 8
+      BBB: 9
+      BBB (low): 10
+      BB (high): 11
+      BB: 12
+      BB (low): 13
+      B (high): 14
+      B: 15
+      B (low): 16
+      CCC (high): 17
+      CCC: 18
+      CCC (low): 19
+      CC: 20
+      C: 21
+      D: 22
