@@ -1,0 +1,284 @@
+# Liquidity gold set V1, hand-written labels (eval/LIQUIDITY_LABELING_GUIDE.md). DRAFT until frozen.
+# Quotes are verbatim from the normalised text (’ apostrophe, – en dash as printed).
+# split: dev documents may be read while a prompt is adjusted, holdout documents never.
+version: "1.0-draft"
+documents:
+
+  # ------------------------------------------------- stress cases (dev, flag) --- #
+  - gold_id: L-GPRO-01
+    fixture: tests/fixtures/edgar/gopro_10q_2026q1
+    split: dev
+    expected_flag: true
+    notes: Liquidity and going concern note repeated in the MD&A with "we" instead of "the Company"; both variants are labelled.
+    statements:
+      - status: concern
+        evidence_quote: "Based on current projections, the Company does not expect to have sufficient liquidity to meet its obligations as they become due within one year after the issuance of these condensed consolidated financial statements."
+      - status: concern
+        evidence_quote: "Based on current projections,we do not expect to have sufficient liquidity to meet our obligations as they become due within one year after the issuance of these condensed consolidated financial statements."
+      - status: deteriorated
+        evidence_quote: "As a result, the Company expects to continue to incur operating losses and negative operating cash flows, further reducing liquidity and increasing reliance on external sources of capital."
+      - status: deteriorated
+        evidence_quote: "As a result, we expect to continue to incur operating losses and negative operating cash flows, further reducing liquidity and increasing reliance on external sources of capital."
+      - status: concern
+        evidence_quote: "Future non-compliance with financial covenants may limit the Company’s access to existing credit facilities or result in an acceleration of debt obligations, which would further adversely impact liquidity."
+      - status: concern
+        evidence_quote: "Future non-compliance with financial covenants may limit our access to existing credit facilities or result in an acceleration of debt obligations, which would further adversely impact liquidity."
+      - status: concern
+        evidence_quote: "Additionally, the Company has not met certain covenants in the last two quarters which were subsequently cured or waived and does not expect to be able to meet the future minimum financial covenants"
+      - status: concern
+        evidence_quote: "Additionally, we have not met certain covenants in the last two quarters which were subsequently cured or waived and do not expect to be able to meet the future minimum financial covenants"
+      - status: mentioned
+        evidence_quote: "Our liquidity position has been historically impacted by seasonality, which is primarily driven by higher revenues during the second half of the year as compared to the first half."
+    ineligible:
+      - reason: not_liquidity
+        evidence_quote: "The primary objectives of our investment activities are to preserve principal and provide liquidity without significantly increasing risk."
+
+  - gold_id: L-MVST-01
+    fixture: tests/fixtures/edgar/microvast_10q_2026q2
+    split: dev
+    expected_flag: true
+    notes: Substantial doubt about the going concern, restructuring that strains liquidity; conditional risk factors are mentioned, present worries are concern.
+    statements:
+      - status: deteriorated
+        evidence_quote: "As a result, we expect to continue to incur operating losses and negative operating cash flows, further reducing liquidity and increasing reliance on external sources of capital."
+      - status: concern
+        evidence_quote: "Our plans to mitigate the substantial doubt may not be effectively implemented, and cost-reduction and restructuring actions may themselves strain near-term liquidity."
+      - status: concern
+        evidence_quote: "The cash costs associated with restructuring actions, including severance payments, facility exit costs and contract termination fees, may further strain our near-term liquidity and could accelerate the timing of a covenant breach or the need for additional financing."
+      - status: concern
+        evidence_quote: "Our existing liquidity and capital resources may not be sufficient to sustain our business and service our debt obligations"
+      - status: concern
+        evidence_quote: "There can be no assurance that the initiatives described above will produce the expected benefits or will be sufficient to allow us to maintain liquidity and operations in the ordinary course."
+      - status: concern
+        evidence_quote: "Future non-compliance with financial covenants may limit our access to existing credit facilities or result in an acceleration of debt obligations, which would further adversely impact liquidity."
+      - status: mentioned
+        metric_label: "cash and cash equivalents and restricted cash"
+        value: 143.1
+        unit: USD_MN
+        evidence_quote: "As of June 30, 2026, our principal sources of liquidity were our cash and cash equivalents and restricted cash totaling $143.1 million, of which $127.8 million was comprised of cash and cash equivalents."
+      - status: mentioned
+        evidence_quote: "Additionally, recent equity market conditions and business performance have rendered the equity funding unfavorable as a primary liquidity mechanism."
+      - status: mentioned
+        evidence_quote: "Management is evaluating and pursuing several initiatives intended to improve the Company’s liquidity position, including:"
+      - status: mentioned
+        evidence_quote: "If we are not successful in maintaining demand for our products, or if operating conditions further constrain our cash generation, we may experience additional adverse impacts to revenue, profitability and liquidity."
+      - status: mentioned
+        evidence_quote: "Our substantial indebtedness and debt service obligations could adversely affect our competitiveness, our liquidity, our operations and our ability to obtain additional financing."
+      - status: mentioned
+        evidence_quote: "If our lenders accelerate the repayment of borrowings, we cannot assure you that we will have sufficient assets or liquidity to repay those borrowings."
+    ineligible: []
+
+  - gold_id: L-CVR-01
+    fixture: tests/fixtures/edgar/chicago_rivet_10q_2026q1
+    split: dev
+    expected_flag: true
+    notes: Continued reduction in liquidity and substantial doubt, with a remediation plan that asserts nothing about the current state.
+    statements:
+      - status: deteriorated
+        evidence_quote: "The Company incurred significant recurring operating losses primarily driven by continuous decline in revenues, recurring negative cash flows from operations and continued reduction in liquidity."
+      - status: concern
+        evidence_quote: "The Company’s declining revenues, recurring operating losses and negative cash flows, and continued reduction in liquidity, raise substantial doubt about the Company's ability to continue as a going concern within one year after the issuance date of these financial statements."
+      - status: mentioned
+        evidence_quote: "In response to these challenges, the Company has developed and begun implementing a series of strategic actions aimed at improving liquidity and ensuring business continuity."
+      - status: concern
+        evidence_quote: "However, uncertainty remains with respect to the Company's ability to increase sales, secure additional financing or liquidity, comply with loan covenants, or achieve projected cost savings."
+      - status: deteriorated
+        evidence_quote: "The Company has incurred significant recurring operating losses over the last two years, primarily driven by a continuous decline in revenues, recurring negative cash flows from operations and continued reduction in liquidity."
+      - status: mentioned
+        evidence_quote: "The Company will continue to seek to enhance its sales efforts to further improve revenue, improve operating efficiency and enhance liquidity."
+    ineligible: []
+
+  # ------------------------------------------------- investment grade issuers (dev) --- #
+  - gold_id: L-VW-FY25
+    fixture: tests/fixtures/gold/guidance/vw_fy2025_results
+    split: dev
+    expected_flag: false
+    statements:
+      - status: stable
+        evidence_quote: "In this demanding environment, we launched 30 new models, made visible progress with our restructuring, generated solid net cash flow and thus kept our net liquidity stable at a solid level."
+      - status: stable
+        metric_label: "net liquidity"
+        value: 34.5
+        unit: EUR_BN
+        evidence_quote: "at EUR 34.5 billion, net liquidity at year-end was stable compared to the previous year."
+      - status: mentioned
+        evidence_quote: "Net liquidity in the Automotive Division is expected to range between EUR 32 billion and EUR 34 billion in 2026."
+      - status: mentioned
+        evidence_quote: "The Volkswagen Group continues to pursue its objective of maintaining a solid financing and liquidity policy."
+      - status: stable
+        evidence_quote: "Revenues remained stable, the operating profit dropped sharply due to tariffs and special effects, while net cash flow and liquidity stayed solid."
+      - status: stable
+        evidence_quote: "Volkswagen Group anticipates sales revenue of between 0 and +3 percent, an operating return of 4.0–5.5 percent, and continued stable liquidity despite a challenging global environment."
+    ineligible: []
+
+  - gold_id: L-VW-FY24
+    fixture: tests/fixtures/gold/guidance/vw_fy2024_results
+    split: dev
+    expected_flag: false
+    statements:
+      - status: mentioned
+        evidence_quote: "Net liquidity in the Automotive Division in 2025 is expected to be between EUR 34 and EUR 37 billion."
+      - status: mentioned
+        evidence_quote: "It remains the group’s goal to continue its robust financing and liquidity policy."
+    ineligible: []
+
+  - gold_id: L-VW-Q3-25
+    fixture: tests/fixtures/gold/guidance/vw_q3_2025_results
+    split: dev
+    expected_flag: false
+    statements:
+      - status: mentioned
+        evidence_quote: "Net liquidity in the Automotive Division is expected to amount to around EUR 30 billion in 2025."
+      - status: mentioned
+        evidence_quote: "The Volkswagen Group continues to pursue its objective of maintaining a solid financing and liquidity policy."
+    ineligible: []
+
+  - gold_id: L-OMV-Q4-24
+    fixture: tests/fixtures/gold/guidance/omv_q4_2024_report
+    split: dev
+    expected_flag: false
+    notes: The Baystar revolving credit facility is a subsidiary's instrument (Borealis), not the Group's liquidity.
+    statements:
+      - status: mentioned
+        evidence_quote: "OMV continues to closely monitor developments and regularly evaluates the potential impact of changing gas flows on the Austrian gas market, as well as on the Group’s cash flow and liquidity position."
+      - status: improved
+        evidence_quote: "This divestment strengthened OMV’s liquidity position and balance sheet and aligns with OMV’s strategic shift toward sustainable energy solutions and achieving net zero emissions by 2050."
+    ineligible:
+      - reason: segment
+        evidence_quote: "Borealis granted a guarantee for a Revolving Credit Facility (RCF) used by Bayport Polymers LLC (Baystar) as a liquidity instrument to conduct its ordinary cause of business"
+
+  - gold_id: L-OMV-Q2-25
+    fixture: tests/fixtures/gold/guidance/omv_q2_2025_report
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible:
+      - reason: segment
+        evidence_quote: "The Borealis disposal group entered into guarantees as part of the ordinary course of the Group’s business, mainly under credit facilities granted by banks, without cash collateral."
+
+  - gold_id: L-OMV-DEBT
+    fixture: tests/fixtures/ir/omv_debt_ratings_page
+    split: dev
+    expected_flag: false
+    statements:
+      - status: stable
+        evidence_quote: "Corporate bonds are the key element of the well-balanced debt maturity profile, complemented by ample committed credit facilities and other types of bank funding."
+      - status: mentioned
+        evidence_quote: "Group liquidity and FX-operations are managed in group treasury"
+    ineligible: []
+
+  - gold_id: L-DBRS-26
+    fixture: tests/fixtures/ir/vw_dbrs_rating_report_2026
+    split: dev
+    expected_flag: false
+    notes: An agency speaks about the issuer's liquidity; nothing is the issuer's own statement.
+    statements: []
+    ineligible:
+      - reason: third_party
+        evidence_quote: "The transaction is expected to generate about EUR 7.4 billion in cash proceeds, strengthening VW's financial position, improving liquidity, and supporting the Company's transformation strategy."
+      - reason: third_party
+        evidence_quote: "As of 30 June 2026, the industrial operations retained a substantial net cash position, with the Company's net liquidity position (as defined by VW) amounting to EUR 34.2 billion."
+      - reason: third_party
+        evidence_quote: "Nevertheless, management maintained guidance for a 4.0%–5.5% operating margin, EUR 3 to EUR 6 billion of automotive net CF, and EUR 32 to EUR 34 billion of automotive net liquidity."
+
+  - gold_id: L-VW-DEL-H1-26
+    fixture: tests/fixtures/gold/guidance/vw_h1_2026_deliveries
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: L-VW-DEL-FY25
+    fixture: tests/fixtures/gold/guidance/vw_fy2025_deliveries
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: L-TR-UNIT-Q2-26
+    fixture: tests/fixtures/gold/guidance/traton_q2_2026_unit_sales
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: L-TR-FY25
+    fixture: tests/fixtures/gold/guidance/traton_fy2025_results
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: L-OMV-EIB-26
+    fixture: tests/fixtures/gold/guidance/omv_eib_loan_2026
+    split: dev
+    expected_flag: false
+    notes: A project loan is financing news, not a liquidity statement.
+    statements: []
+    ineligible: []
+
+  # ------------------------------------------------- holdout (never used to adjust the prompt) --- #
+  - gold_id: L-VW-Q1-26
+    fixture: tests/fixtures/ir/vw_q1_2026_results
+    split: holdout
+    expected_flag: false
+    statements:
+      - status: stable
+        metric_label: "Net liquidity"
+        value: 34.2
+        unit: EUR_BN
+        evidence_quote: "Net liquidity remained at a solid level of EUR 34.2 billion (31.12.25: 34.5 billion EUR)."
+      - status: mentioned
+        evidence_quote: "Net liquidity in the Automotive Division is expected to range between EUR 32 billion and EUR 34 billion in 2026."
+      - status: mentioned
+        evidence_quote: "The Volkswagen Group continues to pursue its objective of maintaining a solid financing and liquidity policy."
+    ineligible: []
+
+  - gold_id: L-VW-H1-25
+    fixture: tests/fixtures/gold/guidance/vw_h1_2025_results
+    split: holdout
+    expected_flag: false
+    notes: A lowered net liquidity range is a forecast, not a statement about the current liquidity state.
+    statements:
+      - status: mentioned
+        evidence_quote: "Net liquidity in the Automotive Division in 2025 is expected to be between EUR 31 and EUR 33 billion (previously: EUR 34 to EUR 37 billion)."
+      - status: mentioned
+        evidence_quote: "The Group continues to pursue its objective of maintaining a solid financing and liquidity policy."
+      - status: mentioned
+        evidence_quote: "At the lower end of the forecast ranges for operating result, net cash flow and net liquidity, it is assumed that in particular the current US import tariffs of 27.5% will continue to apply in the second half of 2025; at the upper end, it is assumed that these tariffs will be reduced to 10%."
+    ineligible: []
+
+  - gold_id: L-SP-25
+    fixture: tests/fixtures/ir/vw_sp_outlook_negative_2025
+    split: holdout
+    expected_flag: false
+    notes: S&P speaks, not Volkswagen; the "might not be able to maintain its liquidity buffers" sentence is a polarity trap inside a third party assessment.
+    statements: []
+    ineligible:
+      - reason: third_party
+        evidence_quote: "we assess the group's liquidity as strong because we expect liquidity sources to cover uses by slightly more than 2x in the next 24 months."
+      - reason: third_party
+        evidence_quote: "We do not assess liquidity as exceptional because, in our view, the company might not be able to maintain its liquidity buffers such that its sources of liquidity exceed uses by more than 2x in weaker market conditions."
+      - reason: third_party
+        evidence_quote: "Our strong liquidity assessment for VW is also supported by the following considerations:"
+
+  - gold_id: L-HOG-26
+    fixture: tests/fixtures/edgar/harley_davidson_inc_10q_2026q2
+    split: holdout
+    expected_flag: false
+    notes: Positive liquidity statements and a generic risk factor; the amendment sentence is repeated, labelled once.
+    statements:
+      - status: mentioned
+        evidence_quote: "The Company’s strategy is to maintain a minimum of twelve months of its projected liquidity requirements through a combination of cash and cash equivalents and availability under its credit facilities."
+      - status: stable
+        evidence_quote: "The Company believes its current cash, cash equivalents and availability under its credit facilities are sufficient to meet its liquidity requirements, consistent with this strategy."
+      - status: stable
+        evidence_quote: "the Company believes it will be able to continue to maintain its liquidity requirements through cash balances, committed credit facilities, and other funding sources."
+      - status: mentioned
+        evidence_quote: "The amendment reflects lower forecasted funding requirements and the Company's liquidity position."
+      - status: mentioned
+        evidence_quote: "The Company's operations, demand for its products, and its liquidity could be adversely impacted by changes in tariffs, inflation, work stoppages, facility closures, strikes, natural causes, widespread infectious disease, terrorism, war or other hostilities, including the conflict in Iran, or other factors."
+    ineligible: []
+
+  - gold_id: L-TR-H1-26
+    fixture: tests/fixtures/ir/traton_h1_2026_results
+    split: holdout
+    expected_flag: false
+    statements: []
+    ineligible: []
