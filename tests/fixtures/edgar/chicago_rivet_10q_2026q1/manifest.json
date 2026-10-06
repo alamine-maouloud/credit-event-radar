@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/19871/000001987126000014/cvr-20260331.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T19:10:43.789467+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "14b98c1c2f38d4d7b9e0595aa685bd49d666eda22ab4ed458243a534bc10a8f3",
+  "raw_size_bytes": 1263548,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "17e9ba1f55e413ff1e29fcc294fe2c8c99398f5715632c107e3baf8d9e5596a5",
+  "normalized_chars": 57051,
+  "extra": {
+    "cik": "0000019871",
+    "accession_number": "0000019871-26-000014",
+    "primary_document": "cvr-20260331.htm",
+    "form": "10-Q",
+    "filing_date": "2026-05-08"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "CHICAGO_RIVET_MACHINE"
+}

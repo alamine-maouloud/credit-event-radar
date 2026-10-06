@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/1500435/000150043526000018/gpro-20260331.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T19:10:40.072494+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "15925dfd269cff3973ad9860e9c1bf1ec8da5d2d7fe8a7bb382bf1f731568dfe",
+  "raw_size_bytes": 1399923,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "b1608e45b4b9ca355118abd32de079fc0307131f4b87296389952c7d125f2356",
+  "normalized_chars": 261200,
+  "extra": {
+    "cik": "0001500435",
+    "accession_number": "0001500435-26-000018",
+    "primary_document": "gpro-20260331.htm",
+    "form": "10-Q",
+    "filing_date": "2026-05-11"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "GOPRO_INC"
+}

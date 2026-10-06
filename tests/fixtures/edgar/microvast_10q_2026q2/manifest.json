@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/1760689/000162828026055372/mvst-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T19:10:41.935343+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "8369a53f8893c9669fc82d893370c438541df83721bc9dbd58b9e6adbbacce89",
+  "raw_size_bytes": 1425671,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "90590199ee14e942c9062cb9ccedf3295bd9ac80467dd4fd935a08982c039ca7",
+  "normalized_chars": 169497,
+  "extra": {
+    "cik": "0001760689",
+    "accession_number": "0001628280-26-055372",
+    "primary_document": "mvst-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-10"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "MICROVAST_HOLDINGS"
+}

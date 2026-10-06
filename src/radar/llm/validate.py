@@ -178,7 +178,8 @@ def _temporal_check(
 _LIQUIDITY_NEGATIVE_RE = re.compile(
     r"(?i)\b(?:constrain(?:ed|ts?)|tighten(?:ed|ing|s)?|tight|strain(?:ed|s)?|stress(?:ed)?|"
     r"pressures?|shortfalls?|squeeze[sd]?|insufficien(?:t|cy)|deteriorat(?:ed|ing|ion|es)|"
-    r"weaken(?:ed|ing|s)?|reduc(?:ed|ing|tion)|concerns?|uncertaint(?:y|ies)|substantial\s+doubt|"
+    r"weaken(?:ed|ing|s)?|reduc(?:ed|ing|tion)\s+(?:in\s+|of\s+)?(?:\w+\s+){0,2}liquidity|"
+    r"concerns?|uncertaint(?:y|ies)|substantial\s+doubt|"
     r"adversely\s+(?:impact|affect)(?:ed|ing|s)?|unable\s+to\s+(?:meet|fund|service|repay)|"
     r"difficult(?:y|ies)\s+(?:in\s+)?(?:meeting|funding|refinancing)|at\s+risk|risk\s+of)\b"
 )
@@ -204,14 +205,22 @@ def _negated(sentence: str, marker_start: int) -> bool:
     return any(_NEGATION_RE.fullmatch(w.strip(",;:()")) for w in before[-5:])
 
 
+# "may / could / might / would adversely affect our liquidity" with nothing else negative in
+# the window is a hypothetical risk factor, not a present worry (Phase 3.4a closing rule):
+# the statement stays valid as mentioned, it never sets the flag.
+_ADVERSE_EFFECT_RE = re.compile(r"(?i)^adversely\s+(?:impact|affect)")
+_HYPOTHETICAL_MODAL_RE = re.compile(r"(?i)\b(?:may|could|might|would)\b")
+
+
 def liquidity_polarity_ok(quote: str, status: str) -> tuple[bool, str | None]:
-    """A negative status needs a negative marker that is not negated in its sentence.
+    """A negative status needs a present negative marker that is not negated in its window.
     Positive and neutral statuses are never rejected here: "no liquidity concerns" read as
-    stable or mentioned is right, read as concern it is a POLARITY_MISMATCH."""
+    stable or mentioned is right, read as concern it is a POLARITY_MISMATCH; a conditional
+    adverse effect alone is a HYPOTHETICAL_RISK that fits mentioned."""
     if status not in NEGATIVE_LIQUIDITY_STATUSES:
         return True, None
     sentences = [s.text for s in iter_sentences(quote)] or [quote]
-    found_negated = False
+    found_negated = found_hypothetical = False
     for sentence in sentences:
         if _LIQUIDITY_NEGATED_POSITIVE_RE.search(sentence):
             return True, None
@@ -219,13 +228,27 @@ def liquidity_polarity_ok(quote: str, status: str) -> tuple[bool, str | None]:
             if _negated(sentence, m.start()):
                 found_negated = True
                 continue
+            if _ADVERSE_EFFECT_RE.match(m.group(0)) and _HYPOTHETICAL_MODAL_RE.search(
+                sentence[: m.start()]
+            ):
+                found_hypothetical = True
+                continue
             return True, None
+    if found_hypothetical:
+        return (
+            False,
+            "POLARITY_MISMATCH: HYPOTHETICAL_RISK, only a conditional adverse effect and no "
+            f"present deterioration, status {status} is not supported (mentioned fits)",
+        )
     if found_negated:
         return (
             False,
             f"POLARITY_MISMATCH: the passage negates the worry, status {status} contradicts it",
-        )  # noqa: E501
-    return False, f"POLARITY_MISMATCH: no deterioration or worry wording supports status {status}"  # noqa: E501
+        )
+    return (
+        False,
+        f"POLARITY_MISMATCH: no deterioration or worry wording supports status {status}",
+    )
 
 
 def validate_liquidity_statement(

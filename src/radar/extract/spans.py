@@ -36,11 +36,54 @@ def _is_false_boundary(before: str) -> bool:
     return len(token) == 1 and token.isalpha()  # initials such as "J."
 
 
+# sentence-window-1.1 (2026-10-06): a line break inside a wrapped sentence no longer ends the
+# window. Some HTML filings wrap their paragraphs at a fixed width; the normalised text and
+# its hashes are untouched, only the windows the extractors and the validator reason on.
+SENTENCE_WINDOW_VERSION = "sentence-window-1.1"
+_TERMINAL_END_RE = re.compile(r"[.!?;:][\"'\u201d\u2019)\]]*\s*$")
+_CONTINUATION_START_RE = re.compile(r"^\s*[a-z\u00e0-\u00ff]")
+
+
+def _continues(line: str, nxt: str) -> bool:
+    """The next line continues this one: no terminal punctuation here, no table cell on
+    either side, and the next line starts with a lowercase letter or this one ends with a
+    hyphen before a letter. A heading followed by a capital keeps its own window."""
+    tail = line.rstrip()
+    if not tail or "|" in line or "|" in nxt:
+        return False
+    if _TERMINAL_END_RE.search(tail):
+        return False
+    if tail.endswith("-") and nxt[:1].isalpha():
+        return True
+    return bool(_CONTINUATION_START_RE.match(nxt))
+
+
+def _logical_lines(text: str) -> list[tuple[int, str]]:
+    lines = text.split("\n")
+    out: list[tuple[int, str]] = []
+    pos = 0
+    start: int | None = None
+    buffer: str | None = None
+    for i, line in enumerate(lines):
+        if buffer is None:
+            start, buffer = pos, line
+        else:
+            buffer = buffer + "\n" + line
+        pos += len(line) + 1
+        nxt = lines[i + 1] if i + 1 < len(lines) else None
+        if nxt is not None and _continues(buffer, nxt):
+            continue
+        assert start is not None
+        out.append((start, buffer))
+        buffer = None
+    return out
+
+
 def iter_sentences(text: str) -> list[Sentence]:
-    """Split normalised text into sentences; each line is a sentence boundary too."""
+    """Split normalised text into sentence windows. A line ends a window unless it is a
+    wrapped continuation (sentence-window-1.1); offsets refer to the original text."""
     sentences: list[Sentence] = []
-    line_start = 0
-    for line in text.split("\n"):
+    for line_start, line in _logical_lines(text):
         cursor = 0
         for m in _BOUNDARY_RE.finditer(line):
             before = line[cursor : m.start()]
@@ -51,7 +94,6 @@ def iter_sentences(text: str) -> list[Sentence]:
         tail = line[cursor:]
         if tail.strip():
             sentences.append(Sentence(line_start + cursor, line_start + len(line), tail))
-        line_start += len(line) + 1
     return [s for s in sentences if s.text.strip()]
 
 

@@ -497,3 +497,61 @@ def test_an_agency_report_never_carries_the_issuers_statement():
         st, doc(LESSONS), ISSUER_NAMES, document_date=date(2026, 5, 11)
     )
     assert own.checks["issuer_voice"] is True
+
+
+# Closing Phase 3.4a: a conditional adverse effect alone is a hypothetical risk, kept as
+# mentioned, never a worry; a present deterioration in the same window still allows a
+# negative status; a wrapped sentence is one window.
+HYPO = "\n".join(
+    [
+        "Issuer Test A AG quarterly report",
+        "Lower credit ratings generally result in higher borrowing costs, including costs of derivative transactions, reduced access to debt capital markets, and may adversely impact our liquidity.",
+        "Pension and other postretirement liabilities could adversely affect Issuer Test A’s liquidity and financial condition;",
+        "Our liquidity is constrained and could deteriorate further if the restructuring fails.",
+        "The cash costs of the restructuring may further strain our near-term liquidity.",
+        "the cash anticipated to be generated from ongoing operations and cash available under its Credit Agreement are not",
+        "expected to be sufficient to generate adequate liquidity to meet the Company’s obligations over the next twelve months.",
+    ]
+)
+L_RATINGS = "Lower credit ratings generally result in higher borrowing costs, including costs of derivative transactions, reduced access to debt capital markets, and may adversely impact our liquidity."
+L_PENSION = "Pension and other postretirement liabilities could adversely affect Issuer Test A’s liquidity and financial condition;"
+L_PRESENT = "Our liquidity is constrained and could deteriorate further if the restructuring fails."
+L_STRAIN = "The cash costs of the restructuring may further strain our near-term liquidity."
+L_WRAPPED = "the cash anticipated to be generated from ongoing operations and cash available under its Credit Agreement are not\nexpected to be sufficient to generate adequate liquidity to meet the Company’s obligations over the next twelve months."
+
+
+def _hypo(quote, status):
+    start = HYPO.index(quote)
+    st = LiquidityStatement(
+        risk_type="liquidity",
+        status=status,
+        evidence_quote=quote,
+        start_offset=start,
+        end_offset=start + len(quote),
+    )
+    return validate_liquidity_statement(
+        st, doc(HYPO), ISSUER_NAMES, document_date=date(2026, 8, 27)
+    )
+
+
+@pytest.mark.parametrize("quote", [L_RATINGS, L_PENSION])
+def test_conditional_adverse_effect_alone_is_a_hypothetical_risk(quote):
+    for status in ("concern", "deteriorated"):
+        result = _hypo(quote, status)
+        assert result.status == "INVALID" and result.checks["polarity_match"] is False
+        assert any("HYPOTHETICAL_RISK" in r for r in result.reasons)
+    kept = _hypo(quote, "mentioned")
+    assert kept.status == "VALID"  # the statement is kept, it just sets no flag
+
+
+@pytest.mark.parametrize(
+    "quote,status", [(L_PRESENT, "concern"), (L_PRESENT, "deteriorated"), (L_STRAIN, "concern")]
+)
+def test_present_deterioration_with_a_modal_is_still_a_worry(quote, status):
+    result = _hypo(quote, status)
+    assert result.status == "VALID", result.reasons
+
+
+def test_wrapped_negation_is_one_window_for_the_polarity_check():
+    result = _hypo(L_WRAPPED, "concern")
+    assert result.status == "VALID", result.reasons
