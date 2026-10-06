@@ -376,3 +376,62 @@ def test_results_jsonl_is_sanitised(tmp_path, gold_path):
     (out / "results.jsonl").unlink()
     write_results(out, raw)
     assert (out / "results.jsonl").exists()
+
+
+def test_benchmark_runs_the_liquidity_kind_with_its_own_scorer(tmp_path):
+    """The benchmark takes a kind: liquidity gold rows, the liquidity schema, validator and
+    scorer; outputs keep the same row shape."""
+    from radar.eval.liquidity import load_liquidity_gold
+
+    text = "Issuer Test A AG quarterly report\nLiquidity has become constrained in the second quarter.\n"
+    quote = "Liquidity has become constrained in the second quarter."
+    start = text.index(quote)
+    gold_rows = [
+        {
+            "gold_id": "L-T-01", "issuer_id": "ISSUER_TEST_A", "fixture": "tests/fixtures/none/l",
+            "source_url": "https://example.invalid/l", "document_date": "2026-05-11",
+            "raw_sha256": "a" * 64, "normalized_sha256": doc(text).doc_id, "normalizer_version": "t",
+            "split": "dev", "expected_flag": True, "notes": None, "ineligible": [],
+            "statements": [{"status": "concern", "evidence_quote": quote, "start_offset": start, "end_offset": start + len(quote)}],
+        }
+    ]  # fmt: skip
+    gold_path = tmp_path / "liq.jsonl"
+    gold_path.write_text("\n".join(json.dumps(r) for r in gold_rows) + "\n")
+
+    class LiquidityProvider(LLMProvider):
+        name = "openai"
+
+        def complete(self, request: ExtractionRequest) -> ExtractionResponse:
+            payload = {"has_liquidity_statements": True, "statements": [
+                {"risk_type": "liquidity", "status": "concern", "metric_label": None, "value": None, "unit": None,
+                 "period": None, "evidence_quote": quote, "start_offset": start, "end_offset": start + len(quote)}]}  # fmt: skip
+            raw = json.dumps(payload)
+            return ExtractionResponse(raw_json=raw, model_id=request.model_id, resolved_model=request.model_id,
+                                      provider=self.name, input_tokens=request.estimated_input_tokens,
+                                      output_tokens=estimate_tokens(raw), latency_ms=5, reasoning_effort="low")  # fmt: skip
+
+    db = Database(tmp_path / "r.db")
+    db.init_schema()
+    out = tmp_path / "run"
+    summary = run_benchmark(
+        load_liquidity_gold(gold_path),
+        db=db,
+        universe=UNIVERSE,
+        provider=LiquidityProvider(),
+        cache=LLMCache(db),
+        budget=RunBudget(limit_usd=5.0, pricing=load_pricing()),
+        prompt=load_prompt(ROOT / "prompts" / "extraction" / "liquidity.v1.yaml"),
+        config=_config(),
+        out_dir=out,
+        load_document=lambda row, universe, root: doc(text, published=row.document_date),
+        kind="liquidity",
+        gold_path=gold_path,
+    )
+    rows = [json.loads(line) for line in (out / "outputs.jsonl").read_text().splitlines()]
+    assert rows[0]["run_status"] == "ok" and rows[0]["has_liquidity_statements"] is True
+    assert rows[0]["statements"][0]["validation"]["status"] == "VALID"
+    run = json.loads((out / "run.json").read_text())
+    assert run["kind"] == "liquidity" and run["schema_version"] == "liquidity-1.0"
+    assert run["extractor_version"] == "llm-liquidity-1.0"
+    assert summary.metrics["dev"]["document_flag"]["recall"] == 1.0
+    assert summary.metrics["dev"]["negative_statements"]["precision"] == 1.0

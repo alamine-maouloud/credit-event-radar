@@ -24,6 +24,10 @@ outputs/*
 # Private golden fixtures (issuer and agency documents): manifests are committed, bytes are not (ADR-010)
 tests/fixtures/ir/*/document.*
 tests/fixtures/gold/**/document.*
+# SEC filings fetched after 2026-10-06 follow the same policy; the two earlier public fixtures stay committed
+tests/fixtures/edgar/*/document.*
+!tests/fixtures/edgar/harley_davidson_inc_10q_2026q2/document.*
+!tests/fixtures/edgar/synthetic_issuer_test_a_10q/document.*
 
 # benchmark dry runs are estimates only, real runs are committed as evidence
 eval/runs/dry-*/
