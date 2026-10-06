@@ -20,6 +20,7 @@ from radar.connectors.ir import (
 )
 from radar.connectors.robots import HostCadence, RobotsGate
 from radar.normalize import PDF_NORMALIZER_VERSION, PdfNormalizer, normalizer_for
+from radar.snapshot import FetchedBytes
 
 UA = "Credit Event Radar test suite research@issuer-test-a.invalid"
 HOST = "https://ir.issuer-test-a.invalid"
@@ -210,7 +211,7 @@ def test_fetch_rss_documents_carry_provenance(tmp_path: Path):
     assert d.extra["published"] == "2026-04-30" and d.published_at == datetime(
         2026, 4, 30, tzinfo=UTC
     )
-    assert d.title.startswith("Issuer Test A reports") and d.normalizer_version == "sec-html-1.0"
+    assert d.title.startswith("Issuer Test A reports") and d.normalizer_version == "ir-html-1.0"
     assert "EUR 500 million bond" in d.text
     assert Path(d.raw_path).read_bytes() == HTML_DOC
     assert all(r.headers["User-Agent"] == UA for r in seen)
@@ -313,3 +314,43 @@ def test_normalizer_selection_by_content_type_and_sniffing():
     assert normalizer_for("application/octet-stream", PDF_DOC).version == PDF_NORMALIZER_VERSION
     assert normalizer_for("text/html", b"<p>x</p>").version == "sec-html-1.0"
     assert normalizer_for(None, b"<p>x</p>").version == "sec-html-1.0"
+
+
+def test_canonical_url_drops_download_parameters():
+    from radar.connectors.ir import canonical_url
+
+    assert (
+        canonical_url("https://x.invalid/a.pdf?1744026244&disposition=attachment#top")
+        == "https://x.invalid/a.pdf?1744026244"
+    )
+    assert (
+        canonical_url("https://x.invalid/a.pdf?disposition=attachment") == "https://x.invalid/a.pdf"
+    )
+    assert canonical_url("https://x.invalid/p?a=1&b=2") == "https://x.invalid/p?a=1&b=2"
+
+
+def test_html_title_fallback_for_documents_without_discovered_title(tmp_path: Path):
+    from radar.connectors.ir import html_title
+
+    seen: list[httpx.Request] = []
+    page = FetchedBytes(
+        url="u",
+        content=b"<html><head><title> Notice of early redemption | OMV.com </title></head><body>x</body></html>",
+        retrieved_at=datetime(2026, 1, 1, tzinfo=UTC),
+        content_type="text/html",
+    )
+    assert html_title(page) == "Notice of early redemption"
+    assert (
+        html_title(
+            FetchedBytes(
+                url="u",
+                content=PDF_DOC,
+                retrieved_at=datetime(2026, 1, 1, tzinfo=UTC),
+                content_type="application/pdf",
+            )
+        )
+        is None
+    )
+    source = src(kind="sitemap", url=f"{HOST}/sitemap.xml", path_prefix="/en/investors/news/")
+    docs = adapter(tmp_path, seen).fetch(date(2026, 7, 1), [issuer(source)])
+    assert docs and all(d.title for d in docs)

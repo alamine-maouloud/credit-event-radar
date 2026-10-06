@@ -7,9 +7,9 @@
   "raw_file": "document.htm.gz",
   "raw_sha256": "16142b871b2543ad5ff19b1e94486e52508b17448b1087bb2ce455c46c2f49f1",
   "raw_size_bytes": 260084,
-  "normalizer_version": "sec-html-1.0",
-  "normalized_sha256": "120923adff965136a0b72d7fd91434eafe6b62d9695e31a1f9e68a73b59ba450",
-  "normalized_chars": 4584,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "95b2150e4cc76f6a44d2ac0e005c1512dffc3730a1f8b915707e3e7a09549a79",
+  "normalized_chars": 336,
   "extra": {
     "content_type": "text/html; charset=utf-8",
     "source_id": "omv_ir_news",
@@ -30,14 +30,14 @@
         "event_type": "redemption",
         "effective_date": "2026-08-07",
         "fields": {
-          "amount": 750000000.0,
-          "currency": "EUR",
-          "amount_eur_equiv": 750000000.0,
+          "amount": null,
+          "currency": null,
+          "amount_eur_equiv": null,
           "coupon": null,
           "maturity": null,
           "seniority": "subordinated"
         },
-        "n_spans": 3
+        "n_spans": 2
       }
     ],
     "decisions": [

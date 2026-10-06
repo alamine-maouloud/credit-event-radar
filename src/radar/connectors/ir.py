@@ -23,7 +23,7 @@ from datetime import UTC, date, datetime
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, ClassVar
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import feedparser
 import httpx
@@ -156,13 +156,28 @@ def discover_sitemap(
     return out[: source.max_items], nested
 
 
+_DROPPED_QUERY_KEYS = {"disposition", "download"}
+
+
+def canonical_url(url: str) -> str:
+    """Drop the fragment and download-only query parameters (e.g. disposition=attachment)
+    so the same document linked twice is fetched once."""
+    parts = urlsplit(url)
+    query = "&".join(
+        pair
+        for pair in parts.query.split("&")
+        if pair and pair.split("=")[0] not in _DROPPED_QUERY_KEYS
+    )
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, query, ""))
+
+
 def discover_page_links(raw: bytes, source: IRSource) -> list[Discovered]:
     pattern = re.compile(source.link_pattern or "")
     soup = BeautifulSoup(raw, "html.parser")
     seen: set[str] = set()
     out: list[Discovered] = []
     for a in soup.find_all("a", href=True):
-        href = urljoin(str(source.url), str(a["href"]).strip()).split("#")[0]
+        href = canonical_url(urljoin(str(source.url), str(a["href"]).strip()))
         if not pattern.search(href) or href in seen:
             continue
         seen.add(href)
@@ -171,6 +186,20 @@ def discover_page_links(raw: bytes, source: IRSource) -> list[Discovered]:
         if len(out) >= source.max_items:
             break
     return out
+
+
+def html_title(fetched: FetchedBytes) -> str | None:
+    """<title> of an HTML document, without a trailing site name ("... | OMV.com")."""
+    media = (fetched.content_type or "").split(";")[0].strip().lower()
+    if media not in ("text/html", "application/xhtml+xml", ""):
+        return None
+    if fetched.content[:5] == b"%PDF-":
+        return None
+    soup = BeautifulSoup(fetched.content, "html.parser")
+    if soup.title is None:
+        return None
+    text = " ".join(soup.title.get_text(" ", strip=True).split())
+    return text.split(" | ")[0].strip() or None
 
 
 class IRSourceAdapter(SourceAdapter):
@@ -242,7 +271,7 @@ class IRSourceAdapter(SourceAdapter):
         source: IRSource | None,
         found: Discovered | None,
     ) -> RawDocument:
-        normalizer = normalizer_for(fetched.content_type, fetched.content)
+        normalizer = normalizer_for(fetched.content_type, fetched.content, kind="ir")
         extra: dict[str, Any] = {"content_type": fetched.content_type}
         if source is not None:
             extra.update(
@@ -262,12 +291,17 @@ class IRSourceAdapter(SourceAdapter):
             if found.published is not None:
                 p = found.published
                 published_at = datetime(p.year, p.month, p.day, tzinfo=UTC)
+        title = (
+            (found.title if found else None)
+            or html_title(fetched)
+            or (source.id if source else None)
+        )
         return build_raw_document(
             fetched,
             source_type="ir_feed",
             raw_dir=self.raw_dir,
             normalizer=normalizer,
-            title=(found.title if found else None) or (source.id if source else None),
+            title=title,
             published_at=published_at,
             issuer_hint=issuer.id if issuer else None,
             extra=extra,

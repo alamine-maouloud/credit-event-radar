@@ -7,9 +7,9 @@
   "raw_file": "document.htm.gz",
   "raw_sha256": "dd9f6c83026869e0c1ad9e551e687b48090352029de646b0df17f442fe953e5f",
   "raw_size_bytes": 86975,
-  "normalizer_version": "sec-html-1.0",
-  "normalized_sha256": "eb76004aa311c7a5bb3408ffddc6c0a6fdf4b79523912004771ec7c695f85473",
-  "normalized_chars": 10509,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "06040ca12386964a23eaebf3adf08d1b7e3bbed25ddd34b312f241881171a15e",
+  "normalized_chars": 9419,
   "extra": {
     "content_type": "text/html;charset=UTF-8",
     "source_id": "traton_press_rss",

@@ -220,6 +220,18 @@ def events(
         f = ev.fields
         decided = database.priority_of(ev.event_id)
         priority = (decided[0] or "NONE") if decided else "undecided"
+        if ev.family == "rating" and not f.get("old_rating"):
+            parts = [
+                f.get("agency"),
+                f.get("rating"),
+                f.get("new_outlook") and f"outlook {f['new_outlook']}",
+                f.get("watch") and f"watch {f['watch']}",
+            ]
+            detail = " ".join(str(x) for x in parts if x)
+            kind = f"{ev.family}/{ev.event_type}"
+            head = f"{ev.event_id}  {priority:<9}  {ev.issuer_id}  {kind}"
+            typer.echo(f"{head}  {ev.effective_date}  {detail}")
+            continue
         detail = (
             f"{f.get('agency')} {f.get('old_rating')} to {f.get('new_rating')}"
             if ev.family == "rating"

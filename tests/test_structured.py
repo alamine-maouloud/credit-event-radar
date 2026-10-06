@@ -393,3 +393,41 @@ def test_document_agency_detection(scales):
         + "Later: Moody's disagrees."
     )
     assert document_agency(doc(long), scales) == "FITCH"
+
+
+def test_reverse_transition_to_x_from_y(scales):
+    text = "Morningstar DBRS downgraded the Issuer Rating on Issuer Test A AG to BBB (high) from A (low) and changed the trend to Stable."
+    ev = only_event(text, scales)
+    assert ev.event_type == "downgrade"
+    assert (ev.fields["agency"], ev.fields["old_rating"], ev.fields["new_rating"]) == (
+        "DBRS",
+        "A (low)",
+        "BBB (high)",
+    )
+    assert ev.fields["new_outlook"] == "stable"
+    assert next(s for s in ev.evidence if s.field == "old_rating").quote == "A (low)"
+
+
+def test_dbrs_confirmed_with_trend(scales):
+    ev = only_event(
+        "Morningstar DBRS confirmed Issuer Test A AG's Issuer Rating at BBB (high) with a Stable trend.",
+        scales,
+    )
+    assert ev.event_type == "affirmation" and ev.fields["rating"] == "BBB (high)"
+
+
+def test_report_mode_skips_dated_references(scales):
+    text = (
+        "Research Update: Issuer Test A AG Outlook Revised To Negative; Affirmed At 'BBB+'\n"
+        "December 17, 2025\n"
+        "We revised our outlook on Issuer Test A to negative from stable.\n"
+        "Related Research\n"
+        "Issuer Test A AG 'BBB+' Rating Affirmed As Strategic Actions Offset Short-Term Financial Pressure, March 27, 2025"
+    )
+    result = extract_rating_actions(
+        doc(text), "ISSUER_TEST_A", scales, default_agency="SP", report_mode=True
+    )
+    assert [e.event_type for e in result.events] == ["outlook_change"]
+    assert [s.reason for s in result.skipped] == ["dated_reference_in_report"]
+    without = extract_rating_actions(doc(text), "ISSUER_TEST_A", scales, default_agency="SP")
+    assert sorted(e.event_type for e in without.events) == ["affirmation", "outlook_change"]

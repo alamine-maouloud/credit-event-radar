@@ -7,9 +7,9 @@
   "raw_file": "document.htm.gz",
   "raw_sha256": "c37111ca1af03c015879c979ae3853b6818e699ad39befb5548704acc230cc41",
   "raw_size_bytes": 137848,
-  "normalizer_version": "sec-html-1.0",
-  "normalized_sha256": "19e353c17176723b8b2408d7c078b22cf72cb04f82550a9bfc8142c0702fb712",
-  "normalized_chars": 15930,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "5cad3a1b09240c404ff33ecec86916e03db08489a9d62b6069c1be1dbbcab60b",
+  "normalized_chars": 12155,
   "extra": {
     "content_type": "text/html; charset=utf-8",
     "source_id": "vw_press_rss",

@@ -141,7 +141,11 @@ class FixtureAdapter:
             fixture.fetched,
             source_type=m["source_type"],
             raw_dir=self.raw_dir,
-            normalizer=normalizer_for(m.get("content_type"), fixture.raw),
+            normalizer=normalizer_for(
+                m.get("content_type"),
+                fixture.raw,
+                kind="ir" if m["source_type"] == "ir_feed" else "edgar",
+            ),
             title=title,
             published_at=datetime.fromisoformat(f"{published}T00:00:00+00:00")
             if published

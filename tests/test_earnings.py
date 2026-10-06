@@ -112,3 +112,10 @@ def test_results_title_patterns(title):
 def test_title_from_first_line_when_missing():
     ev = only("Second quarter 2026 results\nIssuer Test A confirms its guidance.", title=None)
     assert ev.fields["period"] == "Second quarter"
+
+
+def test_forward_looking_first_half_title_is_not_a_results_release():
+    title = "Neptun Deep advances towards first gas, expected in the first half of 2027"
+    assert extract_earnings_events(doc("Text.", title), "ISSUER_TEST_A").events == []
+    title2 = "Issuer Test A improves profitability and increases incoming orders by 30% in the first half of 2026"
+    assert extract_earnings_events(doc("Text.", title2), "ISSUER_TEST_A").events

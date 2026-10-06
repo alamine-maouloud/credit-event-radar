@@ -41,7 +41,7 @@ issuers:
         link_pattern: 'uploads\.vw-mms\.de/.*\.pdf'
         document_type: rating_report
         content: pdf
-        max_items: 10
+        max_items: 20
         note: Agency releases republished by the issuer, copyrighted, never committed (ADR-010)
     tags: [demo_watchlist]
 

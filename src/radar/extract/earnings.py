@@ -22,6 +22,11 @@ _RESULTS_TITLE_RE = re.compile(
     r"(?i)\b(?:(?:first|second|third|fourth)\s+quarter|Q[1-4]|half[- ]year|(?:first|second)\s+half|H[12]\b|nine[- ]months|9M\b|"  # noqa: E501
     r"full[- ]year|fiscal[- ]year|FY\s?20\d\d|annual results|results|interim report|trading update)\b"  # noqa: E501
 )
+_WEAK_PERIOD_RE = re.compile(r"(?i)(?:first|second)\s+half")
+_RESULTS_NOUN_RE = re.compile(
+    r"(?i)\b(?:results?|profit(?:ability)?|revenues?|sales|earnings|orders?|deliveries|ebit(?:da)?|"
+    r"margins?|cash flow|outlook|guidance|quarter|interim|report)\b"
+)
 _STATEMENTS: list[tuple[str, re.Pattern[str]]] = [
     (
         "reaffirmed",
@@ -97,6 +102,8 @@ def extract_earnings_events(doc: RawDocument, issuer_id: str) -> Extraction:
     period_match = _RESULTS_TITLE_RE.search(title)
     if not period_match:
         return Extraction([], [])
+    if _WEAK_PERIOD_RE.fullmatch(period_match.group(0)) and not _RESULTS_NOUN_RE.search(title):
+        return Extraction([], [])  # "expected in the first half of 2027" is not a results release
     skipped: list[Skipped] = []
     evidence: list[EvidenceSpan] = [title_span] if title_span else []
     statuses: list[tuple[str, int, int]] = []

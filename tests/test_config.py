@@ -328,7 +328,7 @@ def test_ir_sources_configured_for_the_three_pilot_issuers(universe):
     }
     vw = universe.by_id("VOLKSWAGEN")
     assert vw.ir_sources[1].table_profile == "current_by_agency"
-    assert vw.ir_sources[2].content == "pdf" and vw.ir_sources[2].max_items == 10
+    assert vw.ir_sources[2].content == "pdf" and vw.ir_sources[2].max_items == 20
     omv = universe.by_id("OMV")
     assert omv.ir_sources[0].path_prefix == "/en/investors/news-and-events/news/"
     assert omv.ir_sources[2].table_profile == "dated_by_agency"

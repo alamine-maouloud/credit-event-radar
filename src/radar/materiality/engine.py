@@ -264,7 +264,23 @@ def modifier(condition: str):
 # --------------------------------------------------------------- ratings --- #
 
 
+def _agency_guard(ctx: _Context) -> str | None:
+    """Rating rules only apply to admissible agencies (rules.yaml rating_state)."""
+    if (
+        ctx.family == "rating"
+        and ctx.agency
+        and ctx.agency not in ctx.rules.rating_state.admissible_agencies
+    ):
+        return (
+            f"agency {ctx.agency} is not admissible for rating rules "
+            "(rating_state.admissible_agencies)"
+        )
+    return None
+
+
 def _downgrade_guard(ctx: _Context) -> str | None:
+    if guard := _agency_guard(ctx):
+        return guard
     if ctx.family != "rating" or ctx.event_type != "downgrade":
         return "not a rating downgrade"
     if ctx.label_error:
@@ -334,6 +350,8 @@ def rat03(ctx: _Context) -> Outcome:
 
 @rule("negative_watch_at_boundary")
 def rat04(ctx: _Context) -> Outcome:
+    if guard := _agency_guard(ctx):
+        return False, guard, {}
     if ctx.family != "rating" or ctx.fields.get("watch") != "negative":
         return False, "no negative watch", {}
     if ctx.label_error:
@@ -374,6 +392,8 @@ def rat05(ctx: _Context) -> Outcome:
 
 @rule("outlook_to_negative")
 def rat06(ctx: _Context) -> Outcome:
+    if guard := _agency_guard(ctx):
+        return False, guard, {}
     if ctx.family != "rating" or ctx.fields.get("new_outlook") != "negative":
         return False, "outlook not revised to negative", {}
     previous, origin = ctx.previous_outlook()
@@ -387,6 +407,8 @@ def rat06(ctx: _Context) -> Outcome:
 
 @rule("negative_watch")
 def rat07(ctx: _Context) -> Outcome:
+    if guard := _agency_guard(ctx):
+        return False, guard, {}
     if ctx.family != "rating" or ctx.fields.get("watch") != "negative":
         return False, "no negative watch", {}
     if ctx.rule_bool("negative_watch_at_boundary"):
@@ -402,6 +424,8 @@ def rat07(ctx: _Context) -> Outcome:
 
 @rule("agency_rating_crosses_hy_to_ig")
 def rat08(ctx: _Context) -> Outcome:
+    if guard := _agency_guard(ctx):
+        return False, guard, {}
     if ctx.family != "rating" or ctx.event_type != "upgrade":
         return False, "not a rating upgrade", {}
     if ctx.label_error:
@@ -422,6 +446,8 @@ def rat08(ctx: _Context) -> Outcome:
 
 @rule("upgrade_or_positive_outlook")
 def rat09(ctx: _Context) -> Outcome:
+    if guard := _agency_guard(ctx):
+        return False, guard, {}
     if ctx.family != "rating":
         return False, "not a rating event", {}
     reasons = []
@@ -442,6 +468,8 @@ def rat09(ctx: _Context) -> Outcome:
 
 @rule("affirmation")
 def rat10(ctx: _Context) -> Outcome:
+    if guard := _agency_guard(ctx):
+        return False, guard, {}
     if ctx.family != "rating" or ctx.event_type != "affirmation":
         return False, "not an affirmation", {}
     if ctx.fields.get("watch") not in (None, "none"):

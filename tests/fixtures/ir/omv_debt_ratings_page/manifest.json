@@ -7,9 +7,9 @@
   "raw_file": "document.htm.gz",
   "raw_sha256": "128c63d33316a4723578be3750234efd753f4fb2b044e77daecde8800c92ff2d",
   "raw_size_bytes": 310957,
-  "normalizer_version": "sec-html-1.0",
-  "normalized_sha256": "2eda49cf8793278bfd8156e7c7e715f35dd563f9b398d8fcdaae628ec7b248b1",
-  "normalized_chars": 8192,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "7577187efb5ab8b709cc9ca3fde6c79925fe4216b3be60bf68cce2ebd65378fe",
+  "normalized_chars": 5253,
   "extra": {
     "content_type": "text/html; charset=utf-8",
     "source_id": "omv_debt_ratings_page",
@@ -45,7 +45,7 @@
         "rating": "A3",
         "outlook": "stable",
         "watch": "none",
-        "rating_date": "2025-07-23",
+        "rating_date": "2026-06-01",
         "as_of_basis": "stated"
       },
       {
@@ -53,7 +53,7 @@
         "rating": "A3",
         "outlook": "stable",
         "watch": "none",
-        "rating_date": "2026-06-01",
+        "rating_date": "2025-07-23",
         "as_of_basis": "stated"
       }
     ],

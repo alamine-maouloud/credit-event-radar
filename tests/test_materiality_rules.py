@@ -500,3 +500,16 @@ def test_effective_date_defaults_to_state_date(rules, scales):
         harley_state(rules, scales),
     )
     assert d.effective_date == D
+
+
+def test_non_admissible_agency_events_trigger_no_rating_rule(rules, scales):
+    """DBRS actions are stored and shown but never drive a rule in v1 (user decision, 2026-10-06)."""
+    d = decide(rules, scales, rating_event("DBRS", "BBB (low)", "BB (high)"))
+    assert triggered(d) == set() and d.final_priority is None
+    assert "not admissible" in outcome(d, "RAT-01").reason
+    d2 = decide(
+        rules,
+        scales,
+        ev("rating", "outlook_change", agency="DBRS", old_outlook="stable", new_outlook="negative"),
+    )
+    assert "RAT-06" not in triggered(d2)

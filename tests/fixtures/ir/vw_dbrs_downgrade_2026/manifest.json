@@ -1,0 +1,73 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://uploads.vw-mms.de/system/production/documents/cws/003/292/file_en/7712f3eda2461fd667be33560b2d9829d961fabe/RatingPressRelease_Volkswagen_AG.pdf?1785418346",
+  "content_type": "application/pdf",
+  "retrieved_at": "2026-10-06T14:24:54.681195+00:00",
+  "raw_file": "document.pdf.gz",
+  "raw_sha256": "028174445eb572884754e52a775a4468d456e54d07d811896a7068612e6272cf",
+  "raw_size_bytes": 52892,
+  "normalizer_version": "pdf-text-1.1",
+  "normalized_sha256": "066f195e2b8c8050490963966acb33f67123b30440eb47752e8c10ba139afb58",
+  "normalized_chars": 24953,
+  "extra": {
+    "content_type": "application/pdf",
+    "source_id": "vw_rating_releases",
+    "kind": "page_links",
+    "document_type": "rating_report",
+    "table_profile": null,
+    "expected_content": "pdf",
+    "published": null
+  },
+  "title": "Morningstar DBRS Downgrades Volkswagen AG's Issuer Rating to BBB (high) From A (low); Changes Trend to Stable",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "rating",
+        "event_type": "downgrade",
+        "effective_date": "2026-07-30",
+        "fields": {
+          "agency": "DBRS",
+          "old_rating": "A (low)",
+          "new_rating": "BBB (high)",
+          "new_outlook": "stable",
+          "old_outlook": null,
+          "watch": null
+        },
+        "n_spans": 6
+      },
+      {
+        "family": "rating",
+        "event_type": "outlook_change",
+        "effective_date": "2026-07-30",
+        "fields": {
+          "agency": "DBRS",
+          "old_rating": null,
+          "new_rating": null,
+          "rating": "BBB (high)",
+          "new_outlook": "stable",
+          "old_outlook": "negative",
+          "watch": null
+        },
+        "n_spans": 6
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "downgrade",
+        "final_priority": null,
+        "triggered": []
+      },
+      {
+        "event_type": "outlook_change",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

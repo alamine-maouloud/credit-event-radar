@@ -7,8 +7,8 @@
   "raw_file": "document.pdf.gz",
   "raw_sha256": "88dbe67d028997bff34a3643c2230a9ac428cb2dcb1ea1f41897bb1c4c29fc26",
   "raw_size_bytes": 479235,
-  "normalizer_version": "pdf-text-1.0",
-  "normalized_sha256": "a34e95395c1703578f3bb9bf314678d64f1eebb1ece96b6f0d30a86b3ebb5e85",
+  "normalizer_version": "pdf-text-1.1",
+  "normalized_sha256": "d2de6379c8aad98af15ebc23563b0cbd56ba6e37dea672fa9f1e1244fa475d36",
   "normalized_chars": 14607,
   "extra": {
     "content_type": "application/pdf",

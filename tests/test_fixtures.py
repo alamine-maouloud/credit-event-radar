@@ -33,7 +33,9 @@ def test_fixture_replays_identically(directory: Path, tmp_path: Path):
         pytest.skip(f"private fixture bytes not present for {directory.name}")
     fixture = load_fixture(directory)
     m = fixture.manifest
-    normalizer = normalizer_for(m.get("content_type"), fixture.raw)
+    normalizer = normalizer_for(
+        m.get("content_type"), fixture.raw, kind="ir" if m["source_type"] == "ir_feed" else "edgar"
+    )
     assert m["normalizer_version"] == normalizer.version, "regenerate the manifest on purpose"
     assert sha256_hex(fixture.raw) == m["raw_sha256"]
     assert len(fixture.raw) == m["raw_size_bytes"]

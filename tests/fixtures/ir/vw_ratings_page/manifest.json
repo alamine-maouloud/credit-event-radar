@@ -7,9 +7,9 @@
   "raw_file": "document.htm.gz",
   "raw_sha256": "04a9bb6af0551fca290bfffaff7325d8d0a153272e16a6c89640aa75febbc569",
   "raw_size_bytes": 92932,
-  "normalizer_version": "sec-html-1.0",
-  "normalized_sha256": "b95ab1a520245b3318034c2768fcab15a96e97273bf9f361517459f01a00663c",
-  "normalized_chars": 6022,
+  "normalizer_version": "ir-html-1.0",
+  "normalized_sha256": "5df1a214d047907f112730e32b55b9df0532af09abeb640021135f57c39d7616",
+  "normalized_chars": 2234,
   "extra": {
     "content_type": "text/html; charset=utf-8",
     "source_id": "vw_ratings_page",

@@ -34,7 +34,8 @@ _VERB_RE = re.compile(r"\b(" + "|".join(DOWNGRADE_VERBS + UPGRADE_VERBS) + r")\b
 _SHORT_TERM_RE = re.compile(r"short[\s-]term", re.IGNORECASE)
 _OUTLOOK_WORDS = r"(stable|negative|positive|developing)"
 _OUTLOOK_RE = re.compile(
-    rf"\boutlook\b[^.;]{{0,40}}?\b{_OUTLOOK_WORDS}\b|\b{_OUTLOOK_WORDS}\s+outlook\b", re.IGNORECASE
+    rf"\b(?:outlook|trend)s?\b[^.;]{{0,40}}?\b{_OUTLOOK_WORDS}\b|\b{_OUTLOOK_WORDS}\s+(?:outlook|trend)s?\b",
+    re.IGNORECASE,
 )
 _WATCH_RE = re.compile(
     r"\b(?:CreditWatch|credit watch|watch)\s+(?:with\s+)?(negative|positive|developing)\b"
@@ -96,6 +97,7 @@ class _Patterns:
             self.label_alt[agency_id] = alt
             self.transition_re[agency_id] = re.compile(
                 rf"\bfrom\s+(?P<old>{alt})(?![A-Za-z0-9+\-])\s+to\s+(?P<new>{alt})(?![A-Za-z0-9+\-])"
+                rf"|\bto\s+(?P<new2>{alt})(?![A-Za-z0-9+\-])\s+from\s+(?P<old2>{alt})(?![A-Za-z0-9+\-])"
             )
 
 
@@ -113,14 +115,16 @@ _OUTLOOK_WORDS = r"(stable|negative|positive|developing|evolving)"
 _OUTLOOK_REVISION_RES = [
     re.compile(
         r"(?i:\b(?:revis(?:ed|es|ing)|chang(?:ed|es|ing)|lower(?:ed|s|ing)|rais(?:ed|es|ing)|mov(?:ed|es|ing)|set)"
-        r"\s+(?:the\s+|its\s+|their\s+|our\s+)?(?:rating\s+|long-term\s+)?outlooks?\b[^.;]{0,120}?\bto\s+)"
+        r"\s+(?:the\s+|its\s+|their\s+|our\s+)?(?:rating\s+|long-term\s+)?(?:outlooks?|trends?)\b[^.;]{0,120}?\bto\s+)"
         rf"(?i:{_OUTLOOK_WORDS})\b(?i:(?:\s+from\s+{_OUTLOOK_WORDS}\b)?)"
     ),
     re.compile(
-        r"(?i:\boutlooks?\s+(?:(?:was|were|has been|have been|is|are)\s+)?(?:revised|changed|lowered|raised|moved)\s+to\s+)"  # noqa: E501
+        r"(?i:\b(?:outlooks?|trends?)\s+(?:(?:was|were|has been|have been|is|are)\s+)?(?:revised|changed|lowered|raised|moved)\s+to\s+)"  # noqa: E501
         rf"(?i:{_OUTLOOK_WORDS})\b(?i:(?:\s+from\s+{_OUTLOOK_WORDS}\b)?)"
     ),
-    re.compile(rf"(?i:\boutlooks?\s+to\s+{_OUTLOOK_WORDS}\s+from\s+{_OUTLOOK_WORDS}\b)"),
+    re.compile(
+        rf"(?i:\b(?:outlooks?|trends?)\s+to\s+{_OUTLOOK_WORDS}\s+from\s+{_OUTLOOK_WORDS}\b)"
+    ),
 ]
 _WATCH_RES = [
     re.compile(
@@ -136,6 +140,14 @@ _RATING_NOUN_RE = re.compile(r"(?i:\b(?:ratings?|idr|issuer|long-term|senior|not
 _QUOTES = "'\"\u2018\u2019\u201c\u201d"
 
 _PATTERN_CACHE: dict[int, _Patterns] = {}
+
+
+def _gstart(m: re.Match[str], name: str) -> int:
+    return m.start(name) if m.group(name) is not None else m.start(name + "2")
+
+
+def _gend(m: re.Match[str], name: str) -> int:
+    return m.end(name) if m.group(name) is not None else m.end(name + "2")
 
 
 def _patterns(scales: RatingScales) -> _Patterns:
@@ -182,16 +194,40 @@ def document_agency(doc: RawDocument, scales: RatingScales) -> str | None:
     return None
 
 
+REPORT_DATE_TOLERANCE_DAYS = 3
+
+
 def extract_rating_actions(
-    doc: RawDocument, issuer_id: str, scales: RatingScales, *, default_agency: str | None = None
+    doc: RawDocument,
+    issuer_id: str,
+    scales: RatingScales,
+    *,
+    default_agency: str | None = None,
+    report_mode: bool = False,
 ) -> Extraction:
     """Rating actions stated in sentences. ``default_agency`` applies to sentences that
-    name no agency in an agency-authored document ("we revised our outlook")."""
+    name no agency in an agency-authored document ("we revised our outlook").
+    ``report_mode`` (agency reports) skips sentences dated differently from the report
+    header: those are references to past actions, not the action of the document."""
     pats = _patterns(scales)
     events: list[CreditEvent] = []
     skipped: list[Skipped] = []
     sentences_with_transition: set[int] = set()
+    header = document_header_date(doc) if report_mode else None
     for sentence in iter_sentences(doc.text):
+        if report_mode and header is not None:
+            own = parse_us_date(sentence.text)
+            if own is not None and abs((own[0] - header[0]).days) > REPORT_DATE_TOLERANCE_DAYS:
+                if pats.agency_re.search(sentence.text) or default_agency:
+                    skipped.append(
+                        Skipped(
+                            "dated_reference_in_report",
+                            sentence.start,
+                            sentence.end,
+                            sentence.text[:120],
+                        )
+                    )
+                continue
         mentions = [
             (m.start(), m.end(), pats.by_name[m.group(1).casefold()])
             for m in pats.agency_re.finditer(sentence.text)
@@ -226,8 +262,10 @@ def extract_rating_actions(
                         )
                     )
                     continue
-                old_label = scales.agency(agency_id).canonical_label(m.group("old"))
-                new_label = scales.agency(agency_id).canonical_label(m.group("new"))
+                old_raw = m.group("old") or m.group("old2")
+                new_raw = m.group("new") or m.group("new2")
+                old_label = scales.agency(agency_id).canonical_label(old_raw)
+                new_label = scales.agency(agency_id).canonical_label(new_raw)
                 if old_label is None or new_label is None:
                     skipped.append(
                         Skipped(
@@ -257,15 +295,15 @@ def extract_rating_actions(
                     ),
                     exact_span(
                         doc,
-                        sentence.start + m.start("old"),
-                        sentence.start + m.end("old"),
+                        sentence.start + _gstart(m, "old"),
+                        sentence.start + _gend(m, "old"),
                         extractor_version=EXTRACTOR_VERSION,
                         field="old_rating",
                     ),
                     exact_span(
                         doc,
-                        sentence.start + m.start("new"),
-                        sentence.start + m.end("new"),
+                        sentence.start + _gstart(m, "new"),
+                        sentence.start + _gend(m, "new"),
                         extractor_version=EXTRACTOR_VERSION,
                         field="new_rating",
                     ),
@@ -459,7 +497,7 @@ def _non_transition_event(doc, issuer_id, scales, pats, sentence, mentions) -> C
         new_outlook = "developing"
     if old_outlook == "evolving":
         old_outlook = "developing"
-    affirmed = re.search(r"(?i:\baffirm(?:ed|s|ing)?\b)", text) is not None
+    affirmed = re.search(r"(?i:\b(?:affirm|confirm)(?:ed|s|ing)?\b)", text) is not None
     if watch is None and new_outlook is None and not affirmed:
         return None
     if watch is not None:
@@ -470,24 +508,35 @@ def _non_transition_event(doc, issuer_id, scales, pats, sentence, mentions) -> C
         anchor = outlook_span[0]
     else:
         event_type = "affirmation"
-        anchor = text.lower().index("affirm")
+        anchor = min(
+            i for i in (text.lower().find("affirm"), text.lower().find("confirm")) if i >= 0
+        )
     preceding = [a for s, _, a in mentions if s < anchor]
     agency_id = preceding[-1] if preceding else agency_ids[0]
     alt = pats.label_alt[agency_id]
 
     label = None
     label_span = None
+    affirm_at = re.compile(
+        rf"(?i:\b(?:affirm|confirm)(?:ed|s|ing)?\b)[^.;]{{0,120}}?(?i:\bat)\s+[{_QUOTES}]?"
+        rf"{_LABEL_BOUNDARY_BEFORE}(?P<label>{alt}){_LABEL_BOUNDARY_AFTER}"
+    )
     affirm_a = re.compile(
-        rf"(?i:\baffirm(?:ed|s|ing)?\b)[^.;]{{0,120}}?(?:(?i:\bat)\s+)?[{_QUOTES}]?"
+        rf"(?i:\b(?:affirm|confirm)(?:ed|s|ing)?\b)[^.;]{{0,120}}?[{_QUOTES}]?"
         rf"{_LABEL_BOUNDARY_BEFORE}(?P<label>{alt}){_LABEL_BOUNDARY_AFTER}"
     )
     affirm_b = re.compile(
-        rf"[{_QUOTES}]?(?P<label>{alt})(?:/[A-Za-z0-9+\-]+)?[{_QUOTES}]?\s+(?:[A-Za-z-]+\s+){{0,3}}?(?i:ratings?\s+affirmed)"
+        rf"[{_QUOTES}]?(?P<label>{alt})(?:/[A-Za-z0-9+\-]+)?[{_QUOTES}]?\s+(?:[A-Za-z-]+\s+){{0,3}}?(?i:ratings?\s+(?:affirmed|confirmed))"
     )
-    for pattern in (affirm_a, affirm_b):
-        m = pattern.search(text)
-        if m:
-            label, label_span = m.group("label"), (m.start("label"), m.end("label"))
+    for pattern in (affirm_at, affirm_a, affirm_b):
+        for m in pattern.finditer(text):
+            candidate = m.group("label")
+            quoted = m.start("label") > 0 and text[m.start("label") - 1] in _QUOTES
+            if pattern is affirm_a and len(candidate) == 1 and not quoted:
+                continue  # a bare single letter is a word ("Issuer Test A"), not a rating
+            label, label_span = candidate, (m.start("label"), m.end("label"))
+            break
+        if label is not None:
             break
     if label is None:
         found = _find_rating_label(text, alt)
@@ -589,10 +638,16 @@ def _non_transition_event(doc, issuer_id, scales, pats, sentence, mentions) -> C
             "extractor_version": EXTRACTOR_VERSION,
         }
     )
+    # The rating itself is not part of the key: a title and a body sentence describing the
+    # same outlook or watch action (one with the affirmed rating, one without) must merge.
     key = {
-        "agency": agency_id, "rating": canonical, "new_outlook": new_outlook, "watch": watch,
+        "agency": agency_id,
+        "new_outlook": new_outlook,
+        "watch": watch,
         "date": effective.isoformat() if effective else f"{doc.doc_id}:{sentence.start}",
-    }  # fmt: skip
+    }
+    if event_type == "affirmation":
+        key["rating"] = canonical
     return CreditEvent(
         event_id=event_id_for(issuer_id, "rating", event_type, key),
         issuer_id=issuer_id,

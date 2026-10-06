@@ -84,3 +84,58 @@ def test_html_to_text_cell_separator_not_at_line_end():
 def test_nested_blocks():
     text = normalize_sec_html(b"<div><div><p>one</p></div><p>two</p></div>")
     assert text == "one\ntwo"
+
+
+IR_PAGE = b"""<html><head><title>Notice | Issuer</title></head><body>
+<header><nav><a href="/">Home</a><a href="/investors">Investors</a></nav></header>
+<main id="main">
+<section class="hero-stage--article"><h1>Notice of early redemption</h1><p>August 7, 2026</p></section>
+<article><p>Issuer Test A AG announces the early redemption of its EUR 750,000,000 notes.</p></article>
+<div id="relatedContent123"><section class="teaser-card-slider"><a href="/x">Issuer Test A issues new hybrid notes with a volume of EUR 750 million</a></section></div>
+<aside>Share this page</aside>
+</main>
+<footer>Imprint</footer></body></html>"""
+
+
+def test_ir_normaliser_drops_chrome_and_related_teasers():
+    from radar.normalize import IR_NORMALIZER_VERSION, IrHtmlNormalizer
+
+    text = IrHtmlNormalizer().normalize(IR_PAGE)
+    assert "Notice of early redemption" in text and "announces the early redemption" in text
+    assert "hybrid notes" not in text and "Imprint" not in text and "Share this page" not in text
+    assert "Investors" not in text
+    assert IrHtmlNormalizer().version == IR_NORMALIZER_VERSION == "ir-html-1.0"
+
+
+def test_sec_normaliser_keeps_everything_and_is_unchanged():
+    text = SecHtmlNormalizer().normalize(IR_PAGE)
+    assert "hybrid notes" in text and "Imprint" in text
+    assert SecHtmlNormalizer().version == "sec-html-1.0"
+
+
+def test_normalizer_for_kind():
+    from radar.normalize import normalizer_for
+
+    assert normalizer_for("text/html", b"<p>x</p>", kind="ir").version == "ir-html-1.0"
+    assert normalizer_for("text/html", b"<p>x</p>", kind="edgar").version == "sec-html-1.0"
+    assert normalizer_for("application/pdf", b"%PDF-1.4", kind="ir").version == "pdf-text-1.1"
+
+
+def test_pdf_blocks_split_mid_sentence_are_joined():
+    import pymupdf
+
+    from radar.normalize import PdfNormalizer
+
+    pdf = pymupdf.open()
+    page = pdf.new_page()
+    page.insert_text((72, 72), "Agency downgraded the Issuer Rating on Issuer Test A (VW or the")
+    page.insert_text(
+        (72, 300), "Company) to BBB (high) from A (low) and changed the trend to Stable."
+    )
+    page.insert_text((72, 500), "Rating Action Overview")
+    page.insert_text((72, 600), "We expect tough conditions.")
+    data = pdf.tobytes()
+    pdf.close()
+    text = PdfNormalizer().normalize(data)
+    assert "Issuer Test A (VW or the Company) to BBB (high) from A (low)" in text
+    assert PdfNormalizer().version == "pdf-text-1.1"

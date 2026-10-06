@@ -119,7 +119,9 @@ def run_extractors(
         return empty, empty, observations, profile
     if kind == "rating_report":
         agency = document_agency(doc, scales)
-        ratings = extract_rating_actions(doc, issuer.id, scales, default_agency=agency)
+        ratings = extract_rating_actions(
+            doc, issuer.id, scales, default_agency=agency, report_mode=True
+        )
         return ratings, empty, None, None
     ratings = extract_rating_actions(doc, issuer.id, scales)
     others = Extraction([], [])

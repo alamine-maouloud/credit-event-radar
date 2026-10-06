@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Callable
 from typing import Protocol
 
 from bs4 import BeautifulSoup, NavigableString, Tag
@@ -73,7 +74,11 @@ def _is_hidden(tag: Tag) -> bool:
     return bool(style) and bool(_HIDDEN_RE.search(str(style)))
 
 
-def _walk(node: Tag, out: list[str]) -> None:
+def _sec_dropped(tag: Tag) -> bool:
+    return (tag.name or "").lower() in DROP_TAGS or _is_hidden(tag)
+
+
+def _walk(node: Tag, out: list[str], dropped: Callable[[Tag], bool] = _sec_dropped) -> None:
     for child in node.children:
         if isinstance(child, PreformattedString):
             continue  # comments, doctype, XML declarations, CDATA
@@ -83,26 +88,67 @@ def _walk(node: Tag, out: list[str]) -> None:
         if not isinstance(child, Tag):
             continue
         name = (child.name or "").lower()
-        if name in DROP_TAGS or _is_hidden(child):
+        if dropped(child):
             continue
         if name in CELL_TAGS:
             out.append(" ")
-            _walk(child, out)
+            _walk(child, out, dropped)
             out.append(CELL_SEPARATOR)
         elif name in BLOCK_TAGS:
             out.append("\n")
-            _walk(child, out)
+            _walk(child, out, dropped)
             out.append("\n")
         else:
-            _walk(child, out)
+            _walk(child, out, dropped)
 
 
-def html_to_text(html: str) -> str:
+def html_to_text(html: str, dropped: Callable[[Tag], bool] = _sec_dropped) -> str:
     """Flatten HTML into line-oriented text, before whitespace normalisation."""
     soup = BeautifulSoup(html, "html.parser")
     out: list[str] = []
-    _walk(soup, out)
+    _walk(soup, out, dropped)
     return "".join(out)
+
+
+# ------------------------------------------------------- issuer web pages --- #
+
+IR_NORMALIZER_VERSION = "ir-html-1.0"
+_IR_DROP_TAGS = DROP_TAGS | {"nav", "aside", "footer", "form", "button", "iframe", "svg"}
+_IR_DROP_ATTR_RE = re.compile(
+    r"related|teaser|slider|carousel|recommend|cookie|breadcrumb|sidebar|share-bar|social-share|newsletter",
+    re.IGNORECASE,
+)
+
+
+def _ir_dropped(tag: Tag) -> bool:
+    """Issuer pages: drop navigation, footers, asides, forms and 'related content' blocks
+    (teasers of other releases) identified by their id, class or role."""
+    name = (tag.name or "").lower()
+    if name in _IR_DROP_TAGS or _is_hidden(tag):
+        return True
+    if name == "header" and tag.find("nav") is not None:
+        return True
+    attrs = " ".join(
+        str(v) if not isinstance(v, list) else " ".join(v)
+        for k, v in tag.attrs.items()
+        if k in ("id", "class", "role", "data-component")
+    )
+    if attrs and (_IR_DROP_ATTR_RE.search(attrs) or "navigation" in attrs.lower()):
+        return True
+    return False
+
+
+def normalize_ir_html(raw: bytes) -> str:
+    return normalize_text(html_to_text(decode_bytes(raw), _ir_dropped))
+
+
+class IrHtmlNormalizer:
+    """Normaliser for issuer investor-relations pages (press releases, ratings pages)."""
+
+    version = IR_NORMALIZER_VERSION
+
+    def normalize(self, raw: bytes) -> str:
+        return normalize_ir_html(raw)
 
 
 def normalize_text(text: str) -> str:
@@ -133,14 +179,19 @@ class SecHtmlNormalizer:
         return normalize_sec_html(raw)
 
 
-PDF_NORMALIZER_VERSION = "pdf-text-1.0"
+PDF_NORMALIZER_VERSION = "pdf-text-1.1"
+
+
+PDF_PARAGRAPH_MAX_CHARS = 2000
+_TERMINAL = (".", "!", "?", ":", ";")
 
 
 def pdf_to_text(raw: bytes) -> str:
-    """One line per text block (paragraph), lines of a block joined with spaces (PyMuPDF).
+    """One line per paragraph (PyMuPDF text blocks), lines of a block joined with spaces.
 
-    Keeping a paragraph on one line lets the sentence splitter see sentences that span
-    visual lines in the PDF.
+    Some PDFs split a sentence across blocks: a block that does not end with terminal
+    punctuation is joined with the next one (up to PDF_PARAGRAPH_MAX_CHARS), so the
+    sentence splitter sees whole sentences.
     """
     import pymupdf
 
@@ -151,8 +202,17 @@ def pdf_to_text(raw: bytes) -> str:
                 if block[6] != 0:
                     continue  # image block
                 lines = [line.strip() for line in str(block[4]).split("\n") if line.strip()]
-                if lines:
-                    paragraphs.append(" ".join(lines))
+                if not lines:
+                    continue
+                text = " ".join(lines)
+                if (
+                    paragraphs
+                    and not paragraphs[-1].endswith(_TERMINAL)
+                    and len(paragraphs[-1]) + len(text) <= PDF_PARAGRAPH_MAX_CHARS
+                ):
+                    paragraphs[-1] = paragraphs[-1] + " " + text
+                else:
+                    paragraphs.append(text)
     return "\n".join(paragraphs)
 
 
@@ -174,9 +234,12 @@ def is_pdf(raw: bytes) -> bool:
     return raw[:5] == b"%PDF-"
 
 
-def normalizer_for(content_type: str | None, raw: bytes) -> Normalizer:
-    """Pick the normaliser from the content type, falling back to sniffing the bytes."""
+def normalizer_for(content_type: str | None, raw: bytes, *, kind: str = "edgar") -> Normalizer:
+    """Pick the normaliser from the content type (PDF sniffed from the bytes) and the
+    source kind: ``edgar`` keeps the SEC rules, ``ir`` drops site chrome and teasers."""
     media = (content_type or "").split(";")[0].strip().lower()
     if media == "application/pdf" or is_pdf(raw):
         return PdfNormalizer()
+    if kind == "ir":
+        return IrHtmlNormalizer()
     return SecHtmlNormalizer()
