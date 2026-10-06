@@ -61,6 +61,11 @@ _STATEMENTS: list[tuple[str, re.Pattern[str]]] = [
 ]
 # A sentence that denies the doubt is a reassurance, not a warning.
 _FLAG_NEGATIONS: dict[str, re.Pattern[str]] = {
+    "liquidity": re.compile(
+        r"(?i)\bno\s+(?:\w+\s+){0,2}liquidity\s+(?:concern|constraint|pressure|shortfall)s?\b"
+        r"|\bnot\s+(?:exposed\s+to|subject\s+to|facing|impacted|affected)\b"
+        r"|\bwithout\s+(?:any\s+)?liquidity\b"
+    ),
     "going_concern": re.compile(
         r"(?i)\bno\s+(?:substantial|significant|material)\s+(?:doubt|uncertaint(?:y|ies))\b"
         r"|\bnot\s+(?:impacted|affected|in\s+doubt)\b|\bdoes\s+not\s+cast\b"
@@ -94,7 +99,10 @@ _FLAGS: list[tuple[str, re.Pattern[str]]] = [
     (
         "liquidity",
         re.compile(
-            r"(?i)\bliquidity\b[^.;]{0,30}?\b(?:concerns?|constraints?|shortfalls?|pressures?|risks?)\b"
+            # a worry or a deterioration, never the bare "liquidity risk" of a risk section
+            r"(?i)\bliquidity\b[^.;]{0,30}?\b(?:concerns?|constraints?|constrained|shortfalls?|"
+            r"pressures?|tighten(?:ed|ing)|strained|insufficient)\b"
+            r"|\b(?:constrained|tight|strained|insufficient)\s+liquidity\b"
         ),
     ),
 ]

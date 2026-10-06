@@ -143,3 +143,28 @@ def test_going_concern_flag_needs_doubt_wording(sentence):
 )
 def test_going_concern_flag_on_doubt_wording(sentence):
     assert only(f"Results. {sentence}").fields["flags"] == ["going_concern"]
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "We have no liquidity concerns for the coming twelve months.",
+        "Liquidity risk management is described in the risk report.",
+        "The liquidity risk factors are unchanged from the annual report.",
+        "The Group is not exposed to liquidity constraints.",
+    ],
+)
+def test_liquidity_flag_ignores_negations_and_generic_risk_sections(sentence):
+    assert only(f"Results. {sentence}").fields["flags"] == []
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "Management notes liquidity constraints in the second half.",
+        "Liquidity has become constrained following the recall provisions.",
+        "The company faces liquidity pressure as covenant headroom narrows.",
+    ],
+)
+def test_liquidity_flag_on_explicit_deterioration(sentence):
+    assert only(f"Results. {sentence}").fields["flags"] == ["liquidity"]
