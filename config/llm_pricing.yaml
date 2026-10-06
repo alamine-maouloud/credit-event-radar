@@ -2,16 +2,16 @@
 # prices change, so no figure lives in the code. Verify the official pages before each
 # benchmark and bump the version. Unknown models never cost zero: the budget refuses them.
 version: "2026-10-06"
-source: "Provided by the project owner on 2026-10-06 from the OpenAI developer pages; re-check before any real run"
+source: "Verified against official OpenAI documentation on 2026-10-06 (project owner). Prices change: re-check and bump the version before each benchmark"
 models:
   gpt-5.6-terra:
     input_per_million_usd: 2.0
     output_per_million_usd: 12.0
     valid_from: 2026-10-06
-    note: "Main benchmark model, supports Structured Outputs and reasoning effort levels"
+    note: "Main benchmark model. Verified 2026-10-06: supports Structured Outputs and reasoning efforts none, low, medium, high, xhigh, max"
   gpt-5.6-sol:
     input_per_million_usd: 4.0
     output_per_million_usd: 20.0
     valid_from: 2026-10-06
     valid_until: 2026-11-21
-    note: "High-quality reference; promotional pricing guaranteed by OpenAI at least until 2026-11-21. Never use the bare alias gpt-5.6: record the exact id and the resolved snapshot."
+    note: "High-quality reference. Verified 2026-10-06: promotional pricing guaranteed by OpenAI at least until 2026-11-21; efforts none to max. Never use the bare alias gpt-5.6: record the exact id and the resolved snapshot."

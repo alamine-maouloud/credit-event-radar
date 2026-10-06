@@ -61,7 +61,7 @@ class ModelRole(BaseModel):
     provider: Literal["anthropic", "openai", "azure_openai"]
     model: str
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
-    reasoning_effort: Literal["minimal", "low", "medium", "high"] | None = None
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"] | None = None
 
 
 class LLMSettings(BaseModel):
