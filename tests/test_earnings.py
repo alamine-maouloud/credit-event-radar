@@ -282,9 +282,12 @@ def test_a_quarterly_report_is_a_results_publication_with_its_flags():
     assert ev.effective_date == date(2026, 8, 14)
     assert ev.fields["period"] == "quarterly period ended June 30, 2026"
     assert ev.fields["report_form"] == "10-Q" and ev.fields["guidance_status"] is None
-    assert ev.fields["flags"] == ["going_concern", "covenant"]
+    # on a report only the going concern is a deterministic flag; the covenant candidate
+    # is recorded and left to the validated statements of the LLM path (ADR-024)
+    assert ev.fields["flags"] == ["going_concern"]
     fields = {s.field for s in ev.evidence}
-    assert fields == {"title", "flag:going_concern", "flag:covenant"}
+    assert fields == {"title", "flag:going_concern"}
+    assert any(s.reason == "report_flag_needs_validated_statement:covenant" for s in result.skipped)
     assert all(TEN_Q[s.char_start : s.char_end] == s.quote for s in ev.evidence)
 
 

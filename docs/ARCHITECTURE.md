@@ -503,7 +503,12 @@ report is a results publication in substance (SPEC 6.1 names the 8-K 2.02; the r
 the document behind it), so `extract_periodic_report` now yields one earnings_release
 event per 10-Q or 10-K, dated at filing, with the period read from the cover ("for the
 quarterly period ended June 30, 2026"), the deterministic flags of the same scan as a
-results release and no guidance reading (a report does not guide). No new event type: the
+results release and no guidance reading (a report does not guide). On a report only the
+going concern, whose wording rules are strict, is a deterministic flag: the risk factors of
+a 10-Q are full of hypothetical covenant, liquidity and impairment language ("could face
+liquidity constraints"), which raised false P1 on Deere, PACCAR, General Motors and Compass
+in the first demo build; those families come from the validated statements of the LLM
+path, the candidates are recorded with their reason in the audit. No new event type: the
 same family, type, rules and enrichment apply. The scan is one function shared by both
 extractors (structured-earnings-1.3, which also keeps the "Liquidity and Going Concern"
 heading out of the liquidity flag).

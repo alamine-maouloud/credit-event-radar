@@ -271,7 +271,21 @@ def extract_periodic_report(doc: RawDocument, issuer_id: str) -> Extraction:
         period = f"{form} period ended {extra['report_date']}"
     else:
         period = f"{form} filed {extra.get('filing_date') or 'unknown'}"
-    _, flags, skipped = _scan(doc)
+    _, candidates, skipped = _scan(doc)
+    # A report's risk factors are full of hypothetical covenant, liquidity and impairment
+    # language ("could face liquidity constraints"): on a report only the going concern,
+    # whose wording rules are strict, is a deterministic flag; the other families come
+    # from the validated statements of the LLM path (ADR-024).
+    flags = []
+    for flag, f0, f1 in candidates:
+        if flag == "going_concern":
+            flags.append((flag, f0, f1))
+        else:
+            skipped.append(
+                Skipped(
+                    f"report_flag_needs_validated_statement:{flag}", f0, f1, doc.text[f0:f1][:160]
+                )
+            )
     evidence: list[EvidenceSpan] = [title_span] if title_span else []
     for flag, f0, f1 in flags:
         evidence.append(
