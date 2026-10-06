@@ -1,0 +1,34 @@
+{
+  "run_id": "liquidity-terra-2026-10-06",
+  "started_at": "2026-10-06T19:20:45.821662+00:00",
+  "finished_at": "2026-10-06T19:26:34.677709+00:00",
+  "provider": "openai",
+  "model_id": "gpt-5.6-terra",
+  "resolved_models": [
+    "gpt-5.6-terra"
+  ],
+  "reasoning_effort": "low",
+  "temperature": 0.0,
+  "max_output_tokens": 32768,
+  "prompt_id": "extraction.liquidity",
+  "prompt_version": "1.0.0",
+  "prompt_content_hash": "9f201bfd63510916045cabace7ba8b1222eecb217e45ed80da2d42f87b48fe8f",
+  "kind": "liquidity",
+  "schema_version": "liquidity-1.0",
+  "extractor_version": "llm-liquidity-1.0",
+  "gold_path": "eval/gold/liquidity_v1.jsonl",
+  "gold_labels_sha256": "84a24abe269042058313978908b10bacd9624eee2c35b50f6b5ed469da32078a",
+  "gold_lock_sha256": "051341a046b6342fbbfc118843c988a39a491148394d41a675e33277e1914421",
+  "n_documents": 20,
+  "statuses": {
+    "ok": 20
+  },
+  "total_cost_usd": 0.958552,
+  "estimated_cost_usd": 8.703935999999999,
+  "budget_limit_usd": 10.0,
+  "budget_remaining_usd": 9.041448,
+  "input_tokens": 306644,
+  "output_tokens": 28772,
+  "dry_run": false,
+  "limit": null
+}
