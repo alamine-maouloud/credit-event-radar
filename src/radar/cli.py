@@ -422,6 +422,35 @@ def llm_eval(run: Path = RUN_OPTION, gold: Path = GOLD_OPTION) -> None:
     _echo_metrics(metrics)
 
 
+RUNS_OPTION = typer.Option(..., "--run", help="Run directory, repeat for each run to compare")
+COMPARE_OUT_OPTION = typer.Option(None, "--out", help="Write the markdown table to this file")
+
+
+@app.command("llm-compare")
+def llm_compare(
+    runs: list[Path] = RUNS_OPTION,
+    gold: Path = GOLD_OPTION,
+    out: Path | None = COMPARE_OUT_OPTION,
+) -> None:
+    """Side by side table of benchmark runs with every statement in one category
+    (supported, scope violation, field inconsistency, span failure, ungrounded)."""
+    from radar.eval.compare import compare_runs, render_markdown
+    from radar.eval.gold import load_gold
+
+    table = compare_runs(load_gold(gold), runs)
+    markdown = render_markdown(table)
+    if out is not None:
+        out.write_text(markdown, encoding="utf-8")
+    typer.echo(markdown)
+    for run in table["runs"]:
+        if run["scope_violation_labels"]:
+            typer.echo(
+                f"{run['run_id']} scope violations: {sorted(set(run['scope_violation_labels']))}"
+            )
+        if run["missed"]:
+            typer.echo(f"{run['run_id']} missed: {run['missed']}")
+
+
 def _fmt(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.3f}"
 
