@@ -76,13 +76,18 @@ def pipeline(tmp_path_factory) -> dict:
 
 
 def test_cli_outputs(pipeline):
-    assert "schema 2 ready" in pipeline["init"]
+    assert "schema 3 ready" in pipeline["init"]
     assert "issuers" in pipeline["seed"]
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest"]
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest_url"]
     assert "resolved 1, unresolved 1" in pipeline["process"]
     assert "events new 1" in pipeline["process"]
-    assert "HARLEY_DAVIDSON_INC  rating/downgrade  2026-07-08  SP BBB- to BB+" in pipeline["events"]
+    assert "observations 3" in pipeline["process"]
+    assert "decisions: P1 1" in pipeline["process"]
+    assert (
+        "P1         HARLEY_DAVIDSON_INC  rating/downgrade  2026-07-08  SP BBB- to BB+"
+        in pipeline["events"]
+    )
 
 
 def test_document_provenance_matches_the_manifest(pipeline):
@@ -142,10 +147,101 @@ def test_audit_trail_covers_every_step(pipeline):
     ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
     doc_id = ev.source_doc_ids[0]
     steps = [(e["step"], e["status"]) for e in db.audit_entries(doc_id=doc_id)]
-    assert steps == [("ingest", "ok"), ("resolve", "ok"), ("extract", "ok"), ("process", "ok")]
+    assert steps == [
+        ("ingest", "ok"), ("resolve", "ok"), ("observe", "ok"), ("observe", "ok"), ("observe", "ok"),
+        ("extract", "ok"), ("process", "ok"),
+    ]  # fmt: skip
     entries = db.audit_entries(event_id=ev.event_id)
-    assert entries and entries[0]["outputs_hash"] and entries[0]["model_id"] is None
+    assert [e["step"] for e in entries] == ["extract", "materiality"]
+    assert entries[1]["rules_version"] == "1.2" and entries[1]["model_id"] is None
+    assert "P1 (DECIDED) via RAT-01, RAT-02" in entries[1]["message"]
     db.close()
+
+
+def test_observations_from_the_ratings_table(pipeline):
+    db = Database(pipeline["db"])
+    obs = {o.agency: o for o in db.observations_for("HARLEY_DAVIDSON_INC")}
+    assert set(obs) == {"SP", "MOODYS", "FITCH"}
+    assert all(
+        o.as_of == date(2026, 6, 30) and o.verification_method == "structured_table"
+        for o in obs.values()
+    )
+    assert (obs["MOODYS"].rating, obs["FITCH"].rating, obs["SP"].rating) == ("Baa3", "BBB", "BBB-")
+    assert obs["SP"].watch == "negative"
+    doc = db.get_document(obs["SP"].doc_id)
+    assert all(verify_span(doc, o.evidence) for o in obs.values())
+    assert obs["SP"].evidence.evidence_type == "table_row" and obs[
+        "SP"
+    ].evidence_span_id.startswith("span_")
+    db.close()
+
+
+def test_decision_is_p1_by_rat01_and_rat02(pipeline):
+    db = Database(pipeline["db"])
+    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    d = db.get_decision(ev.event_id)
+    assert d is not None
+    assert (d.final_priority, d.base_priority, d.decision_status) == ("P1", "P1", "DECIDED")
+    assert d.triggered_ids() == ["RAT-01", "RAT-02"]
+    assert d.effective_date == date(2026, 7, 8)
+    after = d.state_after
+    assert set(after.entries) == {"SP", "MOODYS", "FITCH"}
+    assert (
+        after.entries["SP"].rating,
+        after.entries["SP"].category,
+        after.entries["SP"].origin,
+    ) == ("BB+", "HY", "event")
+    for agency, rating in (("MOODYS", "Baa3"), ("FITCH", "BBB")):
+        e = after.entries[agency]
+        assert (e.rating, e.category, e.as_of, e.age_days, e.origin, e.verification) == (
+            rating,
+            "IG",
+            date(2026, 6, 30),
+            8,
+            "observation",
+            "structured_table",
+        )
+    rat02 = next(r for r in d.rules if r.id == "RAT-02")
+    assert rat02.data["other_ig_agencies"] == ["FITCH", "MOODYS"]
+    assert d.provenance.composite_used is False and d.provenance.llm_used == "none"
+    assert not [m for m in d.modifiers if m.applied]
+    db.close()
+
+
+def test_explain_output(pipeline):
+    db = Database(pipeline["db"])
+    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    db.close()
+    out = run("show-event", ev.event_id, "--explain", *pipeline["common"])
+    assert out.startswith("FINAL PRIORITY: P1\n")
+    assert "RAT-01  TRUE" in out and "RAT-02  TRUE" in out
+    assert "S&P Global Ratings BBB- -> BB+, IG -> HY" in out
+    assert "Moody's\n  Baa3  IG" in out and "as_of: 2026-06-30" in out and "age: 8 days" in out
+    assert "Fitch\n  BBB  IG" in out
+    assert "RAT-03  FALSE" in out and "MOD-01  NOT APPLIED" in out and "already HY" in out
+    assert (
+        "Agency ratings used: YES" in out
+        and "Composite rating used: NO" in out
+        and "LLM used: NO" in out
+    )
+    assert (
+        "https://www.sec.gov/Archives/edgar/data/793952/000079395226000061/hog-20260630.htm" in out
+    )
+    assert "raw sha256 " + load_fixture(HARLEY).manifest["raw_sha256"] in out
+    assert "[new_rating] 228641-228644: BB+" in out
+
+
+def test_decide_recomputes_identically(pipeline):
+    db = Database(pipeline["db"])
+    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    before = db.get_decision(ev.event_id).model_dump(mode="json")
+    db.close()
+    out = run("decide", *pipeline["common"])
+    assert "decisions: P1 1" in out
+    db = Database(pipeline["db"])
+    after = db.get_decision(ev.event_id).model_dump(mode="json")
+    db.close()
+    assert before == after
 
 
 def test_unknown_issuer_fixture_produces_no_event(pipeline):
@@ -170,7 +266,7 @@ def test_show_event_traces_back_to_source(pipeline):
         "https://www.sec.gov/Archives/edgar/data/793952/000079395226000061/hog-20260630.htm" in out
     )
     assert "raw sha256 " + load_fixture(HARLEY).manifest["raw_sha256"] in out
-    assert "LLM used for: none" in out
+    assert "Priority: P1 (DECIDED), deterministic rules engine." in out
 
 
 def test_second_run_is_idempotent(pipeline):

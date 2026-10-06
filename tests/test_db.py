@@ -117,6 +117,42 @@ def test_audit_log(db: Database):
     assert stable_hash({"b": 2, "a": 1}) == stable_hash({"a": 1, "b": 2})
 
 
+def test_observation_and_decision_roundtrip(db: Database, scales):
+    from radar.config import CONFIG_DIR, load_rules
+    from radar.materiality.engine import MaterialityEngine
+    from radar.models import RatingObservation
+    from tests.materiality_helpers import candidate, rating_event, state
+
+    span = EvidenceSpan(
+        doc_id="d" * 64,
+        char_start=0,
+        char_end=5,
+        quote="Hello",
+        evidence_type="table_row",
+        extractor_version="t",
+        match_score=100.0,
+        field="rating_row",
+    )
+    obs = RatingObservation(
+        observation_id="obs_1", issuer_id="ISSUER_TEST_A", agency="MOODYS", rating="Baa3", outlook="stable", watch="none",
+        rating_type="long_term_issuer", scope="issuer", as_of=date(2026, 6, 30), doc_id="d" * 64, evidence_span_id="span_1",
+        evidence=span, extractor_version="t", verification_method="structured_table",
+    )  # fmt: skip
+    assert db.insert_observation(obs) is True and db.insert_observation(obs) is False
+    assert db.observations_for("ISSUER_TEST_A") == [obs]
+
+    rules = load_rules(CONFIG_DIR / "rules.yaml")
+    decision = MaterialityEngine(rules, scales).evaluate(
+        rating_event("SP", "BBB-", "BB+"), state(rules, scales, candidate("MOODYS", "Baa3"))
+    )
+    db.upsert_decision(decision)
+    assert db.get_decision(decision.event_id) == decision
+    assert db.priority_of(decision.event_id) == ("P1", "DECIDED")
+    assert db.decisions_for("ISSUER_TEST_A")[0].event_id == decision.event_id
+    db.upsert_decision(decision)  # idempotent replace
+    assert db.count("priority_decisions") == 1
+
+
 def test_count_rejects_unknown_table(db: Database):
     with pytest.raises(ValueError):
         db.count("sqlite_master")

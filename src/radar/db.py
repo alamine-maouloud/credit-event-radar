@@ -17,12 +17,16 @@ from typing import Any
 
 from radar.audit import AuditEntry
 from radar.config import Universe
-from radar.models import AgencyRating, CreditEvent, EvidenceSpan, RawDocument
+from radar.materiality.engine import Decision
+from radar.models import AgencyRating, CreditEvent, EvidenceSpan, RatingObservation, RawDocument
 
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 TABLES = frozenset(
-    {"issuers", "issuer_aliases", "ratings", "documents", "events", "event_evidence", "audit_log"}
-)
+    {
+        "issuers", "issuer_aliases", "ratings", "documents", "events", "event_evidence",
+        "audit_log", "rating_observations", "priority_decisions",
+    }
+)  # fmt: skip
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (
@@ -101,6 +105,39 @@ CREATE TABLE IF NOT EXISTS event_evidence (
     extractor_version TEXT NOT NULL,
     match_score REAL NOT NULL,
     field TEXT
+);
+CREATE TABLE IF NOT EXISTS rating_observations (
+    observation_id TEXT PRIMARY KEY,
+    issuer_id TEXT NOT NULL,
+    agency TEXT NOT NULL,
+    rating TEXT NOT NULL,
+    outlook TEXT,
+    watch TEXT NOT NULL,
+    rating_type TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    as_of TEXT NOT NULL,
+    doc_id TEXT NOT NULL,
+    evidence_span_id TEXT NOT NULL,
+    char_start INTEGER NOT NULL,
+    char_end INTEGER NOT NULL,
+    quote TEXT NOT NULL,
+    evidence_type TEXT NOT NULL,
+    extractor_version TEXT NOT NULL,
+    verification_method TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS priority_decisions (
+    event_id TEXT PRIMARY KEY,
+    issuer_id TEXT NOT NULL,
+    effective_date TEXT,
+    base_priority TEXT,
+    final_priority TEXT,
+    decision_status TEXT NOT NULL,
+    negative INTEGER NOT NULL,
+    triggered_rules TEXT NOT NULL,
+    rules_version TEXT NOT NULL,
+    llm_role TEXT NOT NULL,
+    decision_json TEXT NOT NULL,
+    decided_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -400,6 +437,122 @@ class Database:
     def get_event(self, event_id: str) -> CreditEvent | None:
         row = self.conn.execute("SELECT * FROM events WHERE event_id = ?", (event_id,)).fetchone()
         return self._row_to_event(row) if row else None
+
+    # ------------------------------------------------------ observations --- #
+
+    def insert_observation(self, obs: RatingObservation) -> bool:
+        exists = self.conn.execute(
+            "SELECT 1 FROM rating_observations WHERE observation_id = ?", (obs.observation_id,)
+        ).fetchone()
+        if exists:
+            return False
+        with self.transaction() as c:
+            c.execute(
+                """INSERT INTO rating_observations VALUES
+                   (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    obs.observation_id,
+                    obs.issuer_id,
+                    obs.agency,
+                    obs.rating,
+                    obs.outlook,
+                    obs.watch,
+                    obs.rating_type,
+                    obs.scope,
+                    obs.as_of.isoformat(),
+                    obs.doc_id,
+                    obs.evidence_span_id,
+                    obs.evidence.char_start,
+                    obs.evidence.char_end,
+                    obs.evidence.quote,
+                    obs.evidence.evidence_type,
+                    obs.extractor_version,
+                    obs.verification_method,
+                ),
+            )
+        return True
+
+    def observations_for(self, issuer_id: str) -> list[RatingObservation]:
+        rows = self.conn.execute(
+            "SELECT * FROM rating_observations WHERE issuer_id = ? "
+            "ORDER BY as_of, agency, observation_id",
+            (issuer_id,),
+        )
+        out = []
+        for r in rows:
+            span = EvidenceSpan(
+                doc_id=r["doc_id"],
+                char_start=r["char_start"],
+                char_end=r["char_end"],
+                quote=r["quote"],
+                evidence_type=r["evidence_type"],
+                extractor_version=r["extractor_version"],
+                match_score=100.0,
+                field="rating_row",
+            )
+            out.append(
+                RatingObservation(
+                    observation_id=r["observation_id"],
+                    issuer_id=r["issuer_id"],
+                    agency=r["agency"],
+                    rating=r["rating"],
+                    outlook=r["outlook"],
+                    watch=r["watch"],
+                    rating_type=r["rating_type"],
+                    scope=r["scope"],
+                    as_of=r["as_of"],
+                    doc_id=r["doc_id"],
+                    evidence_span_id=r["evidence_span_id"],
+                    evidence=span,
+                    extractor_version=r["extractor_version"],
+                    verification_method=r["verification_method"],
+                )
+            )
+        return out
+
+    # --------------------------------------------------------- decisions --- #
+
+    def upsert_decision(self, decision: Decision) -> None:
+        with self.transaction() as c:
+            c.execute(
+                """INSERT OR REPLACE INTO priority_decisions VALUES
+                   (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    decision.event_id,
+                    decision.issuer_id,
+                    decision.effective_date.isoformat() if decision.effective_date else None,
+                    decision.base_priority,
+                    decision.final_priority,
+                    decision.decision_status,
+                    int(decision.negative),
+                    _json(decision.triggered_ids()),
+                    decision.rules_version,
+                    decision.provenance.llm_used,
+                    _json(decision.model_dump(mode="json")),
+                    datetime.now(UTC).isoformat(),
+                ),
+            )
+
+    def get_decision(self, event_id: str) -> Decision | None:
+        row = self.conn.execute(
+            "SELECT decision_json FROM priority_decisions WHERE event_id = ?", (event_id,)
+        ).fetchone()
+        return Decision.model_validate(json.loads(row["decision_json"])) if row else None
+
+    def decisions_for(self, issuer_id: str) -> list[Decision]:
+        rows = self.conn.execute(
+            "SELECT decision_json FROM priority_decisions WHERE issuer_id = ? "
+            "ORDER BY effective_date, event_id",
+            (issuer_id,),
+        )
+        return [Decision.model_validate(json.loads(r["decision_json"])) for r in rows]
+
+    def priority_of(self, event_id: str) -> tuple[str | None, str] | None:
+        row = self.conn.execute(
+            "SELECT final_priority, decision_status FROM priority_decisions WHERE event_id = ?",
+            (event_id,),
+        ).fetchone()
+        return (row["final_priority"], row["decision_status"]) if row else None
 
     # ------------------------------------------------------------- audit --- #
 

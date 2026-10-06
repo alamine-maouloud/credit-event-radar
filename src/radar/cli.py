@@ -21,6 +21,7 @@ from radar.config import (
     load_dotenv,
     load_rating_scales,
     load_ratings_seed,
+    load_rules,
     load_settings,
     load_universe,
 )
@@ -143,14 +144,31 @@ def process(db: DbOption = None) -> None:
     database = _db(db)
     universe = load_universe(CONFIG_DIR / "universe.yaml")
     scales = load_rating_scales(CONFIG_DIR / "rating_scales.yaml")
-    s = run_process(database, universe, scales)
+    rules = load_rules(CONFIG_DIR / "rules.yaml")
+    s = run_process(database, universe, scales, rules)
     typer.echo(
         f"documents {s.documents}, resolved {s.resolved}, unresolved {s.unresolved}, "
         f"events new {s.events_new}, merged {s.events_merged}, "
-        f"candidates rejected {s.candidates_skipped}"
+        f"candidates rejected {s.candidates_skipped}, observations {s.observations_new}"
     )
+    decided = ", ".join(f"{k} {v}" for k, v in sorted(s.decisions.items())) or "none"
+    typer.echo(f"decisions: {decided}")
     for event_id in s.event_ids:
         typer.echo(f"  {event_id}")
+
+
+@app.command()
+def decide(
+    issuer: Annotated[str | None, typer.Option(help="Issuer id")] = None, db: DbOption = None
+) -> None:
+    """Recompute materiality decisions for stored events (after a rules.yaml change)."""
+    from radar.pipeline import decide_all
+
+    database = _db(db)
+    scales = load_rating_scales(CONFIG_DIR / "rating_scales.yaml")
+    rules = load_rules(CONFIG_DIR / "rules.yaml")
+    counts = decide_all(database, rules, scales, issuer)
+    typer.echo("decisions: " + (", ".join(f"{k} {v}" for k, v in sorted(counts.items())) or "none"))
 
 
 @app.command()
@@ -161,22 +179,41 @@ def events(
     database = _db(db)
     for ev in database.list_events(issuer):
         f = ev.fields
+        decided = database.priority_of(ev.event_id)
+        priority = (decided[0] or "NONE") if decided else "undecided"
         detail = (
             f"{f.get('agency')} {f.get('old_rating')} to {f.get('new_rating')}"
             if ev.family == "rating"
             else f.get("form", "")
         )
         kind = f"{ev.family}/{ev.event_type}"
-        typer.echo(f"{ev.event_id}  {ev.issuer_id}  {kind}  {ev.effective_date}  {detail}")
+        typer.echo(
+            f"{ev.event_id}  {priority:<9}  {ev.issuer_id}  {kind}  {ev.effective_date}  {detail}"
+        )
 
 
 @app.command("show-event")
-def show_event(event_id: str, db: DbOption = None) -> None:
+def show_event(
+    event_id: str,
+    explain: Annotated[
+        bool, typer.Option("--explain", help="Why this priority? Full rule-by-rule explanation")
+    ] = False,
+    db: DbOption = None,
+) -> None:
     """Trace one event back to its fields, source passages, documents and audit trail."""
     database = _db(db)
     ev = database.get_event(event_id)
     if ev is None:
         raise typer.BadParameter(f"unknown event {event_id}")
+    if explain:
+        from radar.materiality.explain import render_explanation
+
+        decision = database.get_decision(event_id)
+        if decision is None:
+            raise typer.BadParameter(f"no decision stored for {event_id}; run `radar decide`")
+        documents = {d: doc for d in ev.source_doc_ids if (doc := database.get_document(d))}
+        typer.echo(render_explanation(decision, ev, documents), nl=False)
+        return
     typer.echo(f"Event {ev.event_id}")
     typer.echo(f"Issuer: {ev.issuer_id}")
     typer.echo(f"Type: {ev.family}/{ev.event_type}  Effective: {ev.effective_date}")
@@ -203,7 +240,13 @@ def show_event(event_id: str, db: DbOption = None) -> None:
     typer.echo("Audit trail:")
     for entry in database.audit_entries(event_id=event_id):
         typer.echo(f"  {entry['timestamp']} {entry['step']} {entry['status']}: {entry['message']}")
-    typer.echo("Priority decided by: not yet computed (Phase 4). LLM used for: none.")
+    decided = database.priority_of(event_id)
+    if decided:
+        priority, status = decided
+        typer.echo(f"Priority: {priority or 'NONE'} ({status}), deterministic rules engine.")
+        typer.echo("Use --explain for the rule-by-rule view.")
+    else:
+        typer.echo("Priority: not decided yet (run `radar decide`).")
 
 
 if __name__ == "__main__":
