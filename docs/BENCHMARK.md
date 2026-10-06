@@ -1,0 +1,86 @@
+# Benchmark of the guidance extraction, gold set V1
+
+Frozen gold set: eval/gold/guidance_v1.jsonl, lock ee2670bd (30 documents, 57 occurrences,
+10 Volkswagen, 8 TRATON, 12 OMV). Prompt extraction.guidance 1.1.0, schema guidance-1.0,
+validator at two levels, figures computed in code. Every run directory under eval/runs/
+carries run.json, metrics.json and results.jsonl (sanitised: quotes replaced by their hash);
+outputs.jsonl with the verbatim excerpts stays local.
+
+No label was changed after a model output was seen. The validator was corrected once
+(signed numbers printed with a figure dash or an en dash) and the run that exposed the
+defect is kept unchanged next to the re-validated one, which replays the same cached
+answers at zero cost.
+
+## Terra, gpt-5.6-terra, reasoning effort low, 2026-10-06
+
+29 real calls and one cache hit (the smoke test document), 266 282 input tokens, 58 942
+output tokens including reasoning, 1.19 USD against a hard budget of 10 USD, no JSON
+failure, no truncation at a ceiling of 32 768 output tokens.
+
+| Run | Behaviour accuracy | Proposed | Valid | Matched | Precision (valid) | Precision (all) | Recall | F1 | Invalid span rate | Unsupported claim rate | Span exact |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| terra-full-2026-10-06 (validator before the sign fix) | 0.933 | 76 | 61 | 50 | 0.820 | 0.658 | 0.877 | 0.847 | 0.197 | 0.342 | 0.720 |
+| terra-full-2026-10-06-revalidated (same answers, from the cache) | 0.967 | 76 | 66 | 55 | 0.833 | 0.724 | 0.965 | 0.894 | 0.132 | 0.276 | 0.709 |
+
+### Per issuer (re-validated run)
+
+| Issuer | Documents | Behaviour correct | Gold occurrences | Proposed | Valid | Matched | Precision (valid) | Recall |
+|---|---|---|---|---|---|---|---|---|
+| VOLKSWAGEN | 10 | 10 | 35 | 35 | 34 | 34 | 1.00 | 0.97 |
+| TRATON | 8 | 8 | 15 | 16 | 14 | 14 | 1.00 | 0.93 |
+| OMV | 12 | 11 | 7 | 25 | 18 | 7 | 0.39 | 1.00 |
+
+### Cost and latency (first run, real calls)
+
+| Issuer | Cost USD (first run) | Mean latency s | Max input tokens |
+|---|---|---|---|
+| VOLKSWAGEN | 0.393 | 37.2 | 4830 |
+| TRATON | 0.273 | 29.7 | 5441 |
+| OMV | 0.528 | 13.8 | 31295 |
+
+### What the model got right
+
+- Volkswagen: 34 of 35 occurrences matched with every field equal (status, bounds, unit,
+  period, change_basis). The July 2025 cut with the earlier ranges in brackets, the
+  "still expected" and "continues to expect" reaffirmations and the Automotive Division
+  metrics are all read as the guide labels them.
+- TRATON: 14 of 15, including the qualitative raise of July 2026 ("to the upper end of the
+  previous ranges", previous bounds left null) and the quantitative cut of July 2025.
+- OMV: all 7 Group organic CAPEX occurrences found in 80 to 120 thousand character reports,
+  including the raise from EUR 3.2 bn to 3.4 bn with the earlier guidance quoted.
+- The nine no_guidance documents returned has_guidance false with an empty list: no
+  invented statement on deliveries, unit sales, financing or exploration releases.
+- Every quoted span overlaps the gold span; 71 percent are character for character the
+  gold span, the rest are longer passages that also hold the status wording.
+
+### What the model got wrong
+
+- Segment figures despite the prompt: 11 valid statements for OMV segment CAPEX
+  (Chemicals, Fuels, Energy) that the guide excludes. They pass the validator because they
+  are faithful quotes; they are the whole of the over-extraction and the reason OMV
+  precision is 0.39. Six more OMV statements (exploration and appraisal expenditure as
+  capex) were rejected by the validator's metric check.
+- One non-verbatim quote (TRATON FY 2025: "unit sales and" dropped from the sentence),
+  rejected by the span check with a fuzzy score below 90.
+- Two unit errors on "mentioned" statements (EUR instead of percent for "in line with the
+  previous year"), rejected by the unit check; one earlier range invented as 0 for a net
+  cash flow "around EUR 0 billion".
+- One behaviour miss: the OMV FY 2025 KPI page ("production reached the guided level")
+  returned no guidance where the gold says mentioned, not actionable.
+
+### What the validator got wrong, and the fix
+
+The first scoring rejected six correct extractions of negative bounds (TRATON "5% to +5%" with a figure dash before the 5,
+VW "3 to 0 percent" with an en dash before the 3) because the number pattern read the typographic dash as a
+separator. Recall was 0.877 before the fix and 0.965 after, from the same cached answers.
+The defect is covered by a regression test; the first run stays in the repository as
+evidence of the correction.
+
+### Reading for the materiality rules
+
+With validated statements only, the document behaviour is correct on 29 of 30 documents
+and every status and change_basis of a matched occurrence agrees with the gold. ERN-02,
+ERN-03 and ERN-04 can therefore be fed by validated statements; the open question for the
+pipeline is the over-extraction of segment figures, to be handled by the scope rule in
+code (an occurrence whose label names a segment is metadata, never a trigger) rather than
+by trusting the prompt.
