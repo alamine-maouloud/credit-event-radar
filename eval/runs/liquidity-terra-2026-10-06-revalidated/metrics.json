@@ -1,0 +1,115 @@
+{
+  "dev": {
+    "documents": 15,
+    "statements": {
+      "gold": 41,
+      "predicted": 54,
+      "predicted_valid": 38,
+      "matched": 26,
+      "precision": 0.6842105263157895,
+      "recall": 0.6341463414634146,
+      "status_accuracy": 0.7692307692307693
+    },
+    "negative_statements": {
+      "gold": 18,
+      "predicted_valid": 13,
+      "matched": 8,
+      "precision": 0.6153846153846154,
+      "recall": 0.4444444444444444
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 3,
+      "true_positives": 3,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 12
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "the passage does not speak of liquidity, cash or credit lines": 8,
+      "POLARITY_MISMATCH": 5,
+      "unit EUR_MN not supported by the quote": 2,
+      "THIRD_PARTY_DOCUMENT": 4
+    }
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 11,
+      "predicted": 16,
+      "predicted_valid": 7,
+      "matched": 7,
+      "precision": 1.0,
+      "recall": 0.6363636363636364,
+      "status_accuracy": 0.5714285714285714
+    },
+    "negative_statements": {
+      "gold": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null
+    },
+    "document_flag": {
+      "gold_true": 0,
+      "predicted_true": 0,
+      "true_positives": 0,
+      "precision": null,
+      "recall": null,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 5
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "unit EUR_MN not supported by the quote": 1,
+      "POLARITY_MISMATCH": 3,
+      "numbers not in the quote": 3,
+      "unit USD_MN not supported by the quote": 3,
+      "the passage does not speak of liquidity, cash or credit lines": 4
+    }
+  },
+  "all": {
+    "documents": 20,
+    "statements": {
+      "gold": 52,
+      "predicted": 70,
+      "predicted_valid": 45,
+      "matched": 33,
+      "precision": 0.7333333333333333,
+      "recall": 0.6346153846153846,
+      "status_accuracy": 0.7272727272727273
+    },
+    "negative_statements": {
+      "gold": 18,
+      "predicted_valid": 13,
+      "matched": 8,
+      "precision": 0.6153846153846154,
+      "recall": 0.4444444444444444
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 3,
+      "true_positives": 3,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 17
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "the passage does not speak of liquidity, cash or credit lines": 12,
+      "POLARITY_MISMATCH": 8,
+      "unit EUR_MN not supported by the quote": 3,
+      "THIRD_PARTY_DOCUMENT": 4,
+      "numbers not in the quote": 3,
+      "unit USD_MN not supported by the quote": 3
+    }
+  },
+  "cost": {
+    "total_usd": 0.0,
+    "input_tokens": 306644,
+    "output_tokens": 28772
+  }
+}
