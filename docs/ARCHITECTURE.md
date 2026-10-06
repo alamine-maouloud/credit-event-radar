@@ -297,3 +297,37 @@ reason OUT_OF_SCOPE_SEGMENT. Re-scoring both runs from the cache showed the guar
 the whole precision gap between the models without touching recall. The pattern is the
 one of the whole project: the model proposes, the code validates, the rules decide, and a
 weakness found in a model becomes a deterministic check rather than a longer prompt.
+
+## ADR-017 · Guidance enrichment: the model extracts, the code constrains, the engine decides (2026-10-06)
+
+Validated LLM statements reach the materiality rules through two separate steps.
+`radar llm-extract --events` runs the guidance extraction on the documents behind the
+stored earnings_release events and stores every statement with its two level validation,
+its computed figures and its provenance (llm_statements: call id, model, prompt and schema
+versions, verified span). It never writes to an event. `radar llm-apply` then builds a
+GuidanceEnrichment from the VALID statements only and applies it:
+
+- statements on the same metric and period must agree after unit normalisation; a
+  conflict blocks that metric and is audited, the others still apply;
+- among the cuts on revenue, EBITDA or free cash flow, the governing metric is the one
+  whose simulated rule is the most severe (ERN-02 before ERN-03), then the larger
+  comparable magnitude, then the fixed order revenue, EBITDA, free cash flow; a cut whose
+  magnitude is not comparable to the percent threshold keeps guidance_change_pct null and
+  falls under ERN-03 (rules 1.5);
+- reaffirmed with no cut gives ERN-04; raised, new or mentioned alone decide nothing; every
+  statement stays in fields.llm_guidance for the audit;
+- only empty deterministic fields are filled; one disagreement with a deterministic value
+  keeps the whole deterministic reading and records the conflict; flags are never touched;
+- the event keeps extraction_method structured and gains enrichment_method llm_validated,
+  so the explanation can say what detected the event, what enriched it and what decided;
+- evidence spans of type llm_statement are the document's own passages at the verified
+  offsets, never the model's text;
+- the application is idempotent twice over: a key on the statement ids and a hash of the
+  applied payload, so a later extraction with new statement ids but the same content is
+  reported as the same semantic enrichment;
+- the engine decides again with rules 1.5 and the audit records the priority before and
+  after.
+
+End to end tests cover a quantitative cut at and below the threshold, an explicit
+reaffirmation, a mentioned statement, a scope violation, an invalid statement, a replay
+from the cache at zero cost and the protection of a deterministic field.
