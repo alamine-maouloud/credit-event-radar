@@ -190,3 +190,20 @@ issuers:
     tags: [demo_watchlist, financials]
     rating_status: unverified
     notes: Exact legal-entity rating not validated. Do not reuse Harley-Davidson Inc. ratings.
+
+  # Historical control case for the deterministic end-to-end test (ADR-004). Not part of
+  # the demo watchlist and distinct from HARLEY_DAVIDSON_FS. Source: 10-Q filed 2026-08-05
+  # (accession 0000793952-26-000061), S&P lowered the long-term rating from BBB- to BB+ on
+  # 2026-07-08. No seed row: the case lives in tests/fixtures, never in the ratings seed.
+  - id: HARLEY_DAVIDSON_INC
+    name: Harley-Davidson
+    legal_entity: Harley-Davidson, Inc.
+    aliases: ["Harley-Davidson, Inc.", "Harley Davidson", "HOG"]
+    sector: automotive
+    country: "US"
+    sec_cik: "0000793952"
+    ratings_page: null
+    ir_feeds: []
+    tags: [historical_control, sec_filer]
+    rating_status: unverified
+    notes: Historical control issuer for the end-to-end fixture. Ratings are read from the filing under test, never from the seed.

@@ -76,8 +76,20 @@ def test_universe_load(universe):
 
 def test_universe_unverified_issuers_have_notes(universe):
     unverified = [i for i in universe.issuers if i.rating_status == "unverified"]
-    assert {i.id for i in unverified} == {"GM_FINANCIAL", "HARLEY_DAVIDSON_FS", "ROQUETTE"}
+    assert {i.id for i in unverified} == {
+        "GM_FINANCIAL",
+        "HARLEY_DAVIDSON_FS",
+        "ROQUETTE",
+        "HARLEY_DAVIDSON_INC",
+    }
     assert all(i.notes for i in unverified)
+
+
+def test_historical_control_issuer_is_not_in_the_demo_watchlist(universe):
+    hog = universe.by_id("HARLEY_DAVIDSON_INC")
+    assert "historical_control" in hog.tags and "demo_watchlist" not in hog.tags
+    assert hog.sec_cik == "0000793952"
+    assert hog.id != universe.by_id("HARLEY_DAVIDSON_FS").id
 
 
 def test_universe_has_boundary_issuers(universe):

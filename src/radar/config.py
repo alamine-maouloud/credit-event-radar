@@ -7,7 +7,9 @@ pydantic model consumed by the pure modules (:mod:`radar.ratings`, later ``mater
 from __future__ import annotations
 
 import csv
+import os
 import re
+from collections.abc import MutableMapping
 from datetime import date
 from pathlib import Path
 from typing import Any, Literal
@@ -393,3 +395,33 @@ def load_ratings_seed(
             )
         )
     return ratings
+
+
+# --------------------------------------------------------------------------- #
+# .env
+# --------------------------------------------------------------------------- #
+
+
+def load_dotenv(path: Path = ROOT / ".env", env: MutableMapping[str, str] | None = None) -> int:
+    """Load KEY=VALUE lines from .env into ``env`` without overriding existing keys.
+
+    Returns the number of keys set. Missing file: nothing happens. Secrets never go
+    anywhere else than the process environment.
+    """
+    target = os.environ if env is None else env
+    if not path.exists():
+        return 0
+    count = 0
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        if key and key not in target:
+            target[key] = value
+            count += 1
+    return count
