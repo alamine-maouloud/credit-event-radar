@@ -778,3 +778,48 @@ USD for Sol. The 1.9 USD of credits left cover neither run in full; the benchmar
 a reload. Order kept: Terra, Sol, the blind holdout on filings never read, the routed
 default for the kind, Phase 3 closed.
 
+### Going concern V1: Terra, dev split only (2026-10-07)
+
+Run going-concern-terra-2026-10-07 (gpt-5.6-terra, effort low, explicit alternative while
+the kind is TO_BENCHMARK): 19 documents, 1.84 USD plus 0.13 USD for the first attempt that
+crashed in the benchmark writer after one call (the answer was cached, the fix is tested,
+commit 10b7215), 859 thousand input tokens, latency median 15.7 s and maximum 26.7 s on the
+documents with statements, under 3.1 s on the documents without any. The holdout split is
+scored in metrics.json and not read here.
+
+| Level, dev split (14 documents) | Terra |
+|---|---|
+| Decision: document flag precision / recall | 1.000 / 1.000 (7 of 7 doubt cases) |
+| Decision: false flag rate on the 7 documents without a doubt | 0.000 |
+| Decision: OMV "not impacted" control | negated, no flag |
+| Qualification: status accuracy on matched statements | 1.000 (21 doubt, 9 mentioned, 1 negated) |
+| Qualification: doubt statement precision / recall | 0.750 / 0.375 (28 valid, 21 matched, 56 gold) |
+| Extraction: statement precision / recall | 0.775 / 0.290 (41 proposed, 40 valid, 107 gold) |
+| Rejections | 1, HYPOTHETICAL_RISK, the AMS "if ... were to be accelerated ... which raises substantial doubt" sentence, labelled mentioned |
+| Ineligible passages proposed | 0 |
+
+Reading, by level:
+
+- Decision: every document with a doubt gets the flag, none without one does. The
+  deterministic pass alone would have missed nothing here either, so the LLM path adds
+  the qualified statements and the explanation, not the alert; the control that matters,
+  the OMV denial, is read as negated by both passes.
+- Qualification: no status error on the 31 matched statements; the one rejection is the
+  validator doing its job on a conditional. Terra reads the hypotheticals as the guide does.
+- Extraction: Terra proposes 41 passages for 107 labelled, two or three per document, and
+  25 of its 40 valid quotes span several sentences (the evaluation sentence, the conditions,
+  the conclusion together). Of the 9 valid quotes scored as unlabelled, 8 are identical
+  repeats of a labelled sentence quoted at their second occurrence (the gold labels identical
+  repeats once, on the first) and 1 is a generic forward-looking sentence; counted by
+  content, the 28 valid doubt statements are all right. The low recall is the same Terra
+  conservatism seen on covenants: GoPro's note, tax note, goodwill note and risk factors
+  state the doubt sixteen times, Terra quotes it twice.
+
+Corrections from the dev split: none. No validator, prompt or gold change is justified by
+these outputs. The scoring convention on identical repeats penalises multi-sentence quotes;
+it is a property of the scorer shared by the three families, left as it is and noted.
+
+Limits of gold V1, recorded: no real "alleviated" conclusion in the corpus (offline tests
+only); the "significant uncertainty" wording outside the going concern (tariff refunds,
+litigation) is excluded by the topic check and never proposed by Terra.
+
