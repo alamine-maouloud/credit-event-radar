@@ -445,3 +445,89 @@ quotes that include a "Going Concern" heading pass the polarity check on the hea
 word; the per-statement precision figures understate both models because gold V1 omits
 several true worries. Further changes to the liquidity rules belong to a V2 of the gold and
 of the rules, not to this phase.
+
+## Covenant gold set V1, Terra, DEV iteration (2026-10-06)
+
+Frozen set eval/gold/covenant_v1.jsonl, lock 39080bfa: 18 documents, 13 dev and 5 holdout,
+43 statements of which 11 breached, 3 documents expected to carry the flag. Prompt
+extraction.covenant 1.0.0, schema covenant-1.0, effort low. Terra ran once (1.83 USD); the
+run was then re-scored from the cache after two validator corrections motivated by the
+dev split only. The holdout is reported for completeness and was not used for anything.
+
+| Level | covenant-terra-2026-10-06 (gpt-5.6-terra) | covenant-terra-2026-10-06-revalidated (gpt-5.6-terra) |
+|---|---|---|
+| [dev] documents | 13 | 13 |
+| [dev] Extraction: statement recall | 0.222 | 0.306 |
+| [dev] Extraction: statement precision (valid) | 0.727 | 0.647 |
+| [dev] Qualification: status accuracy | 0.875 | 0.909 |
+| [dev] Qualification: resolution accuracy | 0.875 | 0.727 |
+| [dev] Qualification: negative statement precision | 0.667 | 0.714 |
+| [dev] Qualification: negative statement recall | 0.200 | 0.500 |
+| [dev] Decision: document flag precision | 1.000 | 1.000 |
+| [dev] Decision: document flag recall | 0.500 | 1.000 |
+| [dev] Decision: false flag rate on documents without flag | 0.000 (of 11) | 0.000 (of 11) |
+| [holdout] documents | 5 | 5 |
+| [holdout] Extraction: statement recall | 0.286 | 0.429 |
+| [holdout] Extraction: statement precision (valid) | 0.500 | 0.429 |
+| [holdout] Qualification: status accuracy | 1.000 | 0.667 |
+| [holdout] Qualification: resolution accuracy | 1.000 | 0.667 |
+| [holdout] Qualification: negative statement precision | n/a | n/a |
+| [holdout] Qualification: negative statement recall | 0.000 | 0.000 |
+| [holdout] Decision: document flag precision | n/a | n/a |
+| [holdout] Decision: document flag recall | 0.000 | 0.000 |
+| [holdout] Decision: false flag rate on documents without flag | 0.000 (of 4) | 0.000 (of 4) |
+| Cost USD | 1.83 | 0.00 |
+
+| Document | split | expected | covenant-terra-2026-10-06 | covenant-terra-2026-10-06-revalidated |
+|---|---|---|---|---|
+| C-GPRO-01 | dev | FLAG | FLAG | FLAG |
+| C-CVR-01 | dev | FLAG | NO FLAG | FLAG |
+| C-MVST-01 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-HYFM-01 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-CODI-01 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-GM-01 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-CAT-01 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-F-01 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-PCAR-01 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-CMI-01 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-VW-FY25 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-OMV-Q4-25 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-VW-DEL-H1-26 | dev | NO FLAG | NO FLAG | NO FLAG |
+| C-NFE-01 | holdout | FLAG | NO FLAG | NO FLAG |
+| C-SNBR-01 | holdout | NO FLAG | NO FLAG | NO FLAG |
+| C-HOG-01 | holdout | NO FLAG | NO FLAG | NO FLAG |
+| C-DE-01 | holdout | NO FLAG | NO FLAG | NO FLAG |
+| C-TR-H1-26 | holdout | NO FLAG | NO FLAG | NO FLAG |
+
+### What the dev split showed, and what changed
+
+- Terra is conservative: it proposes few statements (23 for 36 gold on dev) and sets no
+  false flag on the 11 dev documents without a problem. The problem was not the model
+  inventing breaches but the validator discarding good extractions before the engine.
+- Six rejections came from one auxiliary field: the model named the agreement ("March 2025
+  Credit Agreement") outside the quoted sentence, and that alone invalidated four correct
+  breaches of Chicago Rivet, the whole of the missing flag. Correction: field-level salvage.
+  An auxiliary field the quote does not support (agreement, covenant_label) is dropped and
+  audited; the statement stays valid when its span, status, entity and scope hold. The
+  decisional fields are never salvaged.
+- One rejection was a date after the document inside a passage that describes future
+  covenant test periods. Correction: a future date is legitimate when the passage is
+  prospective and claims no breach already realised; a breach claimed at a future date
+  stays inconsistent. (That particular passage stays invalid for other reasons.)
+- Result on dev, same answers: flag precision 1.000 and recall 0.500 become 1.000 and
+  1.000, no new false flag; negative statement recall 0.20 becomes 0.50; resolution
+  accuracy drops from 0.875 to 0.727 because the recovered Chicago Rivet statements carry
+  the model's "waived" where the gold says "none" (the waiver sits in the next sentence),
+  a qualification nuance that changes no decision.
+
+### Status and resolution mismatches of the dev split, case by case (no change made)
+
+| Document | Citation | Gold | Terra | Validator | Reading |
+|---|---|---|---|---|---|
+| Caterpillar | "consolidated net worth was $19.463 billion, which was above the $9.000 billion required covenant in the Credit Facility" | mentioned / none | compliant / none | STATUS_MISMATCH, no compliance statement | A level above the requirement is compliance in substance; the validator only knows "in compliance" wording. Gold V1 convention (levels are mentions) is debatable, noted for V2; no decision changes either way. |
+| Caterpillar | "Cat Financial's covenant interest coverage ratio was 1.54 to 1. This was above the 1.15 to 1 minimum ratio" | unlabelled (segment) | compliant / none | STATUS_MISMATCH | Same wording question; the passage is about a segment, which the scope guard did not catch because the segment is not the sentence's first word. |
+| Caterpillar | "Cat Financial's six-month covenant leverage ratio was 7.96 to 1. This was below the maximum ratio" | unlabelled (segment) | compliant / none | STATUS_MISMATCH | Same as above. |
+| Ford | "The corporate credit facility contains a liquidity covenant that requires us to maintain a minimum of $4 billion" | mentioned / none | mentioned / amended | RESOLUTION_MISMATCH, no amendment word | The model's resolution is unsupported by the span: a qualification error of the model, kept as such. |
+
+Remaining misses on dev are sentences the model did not propose (three GoPro breaches, one
+Chicago Rivet), a recall limit of the model, not of the validator.
