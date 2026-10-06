@@ -530,3 +530,62 @@ def test_salvage_is_recorded_in_the_stored_statement(world):
     _extract(world)
     rows = world["db"].statements_for_document(world["events"]["A"].source_doc_ids[0])
     assert "salvaged" in rows[0]["validation_json"]
+
+
+# DEV decisions (2026-10-06): a quantitative comparison to a covenant requirement supports
+# compliant; a configured segment named as subject or holder of the ratio, anywhere in the
+# sentence, is out of scope. The Ford "amended" error stays an error.
+CAT_GROUP = "At June 30, 2026, Caterpillar’s consolidated net worth was $19.463 billion, which was above the $9.000 billion required covenant in the Credit Facility."
+CAT_SEGMENT_POSSESSIVE = "At June 30, 2026, Cat Financial’s covenant interest coverage ratio was 1.54 to 1. This was above the 1.15 to 1 minimum ratio required under the Credit Facility."
+CAT_SEGMENT_OF = "In addition, at June 30, 2026, the six-month covenant leverage ratio of Cat Financial was 7.96 to 1, below the maximum ratio of 10 to 1."
+BARE_RATIO = "The ratio was above 10% at quarter end."
+MINIMUM_NO_COVENANT = "Our margin was above the minimum we had set ourselves for the year."
+CAT_TEXT = "\n".join(
+    [
+        "Issuer Test A AG report",
+        CAT_GROUP,
+        CAT_SEGMENT_POSSESSIVE,
+        CAT_SEGMENT_OF,
+        BARE_RATIO,
+        MINIMUM_NO_COVENANT,
+    ]
+)
+
+
+def _cat(quote, status, segments=None):
+    start = CAT_TEXT.index(quote)
+    st = CovenantStatement(
+        risk_type="covenant",
+        status=status,
+        evidence_quote=quote,
+        start_offset=start,
+        end_offset=start + len(quote),
+    )
+    return validate_covenant_statement(
+        st, doc(CAT_TEXT), ISSUER_NAMES, document_date=date(2026, 8, 5), segments=segments
+    )
+
+
+def test_a_value_above_a_required_covenant_is_compliant():
+    result = _cat(CAT_GROUP, "compliant")
+    assert result.status == "VALID", result.reasons
+
+
+@pytest.mark.parametrize("quote", [BARE_RATIO, MINIMUM_NO_COVENANT])
+def test_a_comparison_without_a_covenant_link_is_not_compliance(quote):
+    result = _cat(quote, "compliant")
+    assert result.checks["status_match"] is False
+    assert any("STATUS_MISMATCH" in r for r in result.reasons)
+
+
+@pytest.mark.parametrize("quote", [CAT_SEGMENT_POSSESSIVE, CAT_SEGMENT_OF])
+def test_a_configured_segment_as_holder_of_the_ratio_is_out_of_scope(quote):
+    result = _cat(quote, "compliant", segments=["Cat Financial"])
+    assert result.checks["scope_match"] is False and result.status == "INVALID"
+    assert any("OUT_OF_SCOPE_SEGMENT" in r for r in result.reasons)
+    # without the segment configured nothing generic fires on a possessive
+    assert _cat(quote, "compliant").checks["scope_match"] is True
+
+
+def test_the_group_sentence_is_not_caught_by_the_segment_guard():
+    assert _cat(CAT_GROUP, "compliant", segments=["Cat Financial"]).checks["scope_match"] is True

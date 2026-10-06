@@ -135,12 +135,16 @@ def _segment_named(label: str, quote: str, segments: list[str]) -> str | None:
         word = re.compile(r"(?<![\w&])" + re.escape(segment) + r"(?![\w&])", re.IGNORECASE)
         if word.search(label):
             return segment
-        # the segment as the subject of the sentence ("Cat Financial was not in compliance",
-        # "Ford Credit's liquidity profile ...")
+        # the configured segment as the subject of the sentence ("Cat Financial was not in
+        # compliance") or as the holder of the figure anywhere in it ("Cat Financial's
+        # ratio", "the ratio of Cat Financial"); only configured names, never a generic rule
         subject = re.compile(
             r"^\s*(?:the\s+)?" + re.escape(segment) + r"(?:\u2019s|'s)?(?![\w&])", re.IGNORECASE
         )
-        if any(subject.match(sentence) for sentence in metric_sentences):
+        holder = re.compile(
+            r"(?<![\w&])" + re.escape(segment) + r"(?:\u2019s|'s)(?![\w&])", re.IGNORECASE
+        )
+        if any(subject.match(sentence) or holder.search(sentence) for sentence in metric_sentences):
             return segment
         introduced = re.compile(
             r"\b(?:for|of|in|at)\s+(?:the\s+)?" + re.escape(segment) + r"(?![\w&])",
@@ -390,6 +394,25 @@ _RESOLUTION_RE = {
 }
 
 
+# "net worth was above the required covenant", "ratio was below the maximum": compliance by
+# an explicit comparison, accepted only when the same window names a covenant or a
+# contractual requirement (a bare "ratio above 10%" is not a compliance statement)
+_COMPLIANT_COMPARISON_RE = re.compile(
+    r"(?i)\b(?:above|exceed(?:s|ed)?|in\s+excess\s+of|below|within|less\s+than|"
+    r"did\s+not\s+exceed|does\s+not\s+exceed)\b[^;\n]{0,80}?\b(?:required|requirement|minimum|"
+    r"maximum|threshold)\b"
+)
+_COVENANT_WORD_RE = re.compile(
+    r"(?i)\bcovenants?\b|\bcontractual\s+requirement|\bcredit\s+(?:agreement|facility)\b"
+)
+
+
+def _compliance_stated(sentence: str) -> bool:
+    if _COMPLIANT_RE.search(sentence):
+        return True
+    return bool(_COMPLIANT_COMPARISON_RE.search(sentence) and _COVENANT_WORD_RE.search(sentence))
+
+
 def _actual_breach(sentence: str) -> bool:
     """A breach stated for the issuer, neither negated nor hypothetical; an event of default
     only with a covenant or compliance word in the window."""
@@ -420,7 +443,7 @@ def covenant_status_ok(quote: str, status: str) -> tuple[bool, str | None]:
         return True, None
     sentences = [s.text for s in iter_sentences(quote)] or [quote]
     breach = any(_actual_breach(s) for s in sentences)
-    compliant = any(_COMPLIANT_RE.search(s) for s in sentences)
+    compliant = any(_compliance_stated(s) for s in sentences)
     risk = any(_RISK_RE.search(s) for s in sentences)
     if status == "breached":
         if breach:
