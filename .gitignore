@@ -23,3 +23,6 @@ outputs/*
 # Private golden fixtures (issuer and agency documents): manifests are committed, bytes are not (ADR-010)
 tests/fixtures/ir/*/document.*
 tests/fixtures/gold/**/document.*
+
+# benchmark dry runs are estimates only, real runs are committed as evidence
+eval/runs/dry-*/

@@ -50,3 +50,14 @@ Aucune recommandation d'investissement.
 > information retrieved as of 2026-10-06. Inspired by publicly available Rothschild & Co Asset
 > Management Fixed Income research and the January 2027 AI Project Management internship
 > description. AI-generated drafts must be validated by an analyst. Not investment advice.
+
+## LLM benchmark (Phase 3.2)
+
+```bash
+radar llm-extract --dry-run --out eval/runs/dry-terra      # prompts and cost estimate, no call
+radar llm-extract --out eval/runs/terra-2026-10-06         # real run, needs OPENAI_API_KEY and LLM_RUN_BUDGET_USD in .env
+radar llm-extract --alternative openai_sol --out eval/runs/sol-2026-10-06
+radar llm-eval --run eval/runs/terra-2026-10-06            # re-score against the frozen gold set
+```
+
+The gold set is frozen (eval/gold/guidance_v1.lock.json); see docs/ARCHITECTURE.md ADR-015.

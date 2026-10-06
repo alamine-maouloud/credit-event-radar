@@ -254,3 +254,24 @@ the prompt says so; nothing the model returns is executed.
 Benchmark models: gpt-5.6-terra (main) and gpt-5.6-sol (high-quality reference) as given
 by the project owner on 2026-10-06; the Anthropic id stays TO_CONFIRM until the official
 catalogue is checked on the day of the first real call, which the providers enforce.
+
+### ADR-015 Benchmark protocol for the LLM extraction (Phase 3.2, 2026-10-06)
+
+The guidance gold set V1 (30 documents, 57 occurrences, eval/gold/guidance_v1.yaml built
+into guidance_v1.jsonl) is frozen by eval/gold/guidance_v1.lock.json: hashes of the labeling
+guide, of the labels and of every document. `radar llm-extract` refuses a document whose
+bytes no longer match the frozen hashes. A run writes a directory under eval/runs/<run_id>/:
+outputs.jsonl (one row per document: run status, cost, latency, resolved model, every
+statement with its two level validation and the figures computed in code), run.json (model,
+effort, prompt version and content hash, schema version, gold and lock hashes, budget) and
+metrics.json. `radar llm-eval` re-scores a run directory. The scorer matches occurrences on
+(metric, period) inside each document, counts only validated statements for recall and
+reports the unsupported claim rate as the share of statements that are invalid or match no
+gold occurrence; the document behaviour is derived from validated statements only.
+
+Two rules make the comparison between models honest: the prompt is versioned and identical
+for every model of a benchmark round (cache key includes it), and no label of a frozen gold
+version is edited after model outputs have been seen. A correction creates guidance_v2 with
+its own lock and its justification; errors of a model stay visible in the run that produced
+them. `--dry-run` renders every prompt and sums the price of the estimated input tokens plus
+the output ceiling, so the budget is checked before the first real call.
