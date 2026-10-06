@@ -147,6 +147,9 @@ class EarningsFields(BaseModel):
     guidance_old: float | None = None
     guidance_new: float | None = None
     guidance_change_pct: float | None = None
+    guidance_qualified_significant: bool | None = Field(
+        default=None, description="The issuer itself calls the guidance cut significant"
+    )
     flags: list[Literal["liquidity", "going_concern", "covenant", "impairment"]] = Field(
         default_factory=list
     )
@@ -183,9 +186,20 @@ class CreditEvent(BaseModel):
     source_doc_ids: list[str] = Field(default_factory=list)
 
 
+DecisionStatus = Literal["DECIDED", "NO_APPLICABLE_RULE"]
+
+
 class PriorityDecision(BaseModel):
+    """Outcome of the materiality engine for one event.
+
+    ``priority`` is null when no base rule applies (``decision_status`` is then
+    NO_APPLICABLE_RULE): P3 is a real, weak materiality level, never a default bucket.
+    """
+
     event_id: str
-    priority: Priority
+    priority: Priority | None
+    decision_status: DecisionStatus = "DECIDED"
+    base_priority: Priority | None = None
     triggered_rules: list[str] = Field(
         default_factory=list, description='e.g. ["RAT-02", "MOD-01"]'
     )
@@ -249,6 +263,29 @@ class AgencyRating(BaseModel):
 
     def verified_at_least(self, level: SeedVerification) -> bool:
         return VERIFICATION_ORDER[self.verification_status] >= VERIFICATION_ORDER[level]
+
+
+class RatingObservation(BaseModel):
+    """An agency rating read from a document by a deterministic extractor.
+
+    Distinct from the hand-verified seed: ``verification_method`` says how the value was
+    obtained and ``evidence_span_id`` points at the exact table row or sentence.
+    """
+
+    observation_id: str
+    issuer_id: str
+    agency: Agency
+    rating: str
+    outlook: Outlook | None = None
+    watch: Watch = "none"
+    rating_type: RatingType
+    scope: RatingScope = "issuer"
+    as_of: date
+    doc_id: str
+    evidence_span_id: str
+    evidence: EvidenceSpan
+    extractor_version: str
+    verification_method: Literal["structured_table", "structured_sentence"]
 
 
 class CompositeRating(BaseModel):

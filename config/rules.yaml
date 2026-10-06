@@ -1,21 +1,28 @@
 # Materiality matrix (docs/SPEC.md, sections 9.3 and 9.4).
 #
 # The LLM never decides a priority. This file is the single source of truth, applied by
-# src/radar/materiality/ (Phase 4). `condition` is a symbolic name implemented by the
-# engine; the description is what the "Why this priority?" panel shows.
+# src/radar/materiality/ (pure functions). `condition` is the symbolic name of the rule
+# function in the engine, `definition` is the formal statement tested in tests/, and
+# `description` is what the "Why this priority?" panel shows.
 #
-# Application policy: final priority = max(base rule, modifier effects), capped at P1.
-# No modifier ever lowers a priority. Every triggered rule and modifier is listed in
-# PriorityDecision.triggered_rules.
+# Application policy: base priority = highest priority among triggered base rules.
+# Modifiers only raise it (effect "+1" moves P3 to P2 or P2 to P1, "set_P1" sets P1),
+# capped at P1. No modifier ever lowers a priority. Rules are orthogonal: an event can
+# satisfy several of them and every triggered rule is listed. An event that triggers no
+# base rule receives no priority (decision_status NO_APPLICABLE_RULE), never a default P3.
 #
-# ADR-001: agency-level ratings are authoritative for credit events. The composite rating
-# is analytical metadata only and never triggers a rule or a modifier. It may be shown in
-# rule_details as context.
+# ADR-001: agency-level ratings are authoritative. The composite rating never triggers or
+# modifies a rule; it may be shown as analytical context only.
+#
+# Anti look-ahead rule (ADR-007): every rule that reads the issuer's other ratings, prior
+# events or fundamentals only uses data whose as_of / effective_date is on or before the
+# event's effective date D. Ingestion timestamps are never used for decisions.
 
-version: "1.1"
+version: "1.2"
 changelog:
   - "1.0: initial matrix from docs/SPEC.md 9.3 and 9.4"
   - "1.1 (2026-10-06): RAT-01, RAT-02, RAT-08 and MOD-01 rewritten on agency-level ratings; the composite no longer drives any rule (ADR-001)"
+  - "1.2 (2026-10-06): formal definition and direction per rule, rating_state parameters with look-ahead guard, RAT-01 and RAT-03 orthogonal, RAT-05 excludes the IG/HY crossing, no priority when no rule applies"
 
 thresholds:
   guidance_cut_p1_pct: 10          # ERN-02: guidance cut >= 10 % on revenue, EBITDA or FCF
@@ -24,135 +31,241 @@ thresholds:
   mod02_window_days: 30
   mod02_min_events: 2
 
+# How the issuer's rating state at the event date D is built (src/radar/materiality/state.py).
+# 400 days is a conservative prototype freshness threshold, not a statement about rating
+# validity. It is configurable and should be calibrated against production data and team
+# requirements.
+rating_state:
+  admissible_agencies: [SP, MOODYS, FITCH]
+  eligible_rating_types: [long_term_issuer, long_term_issuer_default]
+  max_rating_age_days: 400
+  require_complete_date: true
+  allow_future_observation: false
+  stale_policy: exclude
+
 rules:
   - id: RAT-01
     family: rating
     priority: P1
+    direction: negative
     condition: agency_rating_crosses_ig_to_hy
     description: An agency rating moves from IG to HY (fallen angel at agency level)
+    definition: >-
+      family = rating and event_type = downgrade and category(old_rating) = IG and
+      category(new_rating) = HY. Independent of the size of the move (see RAT-03).
 
   - id: RAT-02
     family: rating
     priority: P1
+    direction: negative
     condition: agency_rating_crosses_to_hy_while_another_agency_stays_ig
-    description: An agency downgrades to HY while at least one other agency keeps the issuer IG (split rating, fallen-angel risk)
+    description: An agency downgrades to HY while at least one other admissible agency keeps the issuer IG (split rating, fallen-angel risk)
+    definition: >-
+      RAT-01 holds for agency A, and in the rating state at D after applying A's action
+      there exists an admissible agency B different from A whose rating has
+      category IG. B's rating must satisfy rating_state (as_of <= D, complete date,
+      age <= max_rating_age_days, eligible rating type). Not triggered, with the reason
+      recorded, when no such B exists or no other admissible rating is known at D.
 
   - id: RAT-03
     family: rating
     priority: P1
+    direction: negative
     condition: downgrade_two_or_more_notches
     description: Downgrade of two notches or more in a single action
+    definition: >-
+      family = rating and event_type = downgrade and notch_delta >= 2. Orthogonal to
+      RAT-01: a two-notch move that crosses IG/HY triggers both.
 
   - id: RAT-04
     family: rating
     priority: P1
+    direction: negative
     condition: negative_watch_at_boundary
     description: Negative watch placed on an agency rating at BBB-/Baa3
+    definition: >-
+      family = rating and watch = negative and the agency's rating after the action is
+      exactly the last IG notch (BBB-/Baa3). The rating after the action is new_rating,
+      else the event's rating, else the agency's rating in the state at D.
 
   - id: RAT-05
     family: rating
     priority: P2
+    direction: negative
     condition: downgrade_one_notch
-    description: One-notch downgrade (outside RAT-02)
+    description: One-notch downgrade that does not cross the IG/HY boundary
+    definition: >-
+      family = rating and event_type = downgrade and notch_delta = 1 and not
+      (category(old_rating) = IG and category(new_rating) = HY). SPEC 9.3 states "hors
+      RAT-02" for the crossing case, which v1.1 moved to RAT-01.
 
   - id: RAT-06
     family: rating
     priority: P2
+    direction: negative
     condition: outlook_to_negative
     description: Outlook moves from stable or positive to negative
+    definition: >-
+      family = rating and new_outlook = negative and previous outlook in {stable,
+      positive}. The previous outlook is old_outlook from the event, else the agency's
+      outlook in the state at D. Unknown previous outlook: not triggered, reason recorded.
 
   - id: RAT-07
     family: rating
     priority: P2
+    direction: negative
     condition: negative_watch
     description: Negative watch (outside RAT-04)
+    definition: >-
+      family = rating and watch = negative and RAT-04 does not hold.
 
   - id: RAT-08
     family: rating
     priority: P2
+    direction: positive
     condition: agency_rating_crosses_hy_to_ig
     description: An agency rating moves from HY to IG (rising star at agency level)
+    definition: >-
+      family = rating and event_type = upgrade and category(old_rating) = HY and
+      category(new_rating) = IG.
 
   - id: RAT-09
     family: rating
     priority: P3
+    direction: positive
     condition: upgrade_or_positive_outlook
-    description: Upgrade or positive outlook
+    description: Upgrade without crossing, positive outlook or positive watch
+    definition: >-
+      family = rating and (event_type = upgrade and not RAT-08) or new_outlook =
+      positive or watch = positive.
 
   - id: RAT-10
     family: rating
     priority: P3
+    direction: neutral
     condition: affirmation
     description: Affirmation without change
+    definition: >-
+      family = rating and event_type = affirmation and no watch and new_outlook is null
+      or equal to the previous outlook.
 
   - id: ERN-01
     family: earnings
     priority: P1
+    direction: negative
     condition: liquidity_going_concern_or_covenant_flag
     description: Liquidity, going-concern, covenant breach or waiver language (verified span)
+    definition: >-
+      family = earnings and flags intersects {liquidity, going_concern, covenant}.
 
   - id: ERN-02
     family: earnings
     priority: P1
+    direction: negative
     condition: guidance_cut_at_or_above_threshold
     description: Guidance cut at or above guidance_cut_p1_pct on revenue, EBITDA or FCF, or qualified as significant by the issuer
+    definition: >-
+      family = earnings and ((guidance_metric in {revenue, ebitda, fcf} and
+      guidance_change_pct <= -guidance_cut_p1_pct) or guidance_qualified_significant =
+      true). guidance_change_pct is computed from guidance_old and guidance_new when
+      absent.
 
   - id: ERN-03
     family: earnings
     priority: P2
+    direction: negative
     condition: guidance_cut_below_threshold_or_significant_impairment
     description: Guidance cut below the threshold, or significant impairment
+    definition: >-
+      family = earnings and ((guidance_metric in {revenue, ebitda, fcf} and
+      -guidance_cut_p1_pct < guidance_change_pct < 0) or impairment in flags).
 
   - id: ERN-04
     family: earnings
     priority: P3
+    direction: neutral
     condition: results_in_line_with_guidance
     description: Results in line with guidance
+    definition: >-
+      family = earnings and no guidance cut (guidance_change_pct null or >= 0) and not
+      guidance_qualified_significant and flags does not intersect {liquidity,
+      going_concern, covenant, impairment}.
 
   - id: ISS-01
     family: issuance
     priority: P2
+    direction: neutral
     condition: issuance_at_or_above_threshold
     description: New issue at or above issuance_p2_eur (EUR equivalent)
+    definition: >-
+      family = issuance and event_type != non_call and amount_eur_equiv >=
+      issuance_p2_eur.
 
   - id: ISS-02
     family: issuance
     priority: P2
+    direction: neutral
     condition: subordinated_hybrid_at1_or_t2_issuance
     description: Subordinated, hybrid, AT1 or T2 issuance
+    definition: >-
+      family = issuance and event_type != non_call and seniority in {subordinated,
+      hybrid, AT1, T2}.
 
   - id: ISS-03
     family: issuance
     priority: P1
+    direction: negative
     condition: at1_or_hybrid_non_call
     description: Non-call of an AT1 or hybrid instrument (financials)
+    definition: >-
+      family = issuance and event_type = non_call and seniority in {AT1, hybrid}.
     scope: should
 
   - id: ISS-04
     family: issuance
     priority: P3
+    direction: neutral
     condition: issuance_below_threshold_tap_or_routine_refinancing
     description: Issue below the threshold, tap, or routine refinancing
+    definition: >-
+      family = issuance and event_type != non_call and not ISS-01 and not ISS-02.
 
   - id: EDG-01
     family: edgar
     priority: P1
+    direction: negative
     condition: edgar_8k_item_2_04
     description: 8-K Item 2.04 (triggering event accelerating a financial obligation)
+    definition: >-
+      edgar_item = "2.04" in the event fields, whatever the family.
 
 modifiers:
   - id: MOD-01
     effect: "+1"
     condition: negative_event_with_weakest_agency_rating_at_boundary
-    description: Negative event on an issuer whose weakest agency rating is at BBB-/Baa3 (P3 to P2, P2 to P1)
+    description: Negative event on an issuer whose weakest admissible agency rating is at BBB-/Baa3 (P3 to P2, P2 to P1)
+    definition: >-
+      The event is negative (a triggered base rule has direction negative) and, in the
+      rating state at D after applying the event's action, the weakest admissible
+      agency rating is exactly the last IG notch. Not applied when no admissible rating
+      is known at D or when the weakest rating is already HY.
 
   - id: MOD-02
     effect: set_P1
     condition: two_or_more_negative_p2_events_in_window
     description: At least mod02_min_events negative P2 events on the same issuer within mod02_window_days days; the latest becomes P1
+    definition: >-
+      The event is negative with base priority P2, and the number of the issuer's
+      negative events with base priority P2 whose effective_date satisfies
+      D - mod02_window_days <= effective_date <= D, including this event, is at least
+      mod02_min_events. Only effective dates are used, never ingestion timestamps.
 
   - id: MOD-03
     effect: "+1"
     condition: verified_leverage_above_threshold
     description: Verified leverage above leverage_threshold (only if the data is available and sourced)
+    definition: >-
+      leverage_threshold is set, the event is negative, and a sourced leverage figure
+      with as_of <= D and verified = true is strictly above the threshold. Never applied
+      otherwise.
     requires_sourced_data: true

@@ -111,8 +111,38 @@ def test_universe_rejects_duplicate_alias(tmp_path: Path, universe):
 
 
 def test_rules_match_spec_matrix(rules):
-    assert rules.version == "1.1"
-    assert any("1.1" in entry for entry in rules.changelog)
+    assert rules.version == "1.2"
+    assert any("1.2" in entry for entry in rules.changelog)
+    assert all(r.definition and r.direction for r in rules.rules)
+    assert all(m.definition for m in rules.modifiers)
+
+
+def test_rules_rating_state_parameters(rules):
+    rs = rules.rating_state
+    assert rs.admissible_agencies == ["SP", "MOODYS", "FITCH"]
+    assert rs.eligible_rating_types == ["long_term_issuer", "long_term_issuer_default"]
+    assert rs.max_rating_age_days == 400
+    assert rs.require_complete_date is True and rs.allow_future_observation is False
+    assert rs.stale_policy == "exclude"
+
+
+def test_rule_directions(rules):
+    negative = {r.id for r in rules.rules if r.direction == "negative"}
+    assert negative == {
+        "RAT-01",
+        "RAT-02",
+        "RAT-03",
+        "RAT-04",
+        "RAT-05",
+        "RAT-06",
+        "RAT-07",
+        "ERN-01",
+        "ERN-02",
+        "ERN-03",
+        "ISS-03",
+        "EDG-01",
+    }
+    assert {r.id for r in rules.rules if r.direction == "positive"} == {"RAT-08", "RAT-09"}
     assert {r.id: r.priority for r in rules.rules} == SPEC_RULE_IDS
     assert [m.id for m in rules.modifiers] == ["MOD-01", "MOD-02", "MOD-03"]
 

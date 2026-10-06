@@ -234,14 +234,32 @@ class Thresholds(BaseModel):
     mod02_min_events: int = Field(ge=2)
 
 
+RuleDirection = Literal["negative", "positive", "neutral"]
+
+
+class RatingStateParams(BaseModel):
+    """How the issuer's rating state at the event date is built (ADR-007)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    admissible_agencies: list[str]
+    eligible_rating_types: list[str]
+    max_rating_age_days: int = Field(ge=1)
+    require_complete_date: bool = True
+    allow_future_observation: bool = False
+    stale_policy: Literal["exclude"] = "exclude"
+
+
 class Rule(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str
     family: EventFamily | Literal["edgar"]
     priority: Priority
+    direction: RuleDirection
     condition: str = Field(description="Symbolic condition name implemented by the engine")
     description: str
+    definition: str = Field(description="Formal statement of the rule, tested in tests/")
     scope: Literal["must", "should"] = "must"
 
     @model_validator(mode="after")
@@ -258,6 +276,7 @@ class Modifier(BaseModel):
     effect: Literal["+1", "set_P1"]
     condition: str
     description: str
+    definition: str
     requires_sourced_data: bool = False
 
     @model_validator(mode="after")
@@ -273,6 +292,7 @@ class Rules(BaseModel):
     version: str
     changelog: list[str] = Field(default_factory=list)
     thresholds: Thresholds
+    rating_state: RatingStateParams
     rules: list[Rule]
     modifiers: list[Modifier]
 

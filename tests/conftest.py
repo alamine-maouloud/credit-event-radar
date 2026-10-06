@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 
 from radar.config import load_rating_scales
+
+__all__ = ["load_rating_scales", "make_rating"]
 from radar.models import AgencyRating
 from radar.ratings import RatingScales
 
