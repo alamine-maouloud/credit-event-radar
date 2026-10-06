@@ -378,3 +378,122 @@ def test_liquidity_replay_from_cache_is_free_and_idempotent(world):
     assert {r.status for r in results} <= {"already_applied", "no_valid_statement"}
     assert world["db"].count("event_enrichments") == n
     assert {k: _priority(world, k) for k in DOCS} == before
+
+
+# Wordings of the real 2026 filings: a negated positive is a worry, a reduction is a
+# deterioration, an uncertainty is a worry; a positive belief stays positive.
+REAL = "\n".join(
+    [
+        "Issuer Test A AG quarterly report",
+        "Based on current projections, the Company does not expect to have sufficient liquidity to meet its obligations as they become due within one year.",
+        "Our existing liquidity and capital resources may not be sufficient to sustain our business and service our debt obligations.",
+        "The Company incurred significant recurring operating losses, recurring negative cash flows from operations and continued reduction in liquidity.",
+        "However, uncertainty remains with respect to the Company's ability to secure additional financing or liquidity.",
+        "The Company believes its current cash and availability under its credit facilities are sufficient to meet its liquidity requirements.",
+        "There can be no assurance that the initiatives will be sufficient to allow us to maintain liquidity.",
+    ]
+)
+
+
+@pytest.mark.parametrize(
+    "quote,status",
+    [
+        (
+            "Based on current projections, the Company does not expect to have sufficient liquidity to meet its obligations as they become due within one year.",
+            "concern",
+        ),
+        (
+            "Our existing liquidity and capital resources may not be sufficient to sustain our business and service our debt obligations.",
+            "concern",
+        ),
+        (
+            "The Company incurred significant recurring operating losses, recurring negative cash flows from operations and continued reduction in liquidity.",
+            "deteriorated",
+        ),
+        (
+            "However, uncertainty remains with respect to the Company's ability to secure additional financing or liquidity.",
+            "concern",
+        ),
+        (
+            "There can be no assurance that the initiatives will be sufficient to allow us to maintain liquidity.",
+            "concern",
+        ),
+    ],
+)
+def test_real_filing_wordings_support_a_negative_status(quote, status):
+    start = REAL.index(quote)
+    st = LiquidityStatement(
+        risk_type="liquidity",
+        status=status,
+        evidence_quote=quote,
+        start_offset=start,
+        end_offset=start + len(quote),
+    )
+    result = validate_liquidity_statement(
+        st, doc(REAL), ISSUER_NAMES, document_date=date(2026, 5, 11)
+    )
+    assert result.status == "VALID", result.reasons
+
+
+def test_positive_belief_still_rejects_a_negative_status():
+    quote = "The Company believes its current cash and availability under its credit facilities are sufficient to meet its liquidity requirements."
+    start = REAL.index(quote)
+    st = LiquidityStatement(
+        risk_type="liquidity",
+        status="concern",
+        evidence_quote=quote,
+        start_offset=start,
+        end_offset=start + len(quote),
+    )
+    result = validate_liquidity_statement(
+        st, doc(REAL), ISSUER_NAMES, document_date=date(2026, 5, 11)
+    )
+    assert result.status == "INVALID" and result.checks["polarity_match"] is False
+
+
+# Lessons of the first real liquidity run (Terra, 2026-10-06).
+CREDIT_FACILITIES = "Corporate bonds are the key element of the well-balanced debt maturity profile, complemented by ample committed credit facilities and other types of bank funding."
+REVOLVER = "As of March 31, 2026, there was $1,000,000 in borrowings outstanding under the revolving line of credit."
+AGENCY = "We assess the group's liquidity as strong because we expect liquidity sources to cover uses by slightly more than 2x in the next 24 months."
+LESSONS = "\n".join(["Issuer Test A AG report", CREDIT_FACILITIES, REVOLVER, AGENCY])
+
+
+@pytest.mark.parametrize(
+    "quote,status",
+    [(CREDIT_FACILITIES, "stable"), (REVOLVER, "mentioned")],
+)
+def test_credit_facilities_and_credit_lines_speak_of_liquidity(quote, status):
+    start = LESSONS.index(quote)
+    st = LiquidityStatement(
+        risk_type="liquidity",
+        status=status,
+        evidence_quote=quote,
+        start_offset=start,
+        end_offset=start + len(quote),
+    )
+    result = validate_liquidity_statement(
+        st, doc(LESSONS), ISSUER_NAMES, document_date=date(2026, 5, 11)
+    )
+    assert result.checks["liquidity_named"] is True and result.status == "VALID", result.reasons
+
+
+def test_an_agency_report_never_carries_the_issuers_statement():
+    start = LESSONS.index(AGENCY)
+    st = LiquidityStatement(
+        risk_type="liquidity",
+        status="stable",
+        evidence_quote=AGENCY,
+        start_offset=start,
+        end_offset=start + len(AGENCY),
+    )
+    report = doc(LESSONS).model_copy(
+        update={"extra": {"document_type": "rating_report", "source_id": "vw_rating_releases"}}
+    )
+    result = validate_liquidity_statement(st, report, ISSUER_NAMES, document_date=date(2026, 5, 11))
+    assert result.status == "INVALID" and result.checks["issuer_voice"] is False
+    assert any(r.startswith("THIRD_PARTY_DOCUMENT") for r in result.reasons)
+    # the same passage in the issuer's own release is the issuer speaking
+    own = validate_liquidity_statement(
+        st, doc(LESSONS), ISSUER_NAMES, document_date=date(2026, 5, 11)
+    )
+    assert own.checks["issuer_voice"] is True

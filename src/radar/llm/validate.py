@@ -178,10 +178,22 @@ def _temporal_check(
 _LIQUIDITY_NEGATIVE_RE = re.compile(
     r"(?i)\b(?:constrain(?:ed|ts?)|tighten(?:ed|ing|s)?|tight|strain(?:ed|s)?|stress(?:ed)?|"
     r"pressures?|shortfalls?|squeeze[sd]?|insufficien(?:t|cy)|deteriorat(?:ed|ing|ion|es)|"
-    r"weaken(?:ed|ing|s)?|concerns?|unable\s+to\s+(?:meet|fund|service|repay)|"
+    r"weaken(?:ed|ing|s)?|reduc(?:ed|ing|tion)|concerns?|uncertaint(?:y|ies)|substantial\s+doubt|"
+    r"adversely\s+(?:impact|affect)(?:ed|ing|s)?|unable\s+to\s+(?:meet|fund|service|repay)|"
     r"difficult(?:y|ies)\s+(?:in\s+)?(?:meeting|funding|refinancing)|at\s+risk|risk\s+of)\b"
 )
+# A negated positive is itself a worry ("does not expect to have sufficient liquidity",
+# "may not be sufficient", "no assurance that ... will be sufficient"): the negation is part
+# of the marker, so the negation window rule does not apply to it.
+_LIQUIDITY_NEGATED_POSITIVE_RE = re.compile(
+    r"(?i)\b(?:not|no|never|cannot)\b[^.;]{0,60}?\b(?:sufficient|adequate|enough|able\s+to\s+"
+    r"(?:meet|maintain|fund|service|continue)|assurance)\b"
+)
 _NEGATION_RE = re.compile(r"(?i)\b(?:no|not|without|never|neither|nor|free\s+of|absence\s+of)\b")
+# The passage must speak of liquidity, cash, or committed lines and facilities of credit.
+_LIQUIDITY_TOPIC_RE = re.compile(
+    r"liquidity|\bcash\b|credit (?:line|lines|facilit(?:y|ies))|lines? of credit|revolving|liquid assets"
+)
 NEGATIVE_LIQUIDITY_STATUSES = frozenset({"deteriorated", "concern"})
 
 
@@ -200,6 +212,8 @@ def liquidity_polarity_ok(quote: str, status: str) -> tuple[bool, str | None]:
     sentences = [s.text for s in iter_sentences(quote)] or [quote]
     found_negated = False
     for sentence in sentences:
+        if _LIQUIDITY_NEGATED_POSITIVE_RE.search(sentence):
+            return True, None
         for m in _LIQUIDITY_NEGATIVE_RE.finditer(sentence):
             if _negated(sentence, m.start()):
                 found_negated = True
@@ -255,9 +269,18 @@ def validate_liquidity_statement(
     if not label_ok:
         reasons.append(f"metric label {st.metric_label!r} not in the quote")
 
-    checks["liquidity_named"] = "liquidity" in low or "cash" in low or "credit line" in low
+    checks["liquidity_named"] = bool(_LIQUIDITY_TOPIC_RE.search(low))
     if not checks["liquidity_named"]:
         reasons.append("the passage does not speak of liquidity, cash or credit lines")
+
+    # An agency report (S&P, Moody's, Fitch, DBRS) is a third party: whatever it says about
+    # the issuer's liquidity is never the issuer's own statement (gold V1 rule third_party).
+    document_type = (doc.extra or {}).get("document_type") if isinstance(doc.extra, dict) else None
+    checks["issuer_voice"] = document_type != "rating_report"
+    if not checks["issuer_voice"]:
+        reasons.append(
+            "THIRD_PARTY_DOCUMENT: an agency report never carries the issuer's own liquidity statement"
+        )
 
     polarity_ok, polarity_reason = liquidity_polarity_ok(quote, st.status)
     checks["polarity_match"] = polarity_ok
