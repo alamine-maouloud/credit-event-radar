@@ -19,6 +19,15 @@ from radar.llm.provider import (
 )
 
 API_KEY_ENV = "OPENAI_API_KEY"
+# Reasoning models of the Responses API reject the temperature parameter outright (HTTP 400
+# "Unsupported parameter: 'temperature'", observed on gpt-5.6-terra on 2026-10-06). For them
+# the key is left out of the payload entirely; determinism rests on the cache and the
+# recorded resolved model, not on a sampling parameter the API does not expose.
+NO_TEMPERATURE_MODEL_PREFIXES = ("gpt-5",)
+
+
+def supports_temperature(model_id: str) -> bool:
+    return not model_id.startswith(NO_TEMPERATURE_MODEL_PREFIXES)
 
 
 def build_payload(request: ExtractionRequest) -> dict[str, Any]:
@@ -36,9 +45,10 @@ def build_payload(request: ExtractionRequest) -> dict[str, Any]:
                 "strict": True,
             }
         },
-        "temperature": request.temperature,
         "max_output_tokens": request.max_output_tokens,
     }
+    if supports_temperature(request.model_id):
+        payload["temperature"] = request.temperature
     if request.reasoning_effort:
         payload["reasoning"] = {"effort": request.reasoning_effort}
     return payload

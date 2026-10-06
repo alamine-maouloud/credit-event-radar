@@ -43,7 +43,9 @@ def test_openai_request_payload_uses_structured_outputs_and_effort():
         and fmt["name"] == "GuidanceExtraction"
     )
     assert fmt["schema"]["additionalProperties"] is False
-    assert payload["temperature"] == 0.0 and payload["max_output_tokens"] == 800
+    assert "temperature" not in payload and payload["max_output_tokens"] == 800
+    # a model outside the reasoning family still receives the sampling parameter
+    assert build_payload(request(model_id="gpt-4.1-test"))["temperature"] == 0.0
     roles = [m["role"] for m in payload["input"]]
     assert roles == ["system", "user"]
 
@@ -135,3 +137,16 @@ def test_to_confirm_model_is_refused_before_any_call():
 def test_base_class_is_abstract():
     with pytest.raises(TypeError):
         LLMProvider()  # type: ignore[abstract]
+
+
+@pytest.mark.parametrize("model_id", ["gpt-5.6-terra", "gpt-5.6-sol"])
+def test_openai_reasoning_models_get_no_temperature_field(model_id):
+    """The Responses API rejects temperature for these models (400 on the first real run,
+    2026-10-06): the key must be absent, not null, while effort and strict outputs stay."""
+    from radar.llm.openai_client import build_payload
+
+    payload = build_payload(request(model_id=model_id, temperature=0.0, reasoning_effort="low"))
+    assert "temperature" not in payload
+    assert payload["reasoning"] == {"effort": "low"}
+    assert payload["text"]["format"]["strict"] is True
+    assert payload["model"] == model_id
