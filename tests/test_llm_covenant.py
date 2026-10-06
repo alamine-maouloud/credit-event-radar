@@ -463,3 +463,70 @@ def test_a_breach_without_a_date_is_not_assumed_historical():
         st, doc(text), ISSUER_NAMES, document_date=date(2026, 11, 10)
     )
     assert result.status == "VALID" and result.checks["historical_reference"] is True
+
+
+# DEV iteration after the first Terra run (2026-10-06): auxiliary fields never invalidate a
+# statement whose span, status and entity hold (field-level salvage), and a future date is
+# legitimate when the passage is prospective (a future covenant test period).
+SALVAGE = "As of March 31, 2026, the Company was not in compliance with the minimum net worth covenant, and the lender waived this covenant violation on May 6, 2026."
+FUTURE_RISK = "The Company expects that it will not be in compliance with the leverage covenant as of September 30, 2026."
+FUTURE_BREACH_CLAIM = (
+    "As of September 30, 2026, the Company was not in compliance with the leverage covenant."
+)
+DEV_TEXT = "Issuer Test A AG report\n" + SALVAGE + "\n" + FUTURE_RISK + "\n" + FUTURE_BREACH_CLAIM
+
+
+def _dev(quote, status, resolution="none", **extra):
+    start = DEV_TEXT.index(quote)
+    st = CovenantStatement(
+        risk_type="covenant",
+        status=status,
+        resolution=resolution,
+        evidence_quote=quote,
+        start_offset=start,
+        end_offset=start + len(quote),
+        **extra,
+    )
+    return validate_covenant_statement(
+        st, doc(DEV_TEXT), ISSUER_NAMES, document_date=date(2026, 5, 8)
+    )
+
+
+def test_an_agreement_outside_the_quote_is_dropped_not_the_statement():
+    result = _dev(
+        SALVAGE,
+        "breached",
+        "waived",
+        agreement="March 2025 Credit Agreement",
+        covenant_label="minimum net worth covenant",
+    )
+    assert result.status == "VALID"
+    assert (
+        result.checks["agreement_match"] is False and result.checks["covenant_label_match"] is True
+    )
+    assert result.salvaged == {"agreement": "March 2025 Credit Agreement"}
+    assert any("agreement" in r and "dropped" in r for r in result.reasons)
+
+
+def test_a_wrong_covenant_label_is_dropped_the_same_way():
+    result = _dev(SALVAGE, "breached", "waived", covenant_label="leverage covenant")
+    assert result.status == "VALID" and result.salvaged == {"covenant_label": "leverage covenant"}
+
+
+def test_a_future_covenant_test_date_is_allowed_when_the_passage_is_prospective():
+    result = _dev(FUTURE_RISK, "risk_of_breach", period="2026-09-30")
+    assert result.status == "VALID", result.reasons
+    assert result.checks["temporal_consistency"] is True
+
+
+def test_a_breach_claimed_at_a_future_date_stays_inconsistent():
+    result = _dev(FUTURE_BREACH_CLAIM, "breached")
+    assert result.status == "INVALID" and result.checks["temporal_consistency"] is False
+
+
+def test_salvage_is_recorded_in_the_stored_statement(world):
+    """The extraction stores the salvaged fields next to the validation, the application
+    uses the validated statement with the auxiliary field emptied."""
+    _extract(world)
+    rows = world["db"].statements_for_document(world["events"]["A"].source_doc_ids[0])
+    assert "salvaged" in rows[0]["validation_json"]

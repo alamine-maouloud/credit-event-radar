@@ -65,6 +65,9 @@ class ValidationResult(BaseModel):
     status: Literal["VALID", "INVALID"]
     checks: dict[str, bool]
     reasons: list[str] = Field(default_factory=list)
+    # auxiliary fields the quote does not support, dropped instead of invalidating the
+    # statement (field-level salvage); the decisional fields are never salvaged
+    salvaged: dict[str, str] = Field(default_factory=dict)
     match_kind: Literal["exact", "fuzzy", "none"]
     match_score: float
     matched_start: int | None = None
@@ -374,6 +377,12 @@ _RISK_RE = re.compile(
     r"\b(?:future|potential)\s+non-?compliance\b|\bunable\s+to\s+(?:meet|comply|maintain)\b"
 )
 _HYPOTHETICAL_PREFIX_RE = re.compile(r"(?i)\b(?:future|potential|any|if|should|were)\b")
+# wording of a forward-looking passage (a future covenant test period is then legitimate)
+_PROSPECTIVE_RE = re.compile(
+    r"(?i)\b(?:expects?|expected|anticipates?|anticipated|will|would|may|might|could|shall|"
+    r"forecasts?|projected?|going\s+forward|for\s+the\s+(?:fiscal\s+)?quarter(?:s)?\s+ending)\b"
+)
+SALVAGEABLE_CHECKS = frozenset({"agreement_match", "covenant_label_match"})
 _RESOLUTION_RE = {
     "waived": re.compile(r"(?i)\bwaiv(?:ed|er|ers)\b"),
     "cured": re.compile(r"(?i)\bcured?\b|\bremed(?:ied|iation|y)\b"),
@@ -466,10 +475,15 @@ def validate_covenant_statement(
     if not checks["covenant_named"]:
         reasons.append("the passage does not speak of covenants or contractual compliance")
 
+    salvaged: dict[str, str] = {}
     for field_name, value in (("covenant_label", st.covenant_label), ("agreement", st.agreement)):
         if value and value.casefold().strip() not in low:
             checks[f"{field_name}_match"] = False
-            reasons.append(f"{field_name} {value!r} not in the quote")
+            salvaged[field_name] = value
+            reasons.append(
+                f"{field_name} {value!r} not in the quote: field dropped, statement kept "
+                "(field-level salvage, the field is metadata, not the decision)"
+            )
         else:
             checks[f"{field_name}_match"] = True
 
@@ -505,6 +519,12 @@ def validate_covenant_statement(
         reasons.append(entity_reason)
 
     temporal_ok, temporal_reason = _temporal_check(quote, document_date, st.period)
+    if not temporal_ok and temporal_reason and "after the document date" in temporal_reason:
+        # a future covenant test period is legitimate when the passage is prospective and
+        # claims no breach already realised ("expects that it will not be in compliance as
+        # of September 30"); a breach claimed at a future date stays inconsistent
+        if st.status != "breached" and _PROSPECTIVE_RE.search(quote):
+            temporal_ok, temporal_reason = True, None
     checks["temporal_consistency"] = temporal_ok
     if temporal_reason:
         reasons.append(temporal_reason)
@@ -517,10 +537,11 @@ def validate_covenant_statement(
             "Group level or for the principal division"
         )
 
-    status = "VALID" if all(checks.values()) else "INVALID"
+    decisive = {k: v for k, v in checks.items() if k not in SALVAGEABLE_CHECKS}
+    status = "VALID" if all(decisive.values()) else "INVALID"
     return ValidationResult(
         status=status, checks=checks, reasons=reasons, match_kind=kind, match_score=score,
-        matched_start=m_start, matched_end=m_end,
+        matched_start=m_start, matched_end=m_end, salvaged=salvaged,
     )  # fmt: skip
 
 

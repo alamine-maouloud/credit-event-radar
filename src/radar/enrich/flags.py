@@ -33,7 +33,9 @@ def build_flag_enrichment(rows: list[dict[str, Any]], family: str) -> FlagEnrich
     )
     statements, negative = [], []
     for r in valid:
-        st = r["statement_json"]
+        st = dict(r["statement_json"])
+        for field_name in (r.get("validation_json") or {}).get("salvaged", {}):
+            st[field_name] = None  # dropped by the validator, never shown as the model's claim
         summary = {
             "statement_id": r["statement_id"],
             "status": st.get("status"),
