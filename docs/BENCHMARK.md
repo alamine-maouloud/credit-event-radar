@@ -531,3 +531,82 @@ dev split only. The holdout is reported for completeness and was not used for an
 
 Remaining misses on dev are sentences the model did not propose (three GoPro breaches, one
 Chicago Rivet), a recall limit of the model, not of the validator.
+
+### Covenant V1: Terra against Sol under the final DEV rules (2026-10-06)
+
+Two more defects were found on the dev split once Sol had run, both corrected with tests
+and applied to both models from the cache: "we were not in compliance" was read as
+hypothetical because "were" sat in the hypothetical prefixes, and "anticipate
+non-compliance" was not an anticipation. Four runs are kept: each model raw and each model
+re-validated under the final rules.
+
+| Level | covenant-terra-2026-10-06 (gpt-5.6-terra) | covenant-terra-2026-10-06-revalidated-3 (gpt-5.6-terra) | covenant-sol-2026-10-06 (gpt-5.6-sol) | covenant-sol-2026-10-06-revalidated (gpt-5.6-sol) |
+|---|---|---|---|---|
+| [dev] documents | 13 | 13 | 13 | 13 |
+| [dev] Extraction: statement recall | 0.222 | 0.333 | 0.583 | 0.583 |
+| [dev] Extraction: statement precision (valid) | 0.727 | 0.667 | 0.477 | 0.447 |
+| [dev] Qualification: status accuracy | 0.875 | 0.833 | 0.905 | 0.905 |
+| [dev] Qualification: resolution accuracy | 0.875 | 0.750 | 0.810 | 0.810 |
+| [dev] Qualification: negative statement precision | 0.667 | 0.714 | 0.421 | 0.400 |
+| [dev] Qualification: negative statement recall | 0.200 | 0.500 | 0.800 | 0.800 |
+| [dev] Decision: document flag precision | 1.000 | 1.000 | 1.000 | 1.000 |
+| [dev] Decision: document flag recall | 0.500 | 1.000 | 1.000 | 1.000 |
+| [dev] Decision: false flag rate on documents without flag | 0.000 (of 11) | 0.000 (of 11) | 0.000 (of 11) | 0.000 (of 11) |
+| [holdout] documents | 5 | 5 | 5 | 5 |
+| [holdout] Extraction: statement recall | 0.286 | 0.429 | 0.429 | 0.429 |
+| [holdout] Extraction: statement precision (valid) | 0.500 | 0.429 | 0.750 | 0.750 |
+| [holdout] Qualification: status accuracy | 1.000 | 0.667 | 1.000 | 1.000 |
+| [holdout] Qualification: resolution accuracy | 1.000 | 0.667 | 1.000 | 1.000 |
+| [holdout] Qualification: negative statement precision | n/a | n/a | 1.000 | 1.000 |
+| [holdout] Qualification: negative statement recall | 0.000 | 0.000 | 1.000 | 1.000 |
+| [holdout] Decision: document flag precision | n/a | n/a | 1.000 | 1.000 |
+| [holdout] Decision: document flag recall | 0.000 | 0.000 | 1.000 | 1.000 |
+| [holdout] Decision: false flag rate on documents without flag | 0.000 (of 4) | 0.000 (of 4) | 0.000 (of 4) | 0.000 (of 4) |
+| Cost USD | 1.83 | 0.00 | 3.68 | 0.00 |
+
+| Document | split | expected | covenant-terra-2026-10-06 | covenant-terra-2026-10-06-revalidated-3 | covenant-sol-2026-10-06 | covenant-sol-2026-10-06-revalidated |
+|---|---|---|---|---|---|---|
+| C-GPRO-01 | dev | FLAG | FLAG | FLAG | FLAG | FLAG |
+| C-CVR-01 | dev | FLAG | NO FLAG | FLAG | FLAG | FLAG |
+| C-MVST-01 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-HYFM-01 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-CODI-01 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-GM-01 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-CAT-01 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-F-01 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-PCAR-01 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-CMI-01 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-VW-FY25 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-OMV-Q4-25 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-VW-DEL-H1-26 | dev | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-NFE-01 | holdout | FLAG | NO FLAG | NO FLAG | FLAG | FLAG |
+| C-SNBR-01 | holdout | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-HOG-01 | holdout | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-DE-01 | holdout | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+| C-TR-H1-26 | holdout | NO FLAG | NO FLAG | NO FLAG | NO FLAG | NO FLAG |
+
+Reading, by level:
+
+- Decision: on the dev split both models find the two breach cases (GoPro, Chicago Rivet)
+  and set no false flag on the 11 documents without a problem. On the holdout, reported
+  but never used, Sol finds New Fortress Energy's non-compliance with covenant requirements
+  and Terra does not propose that sentence at all; neither sets a false flag on Sleep
+  Number (forbearance on "Specified Defaults" never tied to a covenant), Harley-Davidson,
+  Deere or TRATON.
+- Qualification: Sol reads status and resolution better (0.905 and 0.810 against 0.833 and
+  0.750) and finds four of the five breached statements of the dev split against two and a
+  half for Terra (negative recall 0.80 against 0.50).
+- Extraction: Sol proposes many more passages (statement recall 0.58 against 0.33); its
+  lower precision is largely gold V1 omissions: the GoPro note and MD&A say the same
+  breaches twice with "the Company" and with "we", and several of the "we" variants are
+  not labelled, so Sol's correct quotes of them count against it. Noted for a V2.
+- Cost: Terra 1.83 USD, Sol 3.68 USD for the same 18 documents.
+
+Notes for a gold V2, no edit of V1: label the "we" variants of the GoPro breaches; levels
+reported above a covenant requirement are compliance, not a mention (Caterpillar); the
+covenant table of Compass Diversified (requirements against actual ratios) is a compliance
+statement the validator cannot read.
+
+The decision between the models waits for the blind holdout: on the dev split they are
+equal at the decisional level, and the one holdout breach separates them on a single
+document.
