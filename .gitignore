@@ -28,3 +28,6 @@ tests/fixtures/gold/**/document.*
 eval/runs/dry-*/
 # raw model outputs carry verbatim excerpts of private documents: local only, results.jsonl is the sanitised copy
 eval/runs/*/outputs.jsonl
+# every .env variant (backups included) holds secrets
+.env.*
+!.env.example
