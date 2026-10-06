@@ -131,7 +131,11 @@ def _enriched_event():
     return event.model_copy(
         update={
             "enrichment_method": "llm_validated",
-            "fields": {**event.fields, "guidance_source": source},
+            "fields": {
+                **event.fields,
+                "guidance_source": source,
+                "llm_guidance": [{"statement_id": "s" * 64, "metric": "fcf", "status": "cut"}],
+            },
         }
     )
 
@@ -143,7 +147,7 @@ def test_explanation_separates_detection_enrichment_and_decision(rules, scales):
     assert "Detected by: deterministic extractor (structured)" in text
     assert (
         "Enriched by: validated LLM statements (gpt-5.6-terra, prompt 1.1.0, "
-        "schema guidance-1.0, 1 statement applied)"
+        "schema guidance-1.0, 1 statement applied, 1 recorded)"
     ) in text
     assert "Priority decided by: deterministic rules engine (rules.yaml 1.5)" in text
     assert decision.provenance.llm_used != "none"

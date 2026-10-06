@@ -221,3 +221,28 @@ Q3 2025 one matches its gold occurrence (recall 56/57 for Terra, 57/57 for Sol);
 TRATON H1 2026 one is a mention of net cash flow the gold did not label, counted as a scope
 violation on both models (one each). Gold V1 stays as frozen; whether that mention belongs
 in the gold is a question for a V2, not an edit.
+
+## Real chain replay at zero cost (lot 3.3b, 2026-10-06)
+
+A replay database was built from the private IR and gold fixtures (`radar ingest --source
+fixtures`), the response cache was copied from the main database, and the chain ran with
+the budget forced to 0.01 USD so that any non cached call would have been refused:
+`radar process`, then `radar llm-extract --events` (19 documents, 19 cache hits, 0 calls,
+0.00 USD, 60 statements stored, 42 valid), then `radar llm-apply` twice (15 events
+enriched, then 15 already applied, 3 without a valid statement).
+
+| Event | Deterministic reading | LLM statements | Decision |
+|---|---|---|---|
+| VW H1 2025 (2025-07-25) | guidance cut, no figure (ERN-03, P2) | net cash flow EUR 2 to 5 bn to 1 to 3 bn, quantitative | fcf -42.9 %, ERN-02, P2 becomes P1 |
+| VW H1 2026 (2026-07-24) | guidance reaffirmed (ERN-04, P3) | revenue cut -3..0 against 0..+3, margin and capex reaffirmed | conflict on guidance_status, deterministic reading kept, P3, conflict shown |
+| VW Q1 2026 (2026-04-30) | no guidance statement | five ranges, status new | nothing decisional, five statements recorded, no rule |
+| TRATON Q1 2026 (2026-04-28) | guidance reaffirmed (P3) | two reaffirmed | consistent, P3 |
+| TRATON H1 2026 (2026-07-22) | no guidance statement | two qualitative raises | nothing decisional, recorded, no rule |
+| OMV quarterly reports (7) | no guidance statement | Group organic CAPEX (one raise) | nothing decisional, no rule |
+| deliveries and KPI pages (3) | no guidance statement | none | no valid statement, untouched |
+
+`radar show-event <id> --explain` now names the three actors: "Detected by: deterministic
+extractor (structured, structured-earnings-1.1)", "Enriched by: validated LLM statements
+(gpt-5.6-terra, prompt 1.1.0, schema guidance-1.0, 1 statement applied, 5 recorded)" and
+"Priority decided by: deterministic rules engine (rules.yaml 1.5)", with the LLM evidence
+span quoted from the document at its verified offsets.

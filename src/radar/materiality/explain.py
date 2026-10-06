@@ -93,10 +93,11 @@ def render_explanation(
     source = event.fields.get("guidance_source") if isinstance(event.fields, dict) else None
     if event.enrichment_method == "llm_validated" and isinstance(source, dict):
         n = len(source.get("statement_ids") or [])
+        recorded = len(event.fields.get("llm_guidance") or [])
         lines.append(
             f"Enriched by: validated LLM statements ({source.get('model_id')}, prompt "
             f"{source.get('prompt_version')}, schema {source.get('schema_version')}, "
-            f"{n} statement{'s' if n != 1 else ''} applied)"
+            f"{n} statement{'s' if n != 1 else ''} applied, {recorded} recorded)"
         )
         conflicts = event.fields.get("llm_guidance_conflicts") or []
         if conflicts:
