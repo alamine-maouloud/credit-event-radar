@@ -254,3 +254,108 @@ def test_negative_bounds_written_with_typographic_dashes_are_found(quote, lower,
     result = validate_statement(st, doc(text), ISSUER_NAMES, document_date=date(2026, 4, 28))
     assert result.checks["numbers_match"] is True and result.checks["numbers_attached"] is True
     assert result.status == "VALID", result.reasons
+
+
+OMV_SEGMENTS = ["Chemicals", "Fuels & Feedstock", "Fuels", "Energy"]
+OMV_OUTLOOK = (
+    "Outlook 2025\n"
+    "Group Organic CAPEX is projected to come in at around EUR 3.6 bn (2024: EUR 3.7 bn).\n"
+    "Organic CAPEX for Chemicals is predicted to be around EUR 0.9 bn (2024: EUR 1.0 bn).\n"
+    "Organic CAPEX for Energy is anticipated to come in at around EUR 1.9 bn (2024: EUR 1.8 bn).\n"
+)
+
+
+def _capex(label: str, quote: str, value: float):
+    return statement(
+        OMV_OUTLOOK,
+        quote,
+        metric="capex",
+        metric_label=label,
+        basis="absolute",
+        unit="EUR_BN",
+        previous_lower=None,
+        previous_upper=None,
+        current_lower=value,
+        current_upper=value,
+        status="new",
+    )
+
+
+@pytest.mark.parametrize(
+    "label,quote,value,segment",
+    [
+        (
+            "Organic CAPEX for Chemicals",
+            "Organic CAPEX for Chemicals is predicted to be around EUR 0.9 bn (2024: EUR 1.0 bn).",
+            0.9,
+            "Chemicals",
+        ),
+        (
+            "Organic CAPEX for Energy",
+            "Organic CAPEX for Energy is anticipated to come in at around EUR 1.9 bn (2024: EUR 1.8 bn).",
+            1.9,
+            "Energy",
+        ),
+    ],
+)
+def test_segment_level_statement_is_rejected_by_the_scope_guard(label, quote, value, segment):
+    """Terra proposed 11 faithful quotes of OMV segment CAPEX on the first benchmark: the
+    guide reads guidance at Group level or for the principal division, so the code rejects
+    them deterministically instead of trusting the prompt."""
+    result = validate_statement(
+        _capex(label, quote, value),
+        doc(OMV_OUTLOOK),
+        ["OMV", "OMV AG"],
+        document_date=date(2025, 4, 30),
+        segments=OMV_SEGMENTS,
+    )
+    assert result.status == "INVALID" and result.checks["scope_match"] is False
+    assert any(r.startswith("OUT_OF_SCOPE_SEGMENT") and segment in r for r in result.reasons)
+
+
+def test_group_level_statement_passes_the_scope_guard():
+    quote = "Group Organic CAPEX is projected to come in at around EUR 3.6 bn (2024: EUR 3.7 bn)."
+    result = validate_statement(
+        _capex("Organic CAPEX", quote, 3.6),
+        doc(OMV_OUTLOOK),
+        ["OMV", "OMV AG"],
+        document_date=date(2025, 4, 30),
+        segments=OMV_SEGMENTS,
+    )
+    assert result.status == "VALID" and result.checks["scope_match"] is True
+
+
+def test_principal_division_is_not_a_segment():
+    text = "In the Automotive Division, the Group expects an investment ratio between 12 and 13 percent in 2025."
+    st = statement(
+        text,
+        text,
+        metric="capex",
+        metric_label="investment ratio",
+        basis="margin_pct",
+        unit="PCT",
+        previous_lower=None,
+        previous_upper=None,
+        current_lower=12,
+        current_upper=13,
+        status="new",
+    )
+    result = validate_statement(
+        st,
+        doc(text),
+        ISSUER_NAMES,
+        document_date=date(2025, 3, 11),
+        segments=["Financial Services"],
+    )
+    assert result.checks["scope_match"] is True and result.status == "VALID"
+
+
+def test_scope_guard_without_configured_segments_accepts_everything():
+    quote = "Organic CAPEX for Chemicals is predicted to be around EUR 0.9 bn (2024: EUR 1.0 bn)."
+    result = validate_statement(
+        _capex("Organic CAPEX for Chemicals", quote, 0.9),
+        doc(OMV_OUTLOOK),
+        ["OMV"],
+        document_date=date(2025, 4, 30),
+    )
+    assert result.checks["scope_match"] is True

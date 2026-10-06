@@ -389,3 +389,11 @@ def test_llm_settings_name_the_benchmark_models(settings):
 def test_env_example_declares_the_run_budget():
     text = (CONFIG_DIR.parent / ".env.example").read_text(encoding="utf-8")
     assert "LLM_RUN_BUDGET_USD=10.00" in text
+
+
+def test_issuer_segments_name_the_levels_that_never_carry_guidance(universe):
+    by_id = {i.id: i for i in universe.issuers}
+    assert by_id["OMV"].segments == ["Chemicals", "Fuels & Feedstock", "Fuels", "Energy"]
+    assert by_id["VOLKSWAGEN"].principal_division == "Automotive Division"
+    assert by_id["TRATON"].principal_division == "TRATON Operations"
+    assert "TRATON Operations" not in by_id["TRATON"].segments

@@ -145,6 +145,14 @@ def _rows():
                     {**OK, "entity_match": False},
                     "Subsidiary net cash flow EUR 1 bn",
                 ),
+                _st(
+                    "capex",
+                    "Organic CAPEX for Fuels",
+                    {**OK, "scope_match": False},
+                    "Organic CAPEX for Fuels EUR 0.7 bn.",
+                    current_lower=0.7,
+                    current_upper=0.7,
+                ),
             ],
         },
         {
@@ -166,10 +174,11 @@ def _gold(tmp_path: Path):
 
 def test_every_statement_falls_in_one_category(tmp_path):
     cat = categorise_run(_gold(tmp_path), _rows())
-    assert cat["statements"] == 5
+    assert cat["statements"] == 6
     assert cat["categories"] == {
         "supported": 1,
         "scope_violation": 1,
+        "scope_rejected": 1,
         "field_inconsistency": 1,
         "span_failure": 1,
         "ungrounded": 1,
@@ -196,4 +205,5 @@ def test_compare_renders_the_runs_side_by_side(tmp_path):
     assert table["runs"][0]["categories"]["scope_violation"] == 1
     md = render_markdown(table)
     assert "| Scope violations (valid quote, outside the gold scope) | 1 |" in md
+    assert "| Scope violations rejected by the guard | 1 |" in md
     assert "Gold occurrences found | 1/2" in md

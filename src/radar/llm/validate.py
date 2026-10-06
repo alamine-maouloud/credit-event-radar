@@ -119,6 +119,28 @@ def _contains(values: list[float], wanted: float) -> bool:
     return any(abs(v - wanted) < 1e-9 for v in values)
 
 
+def _segment_named(label: str, quote: str, segments: list[str]) -> str | None:
+    """The configured segment the statement is about, if any: named in the metric label, or
+    introduced by "for", "of", "in" or "at" in the sentence of the quote that names the
+    metric ("Organic CAPEX for Chemicals"). A principal division is never listed here."""
+    label_low = label.casefold()
+    sentences = [s.text for s in iter_sentences(quote)] or [quote]
+    metric_sentences = [
+        s for s in sentences if label_low and label_low in s.casefold()
+    ] or sentences
+    for segment in sorted(segments, key=len, reverse=True):
+        word = re.compile(r"(?<![\w&])" + re.escape(segment) + r"(?![\w&])", re.IGNORECASE)
+        if word.search(label):
+            return segment
+        introduced = re.compile(
+            r"\b(?:for|of|in|at)\s+(?:the\s+)?" + re.escape(segment) + r"(?![\w&])",
+            re.IGNORECASE,
+        )
+        if any(introduced.search(sentence) for sentence in metric_sentences):
+            return segment
+    return None
+
+
 def validate_statement(
     st: GuidanceStatement,
     doc: RawDocument,
@@ -126,6 +148,7 @@ def validate_statement(
     *,
     document_date: date | None,
     scales: RatingScales | None = None,
+    segments: list[str] | None = None,
 ) -> ValidationResult:
     checks: dict[str, bool] = {}
     reasons: list[str] = []
@@ -198,6 +221,14 @@ def validate_statement(
                     f"period {st.period!r} is not a plausible guidance period for {document_date.isoformat()}"  # noqa: E501
                 )
     checks["temporal_consistency"] = temporal_ok
+
+    segment = _segment_named(st.metric_label, quote, segments or [])
+    checks["scope_match"] = segment is None
+    if segment is not None:
+        reasons.append(
+            f"OUT_OF_SCOPE_SEGMENT: {segment} is a segment of the issuer, guidance is read at "
+            "Group level or for the principal division"
+        )
 
     status = "VALID" if all(checks.values()) else "INVALID"
     return ValidationResult(

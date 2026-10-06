@@ -224,6 +224,10 @@ class Issuer(BaseModel):
     ir_sources: list[IRSource] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
     rating_status: Literal["verified", "unverified"] = "verified"
+    # Guidance scope (eval/LABELING_GUIDE.md section 1): the level at which the issuer
+    # guides, and the segment names that never carry the issuer's guidance.
+    principal_division: str | None = None
+    segments: list[str] = Field(default_factory=list)
     notes: str | None = None
 
     @model_validator(mode="after")

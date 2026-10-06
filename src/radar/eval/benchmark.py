@@ -75,10 +75,14 @@ def build_request(
     )
 
 
-def _statement_entries(parsed: GuidanceExtraction, doc, names, document_date) -> list[dict]:
+def _statement_entries(
+    parsed: GuidanceExtraction, doc, names, document_date, segments: list[str] | None = None
+) -> list[dict]:
     entries = []
     for st in parsed.statements:
-        validation = validate_statement(st, doc, names, document_date=document_date)
+        validation = validate_statement(
+            st, doc, names, document_date=document_date, segments=segments
+        )
         change = compute_guidance_change(st)
         entries.append(
             {
@@ -173,7 +177,7 @@ def run_benchmark(
                 parsed: GuidanceExtraction = result.parsed
                 row["has_guidance"] = parsed.has_guidance
                 row["statements"] = _statement_entries(
-                    parsed, doc, issuer_names(issuer), gold.document_date
+                    parsed, doc, issuer_names(issuer), gold.document_date, issuer.segments
                 )
         rows.append(row)
     (out_dir / "outputs.jsonl").write_text(

@@ -20,6 +20,8 @@ issuers:
     legal_entity: Volkswagen AG
     aliases: ["Volkswagen AG", "Volkswagen Group", "VW", "VW Group", "VW AG"]
     sector: automotive
+    principal_division: Automotive Division
+    segments: ["Financial Services Division", "Financial Services"]
     country: "DE"
     sec_cik: null
     ratings_page: https://www.volkswagen-group.com/en/ratings-15756
@@ -50,6 +52,8 @@ issuers:
     legal_entity: TRATON SE
     aliases: ["TRATON SE", "Traton Group"]
     sector: automotive
+    principal_division: TRATON Operations
+    segments: ["Scania", "MAN Truck & Bus", "International Motors", "Volkswagen Truck & Bus", "TRATON Financial Services"]
     country: "DE"
     sec_cik: null
     ratings_page: https://ir.traton.com/en/rating
@@ -157,6 +161,7 @@ issuers:
     legal_entity: OMV Aktiengesellschaft
     aliases: ["OMV AG", "OMV Aktiengesellschaft"]
     sector: oil_and_gas
+    segments: ["Chemicals", "Fuels & Feedstock", "Fuels", "Energy"]
     country: "AT"
     sec_cik: null
     ratings_page: https://www.omv.com/en/investors/omv-on-the-capital-markets/debt-and-ratings

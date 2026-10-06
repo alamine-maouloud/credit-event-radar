@@ -8,7 +8,8 @@ statement falls in exactly one category:
   occurrence, typically a segment figure the guide excludes;
 - span_failure: the quote is not in the document;
 - ungrounded: the quote exists but is about another entity or an impossible date;
-- field_inconsistency: the quote exists but the numbers, unit or metric are not supported by it.
+- field_inconsistency: the quote exists but the numbers, unit or metric are not supported by it;
+- scope_rejected: a segment level statement refused by the deterministic scope guard.
 """
 
 from __future__ import annotations
@@ -21,13 +22,22 @@ from typing import Any
 from radar.eval.gold import GoldDocument
 from radar.eval.metrics import SCORED, _match, predicted_behaviour
 
-CATEGORIES = ("supported", "scope_violation", "field_inconsistency", "span_failure", "ungrounded")
+CATEGORIES = (
+    "supported",
+    "scope_violation",
+    "scope_rejected",
+    "field_inconsistency",
+    "span_failure",
+    "ungrounded",
+)
 
 
 def categorise_statement(entry: dict[str, Any], matched: bool) -> str:
     checks = entry["validation"].get("checks", {})
     if entry["validation"]["status"] == "VALID":
         return "supported" if matched else "scope_violation"
+    if not checks.get("scope_match", True):
+        return "scope_rejected"
     if not checks.get("span_match", True):
         return "span_failure"
     if not checks.get("entity_match", True) or not checks.get("temporal_consistency", True):
@@ -157,6 +167,9 @@ def render_markdown(table: dict[str, Any]) -> str:
         + " |",
         "| Scope violations (valid quote, outside the gold scope) | "
         + " | ".join(str(r["categories"]["scope_violation"]) for r in runs)
+        + " |",
+        "| Scope violations rejected by the guard | "
+        + " | ".join(str(r["categories"]["scope_rejected"]) for r in runs)
         + " |",
         "| Field inconsistencies (numbers, unit or metric not in the quote) | "
         + " | ".join(str(r["categories"]["field_inconsistency"]) for r in runs)
