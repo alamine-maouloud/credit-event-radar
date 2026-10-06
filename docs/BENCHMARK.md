@@ -84,3 +84,54 @@ ERN-03 and ERN-04 can therefore be fed by validated statements; the open questio
 pipeline is the over-extraction of segment figures, to be handled by the scope rule in
 code (an occurrence whose label names a segment is metadata, never a trigger) rather than
 by trusting the prompt.
+
+## Sol, gpt-5.6-sol, reasoning effort low, 2026-10-06
+
+Same gold set, documents, prompt 1.1.0, schema, effort and validator as the re-validated
+Terra run, no deterministic scope guard yet. 30 real calls, 1.96 USD, no JSON failure, no
+truncation, mean latency 24.8 s.
+
+### Terra versus Sol, raw model output behind the same validator
+
+| Metric | terra-full-2026-10-06-revalidated (gpt-5.6-terra) | sol-full-2026-10-06 (gpt-5.6-sol) |
+|---|---|---|
+| Gold occurrences found | 55/57 | 56/57 |
+| Recall (occurrences) | 0.965 | 0.982 |
+| Precision on validated statements | 0.833 | 1.000 |
+| Precision on all statements | 0.724 | 0.949 |
+| Documents with the correct behaviour | 29/30 | 29/30 |
+| No-guidance documents with a false guidance | 0/9 | 0/9 |
+| Statements proposed | 76 | 59 |
+| Supported (validated and in the gold) | 55 | 56 |
+| Scope violations (valid quote, outside the gold scope) | 11 | 0 |
+| Field inconsistencies (numbers, unit or metric not in the quote) | 9 | 3 |
+| Span failures (quote not in the document) | 1 | 0 |
+| Ungrounded (other entity or impossible date) | 0 | 0 |
+| Cost USD | 0.00 | 1.96 |
+| Mean latency s | n/a | 24.8 |
+
+Every statement is in exactly one row of the lower block. The 11 Terra "scope violations"
+are faithful quotes of OMV segment CAPEX (Chemicals, Fuels, Energy) that the prompt and the
+guide exclude: they are not hallucinations, they are a scope instruction not followed. Sol
+followed it on all seven OMV reports and proposed 59 statements for 57 gold occurrences.
+
+What separates the two models on this gold set:
+
+- Scope discipline: 0 segment figures for Sol against 11 for Terra. This is the whole of
+  the precision gap (1.000 against 0.833 on validated statements).
+- Faithfulness of quotes: no span failure for Sol, one for Terra (a sentence shortened).
+- Shared errors: both give a EUR unit to the VW "in line with the previous year" revenue
+  mention (the only gold occurrence Sol misses), both report OMV exploration and appraisal
+  expenditure as capex once or more (rejected by the metric check), both read the OMV
+  FY 2025 KPI page as no guidance where the gold says mentioned, not actionable.
+- Status reading: Sol labels two TRATON 9M 2025 occurrences `new` where the gold says
+  `reaffirmed` ("continues to expect", "lower end of the guidance range"); the guide's own
+  tie-break ("when in doubt, choose new") makes this a defensible reading, the gold stays.
+- Cost: Sol costs 1.64 times Terra on the same documents (1.96 against 1.19 USD) for the
+  same latency; the difference is the per-token price, not the volume of reasoning.
+
+Reading for the pipeline: with validated statements only, both models give the right
+document behaviour on 29 of 30 documents and agree with the gold on every bound, unit and
+change_basis of a matched occurrence. The decision between them is economic once a
+deterministic scope guard removes segment figures from both outputs (next step, re-scored
+from the cache at zero cost).
