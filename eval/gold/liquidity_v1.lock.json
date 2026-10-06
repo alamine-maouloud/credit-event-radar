@@ -1,0 +1,35 @@
+{
+  "guide_sha256": "8adf2808d178746860fc9abdd40b9912abb5e3d0e4a19c651a103dbbf51a1ce5",
+  "labels_sha256": "84a24abe269042058313978908b10bacd9624eee2c35b50f6b5ed469da32078a",
+  "documents": {
+    "L-GPRO-01": "b1608e45b4b9ca355118abd32de079fc0307131f4b87296389952c7d125f2356",
+    "L-MVST-01": "90590199ee14e942c9062cb9ccedf3295bd9ac80467dd4fd935a08982c039ca7",
+    "L-CVR-01": "17e9ba1f55e413ff1e29fcc294fe2c8c99398f5715632c107e3baf8d9e5596a5",
+    "L-VW-FY25": "c0e93a4d466fb5631645c22245797445877223aea58a58a436718dc9fbeb1c09",
+    "L-VW-FY24": "22ab34c7a036db917b31058db93c1f6bbfadb9f93821046674f949bc7b02f235",
+    "L-VW-Q3-25": "2b21149af26a3a38492b297145a05bf47fe4e1f3e2a23eab0140044900774e4b",
+    "L-OMV-Q4-24": "f5e57cb8424c1dafc3cea2ce2f5201ff68ce6deaab5a57be848af1f8ca0e8e90",
+    "L-OMV-Q2-25": "ca788d3a29d8fba7a951b2333013e74e7db67b3b55606246ba68f9ba2baa6732",
+    "L-OMV-DEBT": "7577187efb5ab8b709cc9ca3fde6c79925fe4216b3be60bf68cce2ebd65378fe",
+    "L-DBRS-26": "231113c4985670fb92d67170a02443aaba2f1d636cf06f462f14da659b428cdb",
+    "L-VW-DEL-H1-26": "34c35d575ef6a5b100923eaba4f2788b7605398ed87f750ac7bfdbbe51f96edd",
+    "L-VW-DEL-FY25": "27c36e7309d85910eed11924a5f3a62320b0fd5e0b2b9bbc8aaba12596f47075",
+    "L-TR-UNIT-Q2-26": "b93c98ab3edaff23f9cfadf201e6ace08ff428cfa6cde5d24a786a31b33a0f9b",
+    "L-TR-FY25": "27fecf1a9544e11f7d116f1e9219c72475393994b957bef6c3fee0a3579ce242",
+    "L-OMV-EIB-26": "2e77ee708028a3bacb38fc2b0e8065fde8e7047b18450255d45b467fb84c2e22",
+    "L-VW-Q1-26": "5cad3a1b09240c404ff33ecec86916e03db08489a9d62b6069c1be1dbbcab60b",
+    "L-VW-H1-25": "e01fe2f82b40161c76da66ce70a0d3a590a00aecdda58211e7e9b18f00eabb8d",
+    "L-SP-25": "e588bf4fc5ac0ca9c6a2977d39cc4f0a071da3665c7f96981c49326d1d1f6612",
+    "L-HOG-26": "6698503881b9265d42e4d352badfae3686d4d5f750c06c24a3ddf29afe2dafb0",
+    "L-TR-H1-26": "06040ca12386964a23eaebf3adf08d1b7e3bbed25ddd34b312f241881171a15e"
+  },
+  "n_documents": 20,
+  "n_statements": 52,
+  "splits": {
+    "dev": 15,
+    "holdout": 5
+  },
+  "frozen_on": "2026-10-06",
+  "frozen_by": "Alamine",
+  "lock_sha256": "051341a046b6342fbbfc118843c988a39a491148394d41a675e33277e1914421"
+}
