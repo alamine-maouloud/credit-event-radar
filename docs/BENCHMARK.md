@@ -184,3 +184,8 @@ EUR unit (rejected), one exploration expenditure labelled capex (rejected) and o
 read as no guidance instead of mentioned. The cheaper model plus guardrails is the
 economic choice for the extraction role; the benchmark can be replayed on a new gold
 version or a new prompt with the same commands.
+
+Decision (Phase 3.3, validated 2026-10-06): gpt-5.6-terra with the deterministic guardrails
+is the default backend for guidance extraction, gpt-5.6-sol the reference and challenger
+model for evaluation. This holds for gold set V1, 30 documents of three issuers, and is not
+a universal conclusion: a new issuer, document type or gold version reopens it.
