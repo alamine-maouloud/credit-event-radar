@@ -4,6 +4,7 @@ earnings_release events. Statements and their validation are stored, events are 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from typing import Any
 
 from radar.audit import AuditEntry
 from radar.config import Universe
@@ -95,6 +96,7 @@ def extract_events(
     doc_id: str | None = None,
     kind: str = "guidance",
     extractor_version: str | None = None,
+    selection: dict[str, Any] | None = None,
 ) -> ExtractSummary:
     spec = KINDS[kind]
     extractor_version = extractor_version or spec["extractor_version"]
@@ -175,6 +177,7 @@ def extract_events(
                         "change_json": change,
                         "validation_status": validation.status,
                         "statement_kind": kind,
+                        "model_selection_json": selection,
                     }
                 )
             db.insert_statements(rows)
@@ -193,6 +196,12 @@ def extract_events(
                     message=(
                         f"{kind} {result.status}: {len(rows)} statement(s), {n_valid} valid, "
                         f"events untouched"
+                        + (
+                            f"; model {request.model_id} as {selection['role']} for {kind}: "
+                            f"{selection['reason']}"
+                            if selection
+                            else ""
+                        )
                     ),
                 )
             )

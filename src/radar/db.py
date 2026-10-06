@@ -20,7 +20,7 @@ from radar.config import Universe
 from radar.materiality.engine import Decision
 from radar.models import AgencyRating, CreditEvent, EvidenceSpan, RatingObservation, RawDocument
 
-SCHEMA_VERSION = "8"
+SCHEMA_VERSION = "9"
 TABLES = frozenset(
     {
         "issuers", "issuer_aliases", "ratings", "documents", "events", "event_evidence",
@@ -185,7 +185,8 @@ CREATE TABLE IF NOT EXISTS llm_statements (
     change_json TEXT NOT NULL,
     validation_status TEXT NOT NULL,
     created_at TEXT NOT NULL,
-    statement_kind TEXT NOT NULL DEFAULT 'guidance'
+    statement_kind TEXT NOT NULL DEFAULT 'guidance',
+    model_selection_json TEXT
 );
 CREATE TABLE IF NOT EXISTS event_enrichments (
     enrichment_id TEXT PRIMARY KEY,
@@ -263,6 +264,8 @@ class Database:
                     "ALTER TABLE llm_statements ADD COLUMN statement_kind TEXT NOT NULL "
                     "DEFAULT 'guidance'"
                 )
+            if "model_selection_json" not in statement_columns:  # schema 8 to 9 (ADR-020)
+                c.execute("ALTER TABLE llm_statements ADD COLUMN model_selection_json TEXT")
             c.execute(
                 "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', ?)",
                 (SCHEMA_VERSION,),
@@ -668,6 +671,7 @@ class Database:
         "statement_id", "llm_call_id", "doc_id", "issuer_id", "event_id", "model_id",
         "resolved_model", "prompt_version", "schema_version", "statement_json",
         "validation_json", "change_json", "validation_status", "statement_kind",
+        "model_selection_json",
     )  # fmt: skip
 
     def insert_statements(self, rows: Iterable[dict[str, Any]]) -> int:
@@ -678,11 +682,14 @@ class Database:
             for row in rows:
                 values = [
                     _json(row[k])
-                    if k.endswith("_json") and not isinstance(row[k], str)
+                    if k.endswith("_json")
+                    and row.get(k) is not None
+                    and not isinstance(row[k], str)
                     else row.get(k)
                     for k in self.STATEMENT_COLUMNS
                 ]
-                values[-1] = values[-1] or "guidance"
+                kind_index = self.STATEMENT_COLUMNS.index("statement_kind")
+                values[kind_index] = values[kind_index] or "guidance"
                 cursor = c.execute(
                     f"INSERT OR IGNORE INTO llm_statements ({', '.join(self.STATEMENT_COLUMNS)}, "
                     f"created_at) VALUES ({', '.join('?' for _ in self.STATEMENT_COLUMNS)}, ?)",
@@ -701,6 +708,8 @@ class Database:
             d = dict(r)
             for k in ("statement_json", "validation_json", "change_json"):
                 d[k] = json.loads(d[k])
+            if d.get("model_selection_json"):
+                d["model_selection_json"] = json.loads(d["model_selection_json"])
             out.append(d)
         return out
 

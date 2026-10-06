@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from radar.enrich.flags import FAMILIES
 from radar.materiality.engine import Decision
 from radar.models import CreditEvent, RawDocument
 
@@ -90,24 +91,37 @@ def render_explanation(
         + (f", {', '.join(detectors)}" if detectors else "")
         + ")"
     )
-    source = event.fields.get("guidance_source") if isinstance(event.fields, dict) else None
-    if event.enrichment_method == "llm_validated" and isinstance(source, dict):
-        n = len(source.get("statement_ids") or [])
-        recorded = len(event.fields.get("llm_guidance") or [])
-        lines.append(
-            f"Enriched by: validated LLM statements ({source.get('model_id')}, prompt "
-            f"{source.get('prompt_version')}, schema {source.get('schema_version')}, "
-            f"{n} statement{'s' if n != 1 else ''} applied, {recorded} recorded)"
-        )
-        conflicts = event.fields.get("llm_guidance_conflicts") or []
-        if conflicts:
+    fields = event.fields if isinstance(event.fields, dict) else {}
+    enriched = False
+    if event.enrichment_method == "llm_validated":
+        source = fields.get("guidance_source")
+        if isinstance(source, dict):
+            enriched = True
+            n = len(source.get("statement_ids") or [])
+            recorded = len(fields.get("llm_guidance") or [])
             lines.append(
-                "Enrichment conflicts: deterministic reading kept for "
-                + ", ".join(
-                    f"{c['field']} ({c['deterministic']} vs LLM {c['llm']})" for c in conflicts
-                )
+                f"Enriched by: validated LLM statements ({source.get('model_id')}, prompt "
+                f"{source.get('prompt_version')}, schema {source.get('schema_version')}, "
+                f"{n} statement{'s' if n != 1 else ''} applied, {recorded} recorded)"
             )
-    else:
+            lines += _model_chosen(source)
+            lines += _conflicts(fields.get("llm_guidance_conflicts") or [])
+        for family in FAMILIES:
+            fsource = fields.get(f"{family}_source")
+            if not isinstance(fsource, dict):
+                continue
+            enriched = True
+            n = len(fsource.get("statement_ids") or [])
+            recorded = len(fields.get(f"llm_{family}") or [])
+            lines.append(
+                f"Enriched by: validated LLM statements for the {family} flag "
+                f"({fsource.get('model_id')}, prompt {fsource.get('prompt_version')}, schema "
+                f"{fsource.get('schema_version')}, {n} statement{'s' if n != 1 else ''} applied, "
+                f"{recorded} recorded)"
+            )
+            lines += _model_chosen(fsource)
+            lines += _conflicts(fields.get(f"llm_{family}_conflicts") or [])
+    if not enriched:
         lines.append("Enriched by: none (deterministic fields only)")
     lines.append(
         f"Agency ratings used: {'YES' if decision.provenance.agency_ratings_used else 'NO'}"
@@ -140,3 +154,24 @@ def render_explanation(
             else:
                 lines.append(f"  [{span.evidence_type}] {span.char_start}-{span.char_end}")
     return "\n".join(lines) + "\n"
+
+
+def _model_chosen(source: dict) -> list[str]:
+    """Why this model read the document (ADR-020): the routed role and the benchmark reason
+    recorded with the statements, never only the model's name."""
+    sel = source.get("model_selection")
+    if not isinstance(sel, dict):
+        return []
+    return [
+        f"Model chosen: {sel.get('model_id')} as {sel.get('role')} for {sel.get('kind')}: "
+        f"{sel.get('reason')}"
+    ]
+
+
+def _conflicts(conflicts: list[dict]) -> list[str]:
+    if not conflicts:
+        return []
+    return [
+        "Enrichment conflicts: deterministic reading kept for "
+        + ", ".join(f"{c['field']} ({c['deterministic']} vs LLM {c['llm']})" for c in conflicts)
+    ]

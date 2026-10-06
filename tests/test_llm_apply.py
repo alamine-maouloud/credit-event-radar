@@ -601,3 +601,24 @@ def test_raised_alone_sets_no_status_and_reaffirmed_wins_over_raised():
     enr3 = build_enrichment([cut, reaff], rules)
     assert enr3.guidance_status == "cut" and enr3.governing is None  # margin is outside ERN-02/03
     assert enr3.decisional_fields["guidance_metric"] == "margin"
+
+
+def test_the_model_selection_reason_travels_with_the_statements(world):
+    """ADR-020: why the model was used is stored with each statement, written in the audit
+    log and carried into the event's provenance, not only the model's name."""
+    selection = {
+        "kind": "guidance", "role": "default", "name": "openai_terra", "model_id": "gpt-5.6-terra",
+        "provider": "openai", "reason": "guidance gold V1 (2026-10-06): Terra with guardrails",
+    }  # fmt: skip
+    _extract(world, selection=selection)
+    db = world["db"]
+    a = world["events"]["A"]
+    rows = db.statements_for_document(a.source_doc_ids[0])
+    assert rows and rows[0]["model_selection_json"] == selection
+    messages = [
+        r["message"]
+        for r in db.conn.execute("SELECT message FROM audit_log WHERE step = 'llm_extract_events'")
+    ]
+    assert messages and all("as default for guidance: guidance gold V1" in m for m in messages)
+    apply_all(db, world["rules"], world["scales"])
+    assert db.get_event(a.event_id).fields["guidance_source"]["model_selection"] == selection

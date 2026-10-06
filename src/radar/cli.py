@@ -303,16 +303,21 @@ def show_event(
 # ---------------------------------------------------------------- llm --- #
 
 
-def _llm_role(alternative: str | None):
+def _select_model(kind: str, alternative: str | None, challenger: bool):
+    """The routed model for the kind (ADR-020): default, challenger or an explicit
+    alternative; refused before any call when the family has no benchmark yet."""
+    from radar.llm.routing import RoutingNotBenchmarked, select_model
+
     settings = _settings()
-    if alternative is None:
-        return settings, settings.llm.roles["extraction"]
     try:
-        return settings, settings.llm.benchmark_alternatives[alternative]["extraction"]
+        selection = select_model(settings.llm, kind, alternative=alternative, challenger=challenger)
     except KeyError as exc:
         raise typer.BadParameter(
             f"unknown alternative {alternative!r}, see settings.llm.benchmark_alternatives"
         ) from exc
+    except RoutingNotBenchmarked as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    return settings, selection
 
 
 def _provider_for(name: str):
@@ -358,6 +363,9 @@ def llm_extract(
     alternative: str | None = typer.Option(
         None, "--alternative", help="Benchmark alternative from settings (openai_sol, anthropic)"
     ),
+    challenger: bool = typer.Option(
+        False, "--challenger", help="Use the routed challenger of this kind instead of its default"
+    ),
     limit: int | None = typer.Option(None, "--limit", help="Only the first N gold documents"),
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Render the prompts and estimate the cost, call nothing"
@@ -377,7 +385,8 @@ def llm_extract(
     from radar.llm.provider import FakeProvider
 
     load_dotenv()
-    settings, role = _llm_role(alternative)
+    settings, selection = _select_model(kind, alternative, challenger)
+    role = selection.model
     pricing = load_pricing(ROOT / settings.llm.pricing_file)
     if kind not in ("guidance", "liquidity", "covenant"):
         raise typer.BadParameter(f"unknown kind {kind!r}, expected guidance, liquidity or covenant")
@@ -417,7 +426,9 @@ def llm_extract(
             issuer_id=issuer,
             doc_id=doc,
             kind=kind,
+            selection=selection.as_record(),
         )
+        typer.echo(f"model {role.model} as {selection.role} for {kind}: {selection.reason}")
         typer.echo(
             f"{result.documents} document(s): {result.calls} call(s), {result.cached} cached, "
             f"{result.cost_usd:.4f} USD, {result.statements} statement(s) stored, "
@@ -454,11 +465,13 @@ def llm_extract(
         dry_run=dry_run,
         gold_path=gold,
         kind=kind,
+        selection=selection.as_record(),
     )
     typer.echo(
         f"run {summary.run_id}: {summary.n_documents} documents, statuses {summary.statuses}, "
         f"model {config.model_id} (effort {config.reasoning_effort}), provider {provider.name}"
     )
+    typer.echo(f"model chosen as {selection.role} for {kind}: {selection.reason}")
     typer.echo(
         f"cost {summary.total_cost_usd:.4f} USD (estimated before the calls "
         f"{summary.estimated_cost_usd:.4f}), budget {summary.budget_limit_usd:.2f}, "

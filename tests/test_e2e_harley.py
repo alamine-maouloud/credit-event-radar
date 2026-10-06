@@ -80,7 +80,7 @@ def pipeline(tmp_path_factory) -> dict:
 
 
 def test_cli_outputs(pipeline):
-    assert "schema 8 ready" in pipeline["init"]
+    assert "schema 9 ready" in pipeline["init"]
     assert "issuers" in pipeline["seed"]
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest"]
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest_url"]

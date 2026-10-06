@@ -707,8 +707,9 @@ What the blind holdout says, by level:
 - Decision: Sol flags the three breach cases and sets no false flag on the two controls;
   Terra flags two of three and sets no false flag. Over the two covenant holdouts (V1 and
   V2, six documents without a breach, four with), Sol is at four of four and Terra at two of
-  four, both at zero false flags. For this family Sol is the better extractor and the
-  difference sits at the decision level, where it matters.
+  four, both at zero false flags. On covenant gold V1 and its two holdouts, Sol gives the
+  better decision-level recall with no observed rise in false flags, at about twice the cost.
+  A result on this gold set, not a claim that Sol reads covenants better in general.
 - Qualification: on the matched statements Sol reads the status better (0.909 against 0.833)
   and the resolution better (0.545 against 0.333); both models over-read a resolution from
   the surrounding context ("waived" on a sentence that has no waiver word).
@@ -746,7 +747,15 @@ before the going concern family):
    breach ...": both models read a risk of breach, the gold reads the stated past
    non-compliance (breached, waived). A defensible disagreement, kept as labelled.
 
-Decision proposal: for the covenant family, Sol as the default extractor and Terra as the
-challenger (guidance and liquidity keep Terra). This needs one setting, the model per
-extraction kind, and is to be validated before any code. Phase 3.4b is frozen on this
-holdout: the next benchmark of the family will be a new gold version and a new holdout.
+Decision (validated 2026-10-07, ADR-020): for the covenant family, Sol is the routed default
+and Terra the challenger; guidance and liquidity keep Terra as default with Sol as
+challenger; going concern waits for its benchmark (settings.llm.routing, the reason recorded
+in every run, statement and explanation). Phase 3.4b is frozen on this holdout: the next
+benchmark of the family will be a new gold version and a new holdout.
+
+Covenant validator V2 backlog (not now: tuning further would fit the system to its holdouts
+more than improve it): the resolution salvaged like the agreement and the covenant label;
+a future covenant test date inside a breach stated in the past tense; the wordings "had not
+maintained compliance", "have not complied", "failing to meet", "defaults" of a named
+covenant; "uncertainty as to our ability to fully meet" as an anticipation; subsidiary
+borrowers (HoldCo) as configurable scope.

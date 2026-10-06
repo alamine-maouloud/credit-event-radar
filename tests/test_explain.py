@@ -159,3 +159,38 @@ def test_explanation_names_no_enrichment_on_a_plain_event(rules, scales):
     text = render_explanation(decide(rules, scales, event, None), event, {})
     assert "Enriched by: none (deterministic fields only)" in text
     assert "Detected by: deterministic extractor (structured)" in text
+
+
+def test_explanation_says_why_the_model_was_chosen_and_names_flag_families(rules, scales):
+    """ADR-020: the audit shows the routed role and the benchmark reason, not only the model's
+    name; a flag family enrichment is named as such."""
+    event = _enriched_event()
+    selection = {
+        "kind": "guidance", "role": "default", "name": "openai_terra", "model_id": "gpt-5.6-terra",
+        "provider": "openai", "reason": "guidance gold V1: Terra with guardrails at precision 1.000",
+    }  # fmt: skip
+    fields = dict(event.fields)
+    fields["guidance_source"] = {**fields["guidance_source"], "model_selection": selection}
+    fields["covenant_source"] = {
+        "method": "llm_validated", "statement_ids": ["c" * 64], "model_id": "gpt-5.6-sol",
+        "prompt_version": "1.0.0", "schema_version": "covenant-1.0",
+        "model_selection": {**selection, "kind": "covenant", "name": "openai_sol",
+                            "model_id": "gpt-5.6-sol", "reason": "covenant holdouts: Sol 4 of 4"},
+    }  # fmt: skip
+    fields["llm_covenant"] = [
+        {"statement_id": "c" * 64, "status": "breached", "resolution": "waived"}
+    ]
+    event = event.model_copy(update={"fields": fields})
+    text = render_explanation(decide(rules, scales, event, None), event, {})
+    assert (
+        "Model chosen: gpt-5.6-terra as default for guidance: guidance gold V1: Terra with "
+        "guardrails at precision 1.000"
+    ) in text
+    assert (
+        "Enriched by: validated LLM statements for the covenant flag (gpt-5.6-sol, prompt 1.0.0, "
+        "schema covenant-1.0, 1 statement applied, 1 recorded)"
+    ) in text
+    assert (
+        "Model chosen: gpt-5.6-sol as default for covenant: covenant holdouts: Sol 4 of 4" in text
+    )
+    assert "Enriched by: none" not in text

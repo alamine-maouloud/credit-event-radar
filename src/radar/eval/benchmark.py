@@ -111,6 +111,7 @@ def run_benchmark(
     dry_run: bool = False,
     gold_path: Path | None = None,
     kind: str = "guidance",
+    selection: dict[str, Any] | None = None,
 ) -> RunSummary:
     spec = KINDS[kind]
     extractor_version = config.extractor_version or spec["extractor_version"]
@@ -231,6 +232,7 @@ def run_benchmark(
         "output_tokens": sum(r["output_tokens"] or 0 for r in rows),
         "dry_run": dry_run,
         "limit": limit,
+        "model_selection": selection,
     }
     (out_dir / "run.json").write_text(json.dumps(run, indent=2, default=str), encoding="utf-8")
     (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")

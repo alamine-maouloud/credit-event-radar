@@ -67,6 +67,18 @@ class ModelRole(BaseModel):
     reasoning_effort: ReasoningEffort | None = None
 
 
+class KindRoute(BaseModel):
+    """Routing of one extraction kind: the default model and its challenger, named after
+    entries of benchmark_alternatives (or TO_BENCHMARK before the family's benchmark), with
+    the reason the benchmarks gave, recorded in every run and explanation (ADR-020)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    default: str
+    challenger: str | None = None
+    reason: str = Field(min_length=1)
+
+
 class LLMSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -76,6 +88,21 @@ class LLMSettings(BaseModel):
     pricing_file: str = "config/llm_pricing.yaml"
     roles: dict[Literal["extraction", "notes", "verification"], ModelRole]
     benchmark_alternatives: dict[str, dict[str, ModelRole]] = Field(default_factory=dict)
+    routing: dict[str, KindRoute] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _routes_name_configured_alternatives(self) -> LLMSettings:
+        for kind, route in self.routing.items():
+            for name in (route.default, route.challenger):
+                if name is None or name == "TO_BENCHMARK":
+                    continue
+                if name not in self.benchmark_alternatives:
+                    raise ValueError(
+                        f"routing.{kind} names {name!r}, not in llm.benchmark_alternatives"
+                    )
+                if "extraction" not in self.benchmark_alternatives[name]:
+                    raise ValueError(f"benchmark_alternatives.{name} has no extraction role")
+        return self
 
 
 class RatingsSettings(BaseModel):

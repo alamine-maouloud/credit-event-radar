@@ -31,6 +31,12 @@ llm:
   # Benchmark (SPEC 15.4): exact ids only, never the bare alias gpt-5.6. Anthropic stays
   # TO_CONFIRM until the official catalogue is checked on the day of the first real run.
   benchmark_alternatives:
+    openai_terra:
+      extraction:
+        provider: openai
+        model: gpt-5.6-terra
+        temperature: 0
+        reasoning_effort: low
     openai_sol:
       extraction:
         provider: openai
@@ -42,6 +48,28 @@ llm:
         provider: anthropic
         model: TO_CONFIRM
         temperature: 0
+  # Routing per extraction kind (ADR-020), decided on the benchmarks of 2026-10-06
+  # (docs/BENCHMARK.md). `radar llm-extract --kind X` uses the default, `--challenger` the
+  # challenger, `--alternative <name>` any entry above; the reason is written in every run,
+  # every stored statement and every explanation. TO_BENCHMARK refuses the default until the
+  # family has its benchmark.
+  routing:
+    guidance:
+      default: openai_terra
+      challenger: openai_sol
+      reason: "guidance gold V1 (2026-10-06): Terra with the deterministic guardrails reaches precision 1.000 and recall 0.965 against Sol 0.982, for 1.19 USD against 1.96 USD"
+    liquidity:
+      default: openai_terra
+      challenger: openai_sol
+      reason: "liquidity gold V1 and blind holdouts V2, V3 (2026-10-06): both models find the same stress cases, Terra at the lower cost"
+    covenant:
+      default: openai_sol
+      challenger: openai_terra
+      reason: "covenant gold V1 and its two holdouts (2026-10-06): Sol finds 4 of 4 breach cases at the decision level against 2 of 4 for Terra, with no false flag observed for either, at about twice the cost; a holdout result on this gold, not a general claim"
+    going_concern:
+      default: TO_BENCHMARK
+      challenger: null
+      reason: "no benchmark yet (Phase 3.4c): the default is chosen after the going concern gold set and its holdout"
 
 ratings:
   # middle: median notch (lowest of two, the single one if alone)

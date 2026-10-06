@@ -57,6 +57,8 @@ Aucune recommandation d'investissement.
 radar llm-extract --dry-run --out eval/runs/dry-terra      # prompts and cost estimate, no call
 radar llm-extract --out eval/runs/terra-2026-10-06         # real run, needs OPENAI_API_KEY and LLM_RUN_BUDGET_USD in .env
 radar llm-extract --alternative openai_sol --out eval/runs/sol-2026-10-06
+radar llm-extract --kind covenant --out eval/runs/x        # routed default of the kind (settings.llm.routing), reason recorded
+radar llm-extract --kind covenant --challenger --out eval/runs/y   # the routed challenger
 radar llm-eval --run eval/runs/terra-2026-10-06            # re-score against the frozen gold set
 radar llm-compare --run eval/runs/a --run eval/runs/b   # side by side, one category per statement
 radar llm-extract --events                                  # statements for the stored earnings events, events untouched

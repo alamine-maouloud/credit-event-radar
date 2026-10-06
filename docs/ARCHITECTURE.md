@@ -390,3 +390,25 @@ word should be salvaged like the agreement and the covenant label instead of rej
 breach, and a future covenant test date inside a breach stated in the past tense should not
 reject it. The decision proposed, and not yet implemented, is Sol as the default extractor
 for this family with Terra as the challenger, one model per extraction kind.
+
+## ADR-020 · One routed model per extraction kind, with its reason in the audit (2026-10-07)
+
+The benchmarks of 2026-10-06 gave a different answer per family: Terra with the
+deterministic guardrails for guidance (precision 1.000, recall 0.965, the lower cost),
+Terra for liquidity (same stress cases found, lower cost), Sol for covenants (four of four
+breach cases on the two holdouts against two of four, no false flag for either, about
+twice the cost). One global extraction model would have forced one family to accept the
+worse reading. The settings now route each kind: `llm.routing.<kind>` names a default and
+a challenger among `llm.benchmark_alternatives`, with the reason the benchmarks gave;
+`TO_BENCHMARK` refuses the default until the family has its benchmark (going concern).
+
+The reason travels with the statements, not only the model's name: `radar llm-extract`
+records the selection (kind, role, name, model, reason) in run.json, in every stored
+statement (schema 9, `llm_statements.model_selection_json`), in the audit log line of the
+extraction and in the event's provenance, and the explanation prints "Model chosen: <model>
+as <role> for <kind>: <reason>" under each "Enriched by" line. `--challenger` runs the
+routed challenger, `--alternative <name>` any configured entry and says so in the reason.
+The covenant conclusion stays phrased as what it is: on covenant gold V1 and its holdouts,
+Sol gives the better decision-level recall without an observed rise in false flags, not a
+general claim.
+

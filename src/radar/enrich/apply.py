@@ -183,6 +183,9 @@ def _source(rows: list[dict[str, Any]], applied: list[str], version: str) -> dic
         "resolved_model": _one({r["resolved_model"] for r in rows}),
         "prompt_version": _one({r["prompt_version"] for r in rows}),
         "schema_version": _one({r["schema_version"] for r in rows}),
+        "model_selection": next(
+            (r["model_selection_json"] for r in rows if r.get("model_selection_json")), None
+        ),
     }
 
 
