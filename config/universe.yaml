@@ -260,3 +260,109 @@ issuers:
     tags: [historical_control, sec_filer]
     rating_status: unverified
     notes: Historical control issuer for the end-to-end fixture. Ratings are read from the filing under test, never from the seed.
+  # Stress cases for the liquidity, covenant and going concern gold sets (Phase 3.4): public
+  # SEC filers under financial pressure in 2026, never in the watchlist, never in the seed.
+  - id: GOPRO_INC
+    name: GoPro
+    legal_entity: GoPro, Inc.
+    aliases: ["GoPro, Inc.", "GoPro Inc", "GPRO"]
+    sector: consumer_electronics
+    country: "US"
+    sec_cik: "0001500435"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer]
+    rating_status: unverified
+    notes: Historical control issuer (10-Q of 2026-05-11 with liquidity and going concern language). Documents are private fixtures, bytes never committed.
+  - id: MICROVAST_HOLDINGS
+    name: Microvast
+    legal_entity: Microvast Holdings, Inc.
+    aliases: ["Microvast Holdings, Inc.", "Microvast Holdings", "MVST"]
+    sector: industrial
+    country: "US"
+    sec_cik: "0001760689"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer]
+    rating_status: unverified
+    notes: Historical control issuer (10-Q of 2026-08-10 with substantial doubt and liquidity strain language). Private fixture bytes.
+  - id: CHICAGO_RIVET_MACHINE
+    name: Chicago Rivet & Machine
+    legal_entity: Chicago Rivet & Machine Co.
+    aliases: ["Chicago Rivet & Machine Co.", "Chicago Rivet", "CVR"]
+    sector: industrial
+    country: "US"
+    sec_cik: "0000019871"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer]
+    rating_status: unverified
+    notes: Historical control issuer (10-Q of 2026-05-08 with continued reduction in liquidity and going concern language). Private fixture bytes.
+  # Liquidity holdout V2 (2026-10-06): five filings chosen from EDGAR metadata only, never read
+  # before their labels were written; historical controls, never watchlist, never seed.
+  - id: NEW_FORTRESS_ENERGY
+    name: New Fortress Energy
+    legal_entity: New Fortress Energy Inc.
+    aliases: ["New Fortress Energy Inc.", "NFE"]
+    sector: energy
+    country: "US"
+    sec_cik: "0001749723"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v2]
+    rating_status: unverified
+    segments: ["Brazil business", "BrazilCo", "CoreCo", "Celba"]
+    notes: Liquidity holdout V2 document only (10-Q 2026). Private fixture bytes.
+  - id: SLEEP_NUMBER
+    name: Sleep Number
+    legal_entity: Sleep Number Corporation
+    aliases: ["Sleep Number Corporation", "Sleep Number Corp", "SNBR"]
+    sector: consumer
+    country: "US"
+    sec_cik: "0000827187"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v2]
+    rating_status: unverified
+    notes: Liquidity holdout V2 document only (10-Q 2026). Private fixture bytes.
+  - id: CATERPILLAR
+    name: Caterpillar
+    legal_entity: Caterpillar Inc.
+    aliases: ["Caterpillar Inc.", "Caterpillar Inc", "CAT"]
+    sector: industrial
+    country: "US"
+    sec_cik: "0000018230"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v2]
+    rating_status: unverified
+    principal_division: Machinery, Energy & Transportation
+    segments: ["Cat Financial", "Financial Products"]
+    notes: Liquidity holdout V2 document only (10-Q 2026). Private fixture bytes.
+  - id: DEERE
+    name: Deere
+    legal_entity: Deere & Company
+    aliases: ["Deere & Company", "John Deere", "DE"]
+    sector: industrial
+    country: "US"
+    sec_cik: "0000315189"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v2]
+    rating_status: unverified
+    segments: ["Capital Corporation", "John Deere Capital Corporation", "Financial Services"]
+    notes: Liquidity holdout V2 document only (10-Q 2026). Private fixture bytes.
+  - id: FORD_MOTOR
+    name: Ford Motor
+    legal_entity: Ford Motor Company
+    aliases: ["Ford Motor Company", "Ford", "F"]
+    sector: automotive
+    country: "US"
+    sec_cik: "0000037996"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, holdout_v2]
+    rating_status: unverified
+    principal_division: Company excluding Ford Credit
+    segments: ["Ford Credit", "Ford Blue", "Ford Model e", "Ford Pro"]
+    notes: Liquidity holdout V2 document only (10-Q 2026). Private fixture bytes.

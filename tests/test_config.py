@@ -81,6 +81,14 @@ def test_universe_unverified_issuers_have_notes(universe):
         "HARLEY_DAVIDSON_FS",
         "ROQUETTE",
         "HARLEY_DAVIDSON_INC",
+        "GOPRO_INC",
+        "MICROVAST_HOLDINGS",
+        "CHICAGO_RIVET_MACHINE",
+        "NEW_FORTRESS_ENERGY",
+        "SLEEP_NUMBER",
+        "CATERPILLAR",
+        "DEERE",
+        "FORD_MOTOR",
     }
     assert all(i.notes for i in unverified)
 
@@ -397,3 +405,10 @@ def test_issuer_segments_name_the_levels_that_never_carry_guidance(universe):
     assert by_id["VOLKSWAGEN"].principal_division == "Automotive Division"
     assert by_id["TRATON"].principal_division == "TRATON Operations"
     assert "TRATON Operations" not in by_id["TRATON"].segments
+
+
+def test_stress_case_issuers_are_historical_controls_outside_the_watchlist(universe):
+    for issuer_id in ("GOPRO_INC", "MICROVAST_HOLDINGS", "CHICAGO_RIVET_MACHINE"):
+        issuer = universe.by_id(issuer_id)
+        assert "historical_control" in issuer.tags and "demo_watchlist" not in issuer.tags
+        assert issuer.rating_status == "unverified" and issuer.ir_sources == []

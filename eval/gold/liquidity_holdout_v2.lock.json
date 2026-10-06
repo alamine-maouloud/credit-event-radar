@@ -1,0 +1,20 @@
+{
+  "guide_sha256": "8adf2808d178746860fc9abdd40b9912abb5e3d0e4a19c651a103dbbf51a1ce5",
+  "labels_sha256": "a7921a0c6b0274840ee2422e386664d89077e3da52225a3a5d0ff60444fac85c",
+  "documents": {
+    "H2-NFE": "56546e52d7ba06daac0115783c360cb84822afa2ff2d4c9e53095dec690a3381",
+    "H2-SNBR": "dcd7c0845950e531617f3b27420f236fbb87288abefc1d814de0fd8499cf09b5",
+    "H2-CAT": "79761596b4b36658113f02d0f5c46e8896006c68fef12023a849ee6ab6ffecbc",
+    "H2-DE": "50a29d33d192e9e182275693e859326d09a68e9a5532063b139a09e4c4994e59",
+    "H2-F": "25562c168bc0f23245676bfb0ad7ccfb512c3ccdeda81859de920389baa7aaa1"
+  },
+  "n_documents": 5,
+  "n_statements": 24,
+  "splits": {
+    "dev": 0,
+    "holdout": 5
+  },
+  "frozen_on": "2026-10-06",
+  "frozen_by": "Alamine",
+  "lock_sha256": "7333d639cd1b4068156e98d6c8d3aea852a1aa77b5b6db99a6e7de253e19f557"
+}

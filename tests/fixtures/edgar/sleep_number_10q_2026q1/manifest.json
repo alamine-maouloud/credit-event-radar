@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/827187/000082718726000041/snbr-20260404.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T19:52:19.926960+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "7127e6b3f7530516bbecef3572be05898d4f6f4d51a0917ad22826e000b5de38",
+  "raw_size_bytes": 1436709,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "dcd7c0845950e531617f3b27420f236fbb87288abefc1d814de0fd8499cf09b5",
+  "normalized_chars": 95181,
+  "extra": {
+    "cik": "0000827187",
+    "accession_number": "0000827187-26-000041",
+    "primary_document": "snbr-20260404.htm",
+    "form": "10-Q",
+    "filing_date": "2026-05-12"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "SLEEP_NUMBER"
+}

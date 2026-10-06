@@ -25,9 +25,20 @@ from radar.eval.gold import GoldDocument, load_gold_document  # noqa: E402
 from radar.llm.validate import NEGATIVE_LIQUIDITY_STATUSES, liquidity_polarity_ok  # noqa: E402
 
 GUIDE = ROOT / "eval" / "LIQUIDITY_LABELING_GUIDE.md"
-LABELS = ROOT / "eval" / "gold" / "liquidity_v1.yaml"
-JSONL = ROOT / "eval" / "gold" / "liquidity_v1.jsonl"
-LOCK = ROOT / "eval" / "gold" / "liquidity_v1.lock.json"
+GOLD_DIR = ROOT / "eval" / "gold"
+# One set = <name>.yaml (labels), <name>.jsonl (built), <name>.lock.json; the guide is shared.
+LABELS = GOLD_DIR / "liquidity_v1.yaml"
+JSONL = GOLD_DIR / "liquidity_v1.jsonl"
+LOCK = GOLD_DIR / "liquidity_v1.lock.json"
+
+
+def _select(name: str) -> None:
+    global LABELS, JSONL, LOCK
+    LABELS = GOLD_DIR / f"{name}.yaml"
+    JSONL = GOLD_DIR / f"{name}.jsonl"
+    LOCK = GOLD_DIR / f"{name}.lock.json"
+
+
 STATUSES = {"deteriorated", "concern", "stable", "improved", "mentioned"}
 REASONS = {"third_party", "segment", "not_liquidity"}
 
@@ -175,6 +186,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    parser.add_argument(
+        "--name", default="liquidity_v1", help="gold set: liquidity_v1 or liquidity_holdout_v2"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("build").set_defaults(func=build)
     f = sub.add_parser("freeze")
@@ -183,6 +197,7 @@ def main() -> None:
     f.set_defaults(func=freeze)
     sub.add_parser("check").set_defaults(func=check)
     args = parser.parse_args()
+    _select(args.name)
     args.func(args)
 
 

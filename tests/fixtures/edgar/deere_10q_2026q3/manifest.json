@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/315189/000110465926102213/de-20260802x10q.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T19:52:23.601462+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "26f7f354920b919c6eed9b3ddc67f8b6374d86b22a56ed1178a4cb8e32aede44",
+  "raw_size_bytes": 6816906,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "50a29d33d192e9e182275693e859326d09a68e9a5532063b139a09e4c4994e59",
+  "normalized_chars": 127464,
+  "extra": {
+    "cik": "0000315189",
+    "accession_number": "0001104659-26-102213",
+    "primary_document": "de-20260802x10q.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-27"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "DEERE"
+}

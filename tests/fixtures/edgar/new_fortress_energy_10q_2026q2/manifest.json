@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/1749723/000174972326000106/nfe-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T19:52:17.977713+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "e8b56c40608040ad478aa54afc6c982f2d14d93957fd29e761ef33c8bc0f0764",
+  "raw_size_bytes": 2481497,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "56546e52d7ba06daac0115783c360cb84822afa2ff2d4c9e53095dec690a3381",
+  "normalized_chars": 493344,
+  "extra": {
+    "cik": "0001749723",
+    "accession_number": "0001749723-26-000106",
+    "primary_document": "nfe-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-06"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "NEW_FORTRESS_ENERGY"
+}

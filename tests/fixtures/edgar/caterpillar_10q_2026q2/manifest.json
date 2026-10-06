@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/18230/000001823026000046/cat-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T19:52:21.710147+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "2e9906cd342aaa531946968d3cd3b64dbe2eb5f4bd27a538d8c62b5522bbb2c4",
+  "raw_size_bytes": 4580608,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "79761596b4b36658113f02d0f5c46e8896006c68fef12023a849ee6ab6ffecbc",
+  "normalized_chars": 274132,
+  "extra": {
+    "cik": "0000018230",
+    "accession_number": "0000018230-26-000046",
+    "primary_document": "cat-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-05"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "CATERPILLAR"
+}

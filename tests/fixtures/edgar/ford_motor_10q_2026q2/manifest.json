@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/37996/000003799626000156/f-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T19:52:25.576065+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "8b8b6868d35ed18aed6c948f63fff30dcb606b1c6c9036c74cab189c14df24a5",
+  "raw_size_bytes": 2984636,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "25562c168bc0f23245676bfb0ad7ccfb512c3ccdeda81859de920389baa7aaa1",
+  "normalized_chars": 215771,
+  "extra": {
+    "cik": "0000037996",
+    "accession_number": "0000037996-26-000156",
+    "primary_document": "f-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-07-29"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "FORD_MOTOR"
+}

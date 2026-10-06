@@ -1,0 +1,108 @@
+# Liquidity holdout V2: five filings chosen from EDGAR metadata only on 2026-10-06, never read
+# before these labels were written. After the freeze nothing changes: prompt, schema, validator,
+# polarity rules, labels. Document level expectation first, statements second.
+version: "1.0"
+documents:
+  - gold_id: H2-NFE
+    fixture: tests/fixtures/edgar/new_fortress_energy_10q_2026q2
+    split: holdout
+    expected_flag: true
+    notes: Restructuring support agreement after events of default, substantial doubt, delayed interest payments. Many generic risk factors are left unlabelled; the Brazil business sentences are a segment.
+    statements:
+      - status: deteriorated
+        evidence_quote: "These outflows were partially offset by improved collections on outstanding receivables and as a result of liquidity constraints, we delayed certain interest payments, increasing accrued interest."
+      - status: concern
+        evidence_quote: "management has concluded that, our current liquidity and forecasted cash flows from operations are not probable to be sufficient to support, in full, obligations as they become due over the next twelve-month period"
+      - status: concern
+        evidence_quote: "If our indebtedness under any of the foregoing facilities or agreements were accelerated, we would not have sufficient liquidity to repay such amounts, and we may be forced to seek additional waivers, amendments, or alternative restructuring transactions, including potentially commencing formal insolvency proceedings."
+      - status: concern
+        evidence_quote: "The Company must also meet the Minimum Liquidity Threshold at closing, and if this threshold is not met, it may be required to raise additional capital under tight time constraints, which may not be possible on acceptable terms."
+      - status: concern
+        evidence_quote: "adequately addressing the substantial doubt as to our ability to continue as a going concern and satisfy our liquidity needs, including the consummation of certain items that management expects to occur and other transactions intended to enhance our liquidity;"
+      - status: mentioned
+        evidence_quote: "Certain lenders have also agreed to provide the Company with incremental funding in exchange for additional term loans or additional letter of credit facility capacity to support ongoing operations and liquidity needs."
+      - status: mentioned
+        evidence_quote: "We used the proceeds to repay existing debt and to provide additional liquidity."
+      - status: mentioned
+        evidence_quote: "Differences between the date when we pay our suppliers and the date when we receive payments from our customers may adversely affect our liquidity and our cash flows."
+    ineligible:
+      - reason: segment
+        evidence_quote: "If a satisfactory resolution is not reached and Celba fails to deliver gas in accordance with contractual requirements prospectively, the contract provides for certain monetary payments that Celba would owe to Alunorte, which could be material and would adversely affect the liquidity of the Brazil business."
+      - reason: segment
+        evidence_quote: "In addition, Alunorte could pursue further claims or commence arbitration against Celba which, if resolved against Celba, could adversely affect the Brazil business' liquidity and results of operations."
+
+  - gold_id: H2-SNBR
+    fixture: tests/fixtures/edgar/sleep_number_10q_2026q1
+    split: holdout
+    expected_flag: true
+    notes: Going concern considerations. The filing's HTML wraps sentences across lines; the sentence "are not / expected to be sufficient to generate adequate liquidity" is a true worry that the frozen validator cannot accept because the negation and its object sit on different lines, so it is deliberately not labelled (known limitation, recorded before any run).
+    statements:
+      - status: concern
+        evidence_quote: "strategy cannot be guaranteed to ensure sufficient cash flow is generated to provide liquidity to meet the Company’s"
+      - status: mentioned
+        evidence_quote: "Historically, the Company has relied principally on liquidity generated from operating activities to fund the Company’s day-"
+      - status: mentioned
+        evidence_quote: "The Company’s primary sources of liquidity are cash flows provided by operating activities and cash available under its"
+    ineligible: []
+
+  - gold_id: H2-CAT
+    fixture: tests/fixtures/edgar/caterpillar_10q_2026q2
+    split: holdout
+    expected_flag: false
+    statements:
+      - status: stable
+        evidence_quote: "We intend to maintain a strong cash and liquidity position."
+      - status: stable
+        evidence_quote: "we currently believe that any matters raised will not have a material adverse effect on the Company’s consolidated results of operations, financial position or liquidity."
+      - status: stable
+        evidence_quote: "We do not believe that changes in the availability of the programs will have a significant impact on our liquidity."
+      - status: mentioned
+        metric_label: "credit facilities"
+        value: 11.5
+        unit: USD_BN
+        evidence_quote: "As of June 30, 2026, we had three global credit facilities with a syndicate of banks totaling $11.500 billion (Credit Facility) available in the aggregate to both Caterpillar and Cat Financial for general liquidity purposes."
+      - status: mentioned
+        evidence_quote: "We intend to utilize our liquidity and debt capacity to fund initiatives targeted to drive long term profitable growth focused on our three strategic growth pillars."
+    ineligible: []
+
+  - gold_id: H2-DE
+    fixture: tests/fixtures/edgar/deere_10q_2026q3
+    split: holdout
+    expected_flag: false
+    statements:
+      - status: stable
+        evidence_quote: "Based on the available sources of liquidity, we expect to meet our funding needs in the short term (next 12 months) and long term (beyond 12 months)."
+      - status: mentioned
+        evidence_quote: "Lower credit ratings generally result in higher borrowing costs, including costs of derivative transactions, reduced access to debt capital markets, and may adversely impact our liquidity."
+      - status: mentioned
+        evidence_quote: "These credit agreements require Capital Corporation and other parts of our business to maintain certain performance metrics and liquidity targets."
+    ineligible: []
+
+  - gold_id: H2-F
+    fixture: tests/fixtures/edgar/ford_motor_10q_2026q2
+    split: holdout
+    expected_flag: false
+    notes: Strong Company liquidity with a long list of risk factors and a financial services segment (Ford Credit) whose liquidity is not the Group's statement.
+    statements:
+      - status: stable
+        metric_label: "liquidity"
+        value: 43.4
+        unit: USD_BN
+        evidence_quote: "At June 30, 2026, we had Company cash of $22.3 billion and liquidity of $43.4 billion."
+      - status: mentioned
+        evidence_quote: "To be prepared for an economic downturn and other stress scenarios, we target an ongoing Company cash balance at or above $20 billion plus significant additional liquidity above our Company cash target."
+      - status: mentioned
+        evidence_quote: "We plan to utilize our liquidity (as described above) and our cash flows from business operations to fund our material cash requirements."
+      - status: mentioned
+        evidence_quote: "Our suppliers’ voluntary inclusion of invoices in the SCF program has no bearing on our payment terms, the amounts we pay, or our liquidity."
+      - status: mentioned
+        evidence_quote: "Pension and other postretirement liabilities could adversely affect Ford’s liquidity and financial condition;"
+    ineligible:
+      - reason: segment
+        evidence_quote: "Ford Credit’s liquidity profile continues to be diverse, robust, and focused on maintaining liquidity levels that meet its business and funding requirements."
+      - reason: segment
+        evidence_quote: "At June 30, 2026, Ford Credit’s net liquidity available for use was $27.4 billion, $2.8 billion higher than year-end 2025, reflecting strong access to public funding markets."
+      - reason: segment
+        evidence_quote: "Ford Credit ended the second quarter of 2026 with $27.4 billion of liquidity, up $2.8 billion from year-end."
+      - reason: not_liquidity
+        evidence_quote: "The corporate credit facility contains a liquidity covenant that requires us to maintain a minimum of $4 billion in aggregate of domestic cash, cash equivalents, and loaned and marketable securities"
