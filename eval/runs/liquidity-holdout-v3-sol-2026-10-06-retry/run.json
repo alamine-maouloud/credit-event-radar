@@ -1,0 +1,35 @@
+{
+  "run_id": "liquidity-holdout-v3-sol-2026-10-06-retry",
+  "started_at": "2026-10-06T20:48:10.710555+00:00",
+  "finished_at": "2026-10-06T20:49:41.145491+00:00",
+  "provider": "openai",
+  "model_id": "gpt-5.6-sol",
+  "resolved_models": [
+    "gpt-5.6-sol"
+  ],
+  "reasoning_effort": "low",
+  "temperature": 0.0,
+  "max_output_tokens": 32768,
+  "prompt_id": "extraction.liquidity",
+  "prompt_version": "1.0.0",
+  "prompt_content_hash": "9f201bfd63510916045cabace7ba8b1222eecb217e45ed80da2d42f87b48fe8f",
+  "kind": "liquidity",
+  "schema_version": "liquidity-1.0",
+  "extractor_version": "llm-liquidity-1.0",
+  "gold_path": "eval/gold/liquidity_holdout_v3.jsonl",
+  "gold_labels_sha256": "f6fc9768d406096c516da7b7bc80eb5348ae94db420d86fef553622177b509aa",
+  "gold_lock_sha256": "10c407c665b87bfe71a9f3546dbc049036f0c7044beabd0acedab0f6bb9ee29a",
+  "n_documents": 5,
+  "statuses": {
+    "cached": 1,
+    "ok": 4
+  },
+  "total_cost_usd": 1.05194,
+  "estimated_cost_usd": 4.622752,
+  "budget_limit_usd": 10.0,
+  "budget_remaining_usd": 8.94806,
+  "input_tokens": 264832,
+  "output_tokens": 8423,
+  "dry_run": false,
+  "limit": null
+}

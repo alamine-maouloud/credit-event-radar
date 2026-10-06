@@ -1,0 +1,127 @@
+{
+  "dev": {
+    "documents": 13,
+    "statements": {
+      "gold": 36,
+      "predicted": 23,
+      "predicted_valid": 11,
+      "matched": 8,
+      "precision": 0.7272727272727273,
+      "recall": 0.2222222222222222,
+      "status_accuracy": 0.875,
+      "resolution_accuracy": 0.875
+    },
+    "negative_statements": {
+      "gold": 10,
+      "predicted_valid": 3,
+      "matched": 2,
+      "precision": 0.6666666666666666,
+      "recall": 0.2
+    },
+    "document_flag": {
+      "gold_true": 2,
+      "predicted_true": 1,
+      "true_positives": 1,
+      "precision": 1.0,
+      "recall": 0.5,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 11
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "agreement '2021 Credit Agreement and 2025 Credit Agreement' not in the quote": 1,
+      "agreement 'March 2025 Credit Agreement' not in the quote": 4,
+      "the passage does not speak of covenants or contractual compliance": 2,
+      "agreement 'Revolving Credit Facility' not in the quote": 1,
+      "agreement '2022 Credit Facility' not in the quote": 1,
+      "quote dated 2026-09-30, after the document date": 1,
+      "STATUS_MISMATCH": 3,
+      "RESOLUTION_MISMATCH": 1
+    }
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 7,
+      "predicted": 11,
+      "predicted_valid": 4,
+      "matched": 2,
+      "precision": 0.5,
+      "recall": 0.2857142857142857,
+      "status_accuracy": 1.0,
+      "resolution_accuracy": 1.0
+    },
+    "negative_statements": {
+      "gold": 1,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": 0.0
+    },
+    "document_flag": {
+      "gold_true": 1,
+      "predicted_true": 0,
+      "true_positives": 0,
+      "precision": null,
+      "recall": 0.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 4
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "quote dated 2027-03-31, after the document date": 2,
+      "STATUS_MISMATCH": 2,
+      "agreement 'Credit Agreement' not in the quote": 3,
+      "the passage does not speak of covenants or contractual compliance": 1,
+      "quote is about another entity": 1
+    }
+  },
+  "all": {
+    "documents": 18,
+    "statements": {
+      "gold": 43,
+      "predicted": 34,
+      "predicted_valid": 15,
+      "matched": 10,
+      "precision": 0.6666666666666666,
+      "recall": 0.23255813953488372,
+      "status_accuracy": 0.9,
+      "resolution_accuracy": 0.9
+    },
+    "negative_statements": {
+      "gold": 11,
+      "predicted_valid": 3,
+      "matched": 2,
+      "precision": 0.6666666666666666,
+      "recall": 0.18181818181818182
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 1,
+      "true_positives": 1,
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 15
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "agreement '2021 Credit Agreement and 2025 Credit Agreement' not in the quote": 1,
+      "agreement 'March 2025 Credit Agreement' not in the quote": 4,
+      "the passage does not speak of covenants or contractual compliance": 3,
+      "agreement 'Revolving Credit Facility' not in the quote": 1,
+      "agreement '2022 Credit Facility' not in the quote": 1,
+      "quote dated 2026-09-30, after the document date": 1,
+      "STATUS_MISMATCH": 5,
+      "RESOLUTION_MISMATCH": 1,
+      "quote dated 2027-03-31, after the document date": 2,
+      "agreement 'Credit Agreement' not in the quote": 3,
+      "quote is about another entity": 1
+    }
+  },
+  "cost": {
+    "total_usd": 1.828506,
+    "input_tokens": 800031,
+    "output_tokens": 19037
+  }
+}

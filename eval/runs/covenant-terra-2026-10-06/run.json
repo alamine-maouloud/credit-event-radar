@@ -1,0 +1,34 @@
+{
+  "run_id": "covenant-terra-2026-10-06",
+  "started_at": "2026-10-06T20:56:42.101093+00:00",
+  "finished_at": "2026-10-06T21:01:06.925161+00:00",
+  "provider": "openai",
+  "model_id": "gpt-5.6-terra",
+  "resolved_models": [
+    "gpt-5.6-terra"
+  ],
+  "reasoning_effort": "low",
+  "temperature": 0.0,
+  "max_output_tokens": 32768,
+  "prompt_id": "extraction.covenant",
+  "prompt_version": "1.0.0",
+  "prompt_content_hash": "d481c08d8ccda8a3ab0c0aa1f2fc7d87f77c90d08ffcd8d3b5c456c8264eef04",
+  "kind": "covenant",
+  "schema_version": "covenant-1.0",
+  "extractor_version": "llm-covenant-1.0",
+  "gold_path": "eval/gold/covenant_v1.jsonl",
+  "gold_labels_sha256": "37fedf761b0cdb709808aa501920ef9c8270b7078a803730b1befaf455224bbb",
+  "gold_lock_sha256": "39080bfac76b897b3ab21043995dd0a49ec3a7f13c2058ac89aa801971c06f9b",
+  "n_documents": 18,
+  "statuses": {
+    "ok": 18
+  },
+  "total_cost_usd": 1.828506,
+  "estimated_cost_usd": 9.210647999999999,
+  "budget_limit_usd": 10.0,
+  "budget_remaining_usd": 8.171494,
+  "input_tokens": 800031,
+  "output_tokens": 19037,
+  "dry_run": false,
+  "limit": null
+}
