@@ -381,3 +381,12 @@ flag precision, recall and false positive rate, resolution accuracy for covenant
 split. The gold set V1 is frozen before any call; the final blind holdout and the runs wait
 for API credits, in the agreed order: the four Sol documents of liquidity holdout V3, then
 Terra on covenants, the dev reading, Sol, the blind holdout, the closing.
+
+Frozen on 2026-10-06 after the blind holdout V2 (docs/BENCHMARK.md): five filings chosen from
+EDGAR metadata, Sol flags the three breach cases and Terra two, neither sets a false flag on
+the two controls. Nothing was tuned on the holdout. The limits recorded there are the first
+items of a validator V2 to decide before the going concern family: a resolution without its
+word should be salvaged like the agreement and the covenant label instead of rejecting the
+breach, and a future covenant test date inside a breach stated in the past tense should not
+reject it. The decision proposed, and not yet implemented, is Sol as the default extractor
+for this family with Terra as the challenger, one model per extraction kind.

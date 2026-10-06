@@ -610,3 +610,143 @@ statement the validator cannot read.
 The decision between the models waits for the blind holdout: on the dev split they are
 equal at the decisional level, and the one holdout breach separates them on a single
 document.
+
+### Covenant holdout V2, the blind test (2026-10-06): Phase 3.4b frozen
+
+Selection, from EDGAR metadata only, at commit b73f2f1 (the final DEV rules): the 10-Q
+filings since May 2026 outside the universe hit by three covenant stress full-text queries
+("not in compliance" "financial covenants"; "covenant" "waiver" "not in compliance";
+"covenant" "event of default" "forbearance"), ranked by the number of queries hit then by
+filing date (Boxlight, three queries; American Shared Hospital Services and FTC Solar, two
+queries, the most recent), plus the latest 10-Q of two investment grade industrials as
+controls (Honeywell, Emerson). Nothing was read before the labels; no prompt, schema,
+validator, guide, segment or label changed after the selection; the gold was frozen (lock
+5176f873, 91 statements, 38 breached, 19 ineligible passages) before the first call.
+Distribution as found: three issuers with stated current breaches under waivers or
+forbearance, two filings that never speak of debt covenants, no trap document this time.
+Passages the frozen wording rules cannot read were labelled mentioned by the V1 convention
+and listed as limits in the gold notes before the runs.
+
+| Level | covenant-holdout-v2-terra-2026-10-06 (gpt-5.6-terra) | covenant-holdout-v2-sol-2026-10-06 (gpt-5.6-sol) |
+|---|---|---|
+| [holdout] documents | 5 | 5 |
+| [holdout] Extraction: statement recall | 0.066 | 0.121 |
+| [holdout] Extraction: statement precision (valid) | 0.750 | 0.846 |
+| [holdout] Qualification: status accuracy | 0.833 | 0.909 |
+| [holdout] Qualification: resolution accuracy | 0.333 | 0.545 |
+| [holdout] Qualification: negative statement precision | 0.600 | 0.857 |
+| [holdout] Qualification: negative statement recall | 0.079 | 0.158 |
+| [holdout] Decision: document flag precision | 1.000 | 1.000 |
+| [holdout] Decision: document flag recall | 0.667 | 1.000 |
+| [holdout] Decision: false flag rate on documents without flag | 0.000 (of 2) | 0.000 (of 2) |
+| Cost USD | 0.50 | 1.04 |
+
+| Document | split | expected | covenant-holdout-v2-terra-2026-10-06 | covenant-holdout-v2-sol-2026-10-06 |
+|---|---|---|---|---|
+| CH2-BOXL | holdout | FLAG | NO FLAG | FLAG |
+| CH2-AMS | holdout | FLAG | FLAG | FLAG |
+| CH2-FTCI | holdout | FLAG | FLAG | FLAG |
+| CH2-HON | holdout | NO FLAG | NO FLAG | NO FLAG |
+| CH2-EMR | holdout | NO FLAG | NO FLAG | NO FLAG |
+
+Terra, document by document (0.50 USD, five documents, 16 statements proposed, 8 valid):
+
+- CH2-BOXL (Boxlight, 10-Q of 2026-08-14), expected flag, Terra: NO FLAG. Terra proposed
+  seven passages. Three recall the 2024 and early 2025 breaches and were rejected as history
+  (HISTORICAL_REFERENCE), one quotes the waivers of 2026 whose wording ("borrowing base
+  defaults", "Minimum Consolidated Adjusted EBITDA defaults") the frozen rules cannot read as
+  a breach, one is the risk factor on future compliance read as a risk of breach where the
+  gold says breached (the passage states the past instances of non-compliance). The decisive
+  loss: the one current breach Terra found, "The Company was not in compliance with the
+  Senior Leverage Ratio covenant as of September 30, 2025 and ... the borrowing base covenant
+  ... through November 30, 2025", was quoted together with the following sentence on the
+  Tenth Amendment and given the resolution "waived" taken from that context; the frozen
+  validator rejects a resolution without its word in the passage and drops the whole
+  statement with it. The document loses its only validated breach and the flag.
+- CH2-AMS (American Shared Hospital Services, 10-Q of 2026-08-13), expected flag, Terra:
+  FLAG. Two of the ten breach statements found (the December 2025 notice of an event of
+  default tied to the Minimum Cash Covenant, the December 2025 and May 2026 lender notices),
+  the September 2025 limited waiver correctly read as a mention; two proposals quote HoldCo's
+  non-compliance with the DFC Loan, a subsidiary's covenant the frozen scope guard cannot
+  reject because HoldCo was not a configured segment at selection.
+- CH2-FTCI (FTC Solar, 10-Q of 2026-08-05), expected flag, Terra: FLAG. One validated breach
+  (the minimum unrestricted cash covenant at June 30, 2026, waived on August 4, 2026) out of
+  nineteen; the Second Amendment passage (breach of the purchase order covenant, waived) was
+  rejected because it names a covenant test period in 2027 and the prospective exception
+  covers non-breached statuses only; the "uncertainty as to our ability to fully meet all
+  existing ... financial covenants" sentence was proposed as a risk of breach and rejected,
+  the gold labels it mentioned for the same reason (no anticipation word the rules read).
+- CH2-HON (Honeywell, 10-Q of 2026-07-23) and CH2-EMR (Emerson, 10-Q of 2026-08-04),
+  no flag expected, Terra: no statement at all on either, no flag.
+
+Sol, document by document (1.04 USD, 34 statements proposed, 13 valid):
+
+- CH2-BOXL, expected flag, Sol: FLAG. Twenty passages proposed, five valid. Sol quotes the
+  current breach sentence on its own (Senior Leverage Ratio at September 30, 2025, borrowing
+  base through November 30, 2025) with the resolution none, which the validator accepts, and
+  the document gets its flag. The rest is the same picture as Terra: the 2024 and early 2025
+  breaches rejected as history, the 2026 waivers of "defaults" rejected for want of a breach
+  word, the Tenth Amendment waiver of "Specified Events of Default" rejected for a resolution
+  without its word, the two risk factors on future compliance read as a risk of breach. Sol
+  quotes the breach sentence and the compliance sentence twice, from the note and from the
+  MD&A: the gold labels identical repeats once, so the second quotes count against precision
+  without being errors.
+- CH2-AMS, expected flag, Sol: FLAG. Five of the ten breach statements found, two of them
+  rejected because the quoted passage runs into the Standstill Period "until June 30, 2027"
+  and the prospective exception covers non-breached statuses only; the payment default at
+  maturity is quoted together with the covenant non-compliance it precedes (matched to the
+  gold breach). No HoldCo passage proposed.
+- CH2-FTCI, expected flag, Sol: FLAG. Two validated breaches (minimum unrestricted cash,
+  direct tracker margin, both waived on August 4, 2026); the Second Amendment passage was
+  rejected for the same 2027 test date as with Terra; the "uncertainty as to our ability to
+  fully meet" sentences proposed as a risk of breach and rejected.
+- CH2-HON and CH2-EMR, no flag expected, Sol: no statement, no flag.
+
+What the blind holdout says, by level:
+
+- Decision: Sol flags the three breach cases and sets no false flag on the two controls;
+  Terra flags two of three and sets no false flag. Over the two covenant holdouts (V1 and
+  V2, six documents without a breach, four with), Sol is at four of four and Terra at two of
+  four, both at zero false flags. For this family Sol is the better extractor and the
+  difference sits at the decision level, where it matters.
+- Qualification: on the matched statements Sol reads the status better (0.909 against 0.833)
+  and the resolution better (0.545 against 0.333); both models over-read a resolution from
+  the surrounding context ("waived" on a sentence that has no waiver word).
+- Extraction: both models find a small share of the 91 labelled statements (Sol 0.12, Terra
+  0.07), because the filings repeat each breach in the notes, the MD&A, the risk factors and
+  the subsequent events, and the models quote each breach once or twice; the valid
+  statements are precise (Sol 0.85, Terra 0.75).
+- Cost: Terra 0.50 USD, Sol 1.04 USD for the five documents (902 thousand characters).
+
+Limits recorded at the freeze, nothing tuned (the first items of a validator V2, to decide
+before the going concern family):
+
+1. A resolution without its word rejects the whole statement. Terra's only current breach
+   on Boxlight carried "waived" taken from the next sentence and was dropped with its breach,
+   which cost the flag. The resolution is context, like the agreement and the covenant label:
+   it should be salvaged to none and the breach kept.
+2. A covenant test date after the document inside a breach passage rejects it, because the
+   prospective exception covers non-breached statuses only (FTC Solar's Second Amendment with
+   a purchase order covenant from March 31, 2027, both models; the AMS notices quoted with the
+   Standstill Period to June 30, 2027, Sol). A breach stated in the past tense with a future
+   test period in the same sentence is still a breach.
+3. Wordings the rules do not read as a breach: "limited waiver of the borrowing base and
+   Minimum Consolidated Adjusted EBITDA defaults" (defaults of a named covenant without the
+   word covenant), "had not maintained compliance", "have not complied with certain
+   covenants", "failing to meet the required ... covenants". Labelled mentioned by convention,
+   they never set the flag.
+4. "there is currently uncertainty as to our ability to fully meet all existing ... financial
+   covenants": an anticipation in substance that the rules do not read; both models propose it
+   as a risk of breach and are rejected.
+5. A subsidiary's covenants (HoldCo under the DFC Loan) cannot be rejected without a
+   configured segment: two Terra proposals scored as ineligible; the scope guard depends on
+   configuration.
+6. "Although the Company has obtained waivers and amendments with respect to each of the
+   foregoing instances of non-compliance, there can be no guarantee that the Company will not
+   breach ...": both models read a risk of breach, the gold reads the stated past
+   non-compliance (breached, waived). A defensible disagreement, kept as labelled.
+
+Decision proposal: for the covenant family, Sol as the default extractor and Terra as the
+challenger (guidance and liquidity keep Terra). This needs one setting, the model per
+extraction kind, and is to be validated before any code. Phase 3.4b is frozen on this
+holdout: the next benchmark of the family will be a new gold version and a new holdout.
