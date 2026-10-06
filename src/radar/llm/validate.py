@@ -280,7 +280,8 @@ def validate_liquidity_statement(
     checks["issuer_voice"] = document_type != "rating_report"
     if not checks["issuer_voice"]:
         reasons.append(
-            "THIRD_PARTY_DOCUMENT: an agency report never carries the issuer's own liquidity statement"
+            "THIRD_PARTY_DOCUMENT: an agency report never carries the issuer's own "
+            "liquidity statement"
         )
 
     polarity_ok, polarity_reason = liquidity_polarity_ok(quote, st.status)
