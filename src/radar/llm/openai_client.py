@@ -75,6 +75,10 @@ class OpenAIProvider(LLMProvider):
         client = self._sdk()
         response, elapsed = timed(lambda: client.responses.create(**payload))
         usage = getattr(response, "usage", None)
+        incomplete = None
+        if getattr(response, "status", None) == "incomplete":
+            details = getattr(response, "incomplete_details", None)
+            incomplete = getattr(details, "reason", None) or "incomplete"
         return ExtractionResponse(
             raw_json=getattr(response, "output_text", "") or "",
             model_id=request.model_id,
@@ -84,4 +88,5 @@ class OpenAIProvider(LLMProvider):
             output_tokens=int(getattr(usage, "output_tokens", 0) or 0),
             latency_ms=elapsed,
             reasoning_effort=request.reasoning_effort,
+            incomplete_reason=incomplete,
         )

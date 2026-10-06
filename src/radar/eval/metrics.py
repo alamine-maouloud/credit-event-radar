@@ -156,6 +156,7 @@ def score(gold_rows: list[GoldDocument], output_rows: list[dict[str, Any]]) -> d
             "ok": statuses.get("ok", 0),
             "cached": statuses.get("cached", 0),
             "json_failures": statuses.get("schema_failure", 0),
+            "truncated": statuses.get("truncated", 0),
             "budget_refused": statuses.get("budget_refused", 0),
             "provider_errors": statuses.get("provider_error", 0),
             "dry_run": statuses.get("dry_run", 0),

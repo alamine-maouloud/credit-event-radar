@@ -430,8 +430,8 @@ def _echo_metrics(m: dict) -> None:
     d, b, o, c = m["documents"], m["behaviour"], m["occurrences"], m["claims"]
     typer.echo(
         f"documents: {d['n']} (ok {d['ok']}, cached {d['cached']}, json failures "
-        f"{d['json_failures']}, budget refused {d['budget_refused']}, provider errors "
-        f"{d['provider_errors']}, dry run {d['dry_run']})"
+        f"{d['json_failures']}, truncated {d.get('truncated', 0)}, budget refused "
+        f"{d['budget_refused']}, provider errors {d['provider_errors']}, dry run {d['dry_run']})"
     )
     typer.echo(f"behaviour accuracy: {_fmt(b['accuracy'])} on {b['n_scored']} documents")
     typer.echo(

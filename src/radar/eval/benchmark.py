@@ -38,7 +38,9 @@ class BenchmarkConfig(BaseModel):
     model_id: str
     reasoning_effort: str | None = None
     temperature: float = 0.0
-    max_output_tokens: int = Field(default=4096, ge=1)
+    # Reasoning tokens count against the ceiling: 4096 left no text at all on the second
+    # real document (2026-10-06). The budget reserves the ceiling before every call.
+    max_output_tokens: int = Field(default=32768, ge=1)
     extractor_version: str = EXTRACTOR_VERSION
 
 

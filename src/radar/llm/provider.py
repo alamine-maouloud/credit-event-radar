@@ -48,6 +48,8 @@ class ExtractionResponse(BaseModel):
     output_tokens: int = Field(ge=0)
     latency_ms: int = Field(ge=0)
     reasoning_effort: str | None = None
+    # set when the API stopped before the end (max_output_tokens, content filter)
+    incomplete_reason: str | None = None
 
 
 class LLMProvider(ABC):
@@ -78,11 +80,13 @@ class FakeProvider(LLMProvider):
         raw_json: str,
         resolved_model: str | None = None,
         latency_ms: int = 5,
+        incomplete_reason: str | None = None,
     ) -> None:
         self.name = name
         self.raw_json = raw_json
         self.resolved_model = resolved_model
         self.latency_ms = latency_ms
+        self.incomplete_reason = incomplete_reason
         self.calls = 0
         self.requests: list[ExtractionRequest] = []
 
@@ -99,6 +103,7 @@ class FakeProvider(LLMProvider):
             output_tokens=estimate_tokens(self.raw_json),
             latency_ms=self.latency_ms,
             reasoning_effort=request.reasoning_effort,
+            incomplete_reason=self.incomplete_reason,
         )
 
 

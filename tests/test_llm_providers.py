@@ -150,3 +150,31 @@ def test_openai_reasoning_models_get_no_temperature_field(model_id):
     assert payload["reasoning"] == {"effort": "low"}
     assert payload["text"]["format"]["strict"] is True
     assert payload["model"] == model_id
+
+
+def test_openai_incomplete_response_reports_the_reason():
+    from radar.llm.openai_client import OpenAIProvider
+
+    class FakeResponses:
+        def create(self, **payload):
+            class Usage:
+                input_tokens = 3918
+                output_tokens = 4096
+
+            class Details:
+                reason = "max_output_tokens"
+
+            class Response:
+                model = "gpt-5.6-terra"
+                output_text = ""
+                status = "incomplete"
+                incomplete_details = Details()
+                usage = Usage()
+
+            return Response()
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    response = OpenAIProvider(client=FakeClient()).complete(request())
+    assert response.incomplete_reason == "max_output_tokens" and response.raw_json == ""

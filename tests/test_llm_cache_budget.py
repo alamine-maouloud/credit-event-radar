@@ -292,3 +292,57 @@ def test_runner_schema_failure_is_recorded(db):
     )
     assert result.status == "schema_failure" and result.parsed is None and result.error
     assert db.audit_entries(doc_id="z" * 64)[-1]["status"] == "error"
+
+
+def _budget_m() -> RunBudget:
+    return RunBudget(
+        limit_usd=10.0,
+        pricing=Pricing.model_validate(
+            {
+                "version": "t",
+                "models": {"m": {"input_per_million_usd": 1.0, "output_per_million_usd": 1.0}},
+            }
+        ),
+    )
+
+
+def _run(db, provider, cache, doc="t" * 64):
+    from radar.llm.runner import run_extraction
+    from radar.llm.schemas import GuidanceExtraction
+
+    return run_extraction(
+        db,
+        request(),
+        GuidanceExtraction,
+        provider=provider,
+        cache=cache,
+        budget=_budget_m(),
+        document_hash=doc,
+        extractor_version="llm-guidance-1.0",
+        prompt_version="1.0.0",
+        doc_id=doc,
+    )
+
+
+def test_runner_truncated_response_is_reported_and_never_cached(db):
+    """Second real document, 2026-10-06: the reasoning alone consumed the whole output
+    ceiling, the API returned an incomplete response with no text and the empty answer was
+    cached as a schema failure. Truncation is its own status and is not cached."""
+    provider = FakeProvider(name="openai", raw_json="", incomplete_reason="max_output_tokens")
+    cache = LLMCache(db)
+    first = _run(db, provider, cache)
+    assert first.status == "truncated" and first.parsed is None
+    assert "max_output_tokens" in (first.error or "")
+    assert cache.get(first.cache_key) is None
+    second = _run(db, provider, cache)
+    assert provider.calls == 2 and second.status == "truncated"
+    assert db.audit_entries(doc_id="t" * 64)[-1]["status"] == "error"
+
+
+def test_runner_schema_failure_is_never_cached(db):
+    provider = FakeProvider(name="openai", raw_json='{"has_guidance": "maybe"}')
+    cache = LLMCache(db)
+    first = _run(db, provider, cache, doc="u" * 64)
+    assert first.status == "schema_failure" and cache.get(first.cache_key) is None
+    _run(db, provider, cache, doc="u" * 64)
+    assert provider.calls == 2

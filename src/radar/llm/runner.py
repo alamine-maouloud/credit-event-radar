@@ -15,7 +15,9 @@ from radar.llm.cache import LLMCache, cache_key
 from radar.llm.provider import ExtractionRequest, ExtractionResponse, LLMProvider
 from radar.llm.schemas import GUIDANCE_SCHEMA_VERSION
 
-RunStatus = Literal["ok", "cached", "budget_refused", "schema_failure", "provider_error"]
+RunStatus = Literal[
+    "ok", "cached", "budget_refused", "schema_failure", "provider_error", "truncated"
+]
 
 
 class ExtractionRun(BaseModel):
@@ -162,9 +164,14 @@ def run_extraction(
         actual_input_tokens=response.input_tokens,
         actual_output_tokens=response.output_tokens,
     )
-    cache.put(key, response)
-    parsed, error = _parse(response.raw_json, schema_model)
-    status = "ok" if parsed is not None else "schema_failure"
+    if response.incomplete_reason:
+        parsed, error = None, f"response incomplete: {response.incomplete_reason}"
+        status: RunStatus = "truncated"
+    else:
+        parsed, error = _parse(response.raw_json, schema_model)
+        status = "ok" if parsed is not None else "schema_failure"
+    if parsed is not None:
+        cache.put(key, response)  # only complete, parseable answers are worth replaying
     outputs_hash = stable_hash(response.raw_json)
     db.insert_llm_call(
         {
@@ -195,7 +202,7 @@ def run_extraction(
                 f"{provider.name} {request.model_id} (resolved {response.resolved_model}, effort {request.reasoning_effort}): "  # noqa: E501
                 f"estimated {entry.estimated_cost_before_call:.4f} USD before, actual {entry.actual_cost_after_call:.4f} after, "  # noqa: E501
                 f"cumulative {entry.cumulative_run_cost:.4f}, remaining {entry.budget_remaining:.4f}"  # noqa: E501
-                + (f"; schema failure: {error}" if error else "")
+                + (f"; {status}: {error}" if error else "")
             ),
         )
     )

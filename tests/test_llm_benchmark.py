@@ -192,7 +192,7 @@ class ScriptedProvider(LLMProvider):
 
 def _config(**overrides) -> BenchmarkConfig:
     base = dict(
-        model_id="gpt-5.6-terra", reasoning_effort="low", temperature=0.0, max_output_tokens=4096
+        model_id="gpt-5.6-terra", reasoning_effort="low", temperature=0.0, max_output_tokens=32768
     )
     base.update(overrides)
     return BenchmarkConfig(**base)
