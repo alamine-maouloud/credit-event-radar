@@ -275,3 +275,11 @@ version is edited after model outputs have been seen. A correction creates guida
 its own lock and its justification; errors of a model stay visible in the run that produced
 them. `--dry-run` renders every prompt and sums the price of the estimated input tokens plus
 the output ceiling, so the budget is checked before the first real call.
+
+Two lessons of the first real calls (2026-10-06) are built into the layer. The Responses API
+rejects the temperature parameter for the gpt-5 family, so the backend omits the key for
+those models instead of sending null. Reasoning tokens count against max_output_tokens: at
+4096 the second document came back incomplete with no text at all, and that empty answer
+had been cached as a schema failure. A response flagged incomplete by the API is now the
+status `truncated`, only complete and parseable answers enter the cache, and the benchmark
+reserves a ceiling of 32768 output tokens against the budget before each call.
