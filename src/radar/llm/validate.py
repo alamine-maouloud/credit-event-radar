@@ -192,7 +192,8 @@ _LIQUIDITY_NEGATED_POSITIVE_RE = re.compile(
 _NEGATION_RE = re.compile(r"(?i)\b(?:no|not|without|never|neither|nor|free\s+of|absence\s+of)\b")
 # The passage must speak of liquidity, cash, or committed lines and facilities of credit.
 _LIQUIDITY_TOPIC_RE = re.compile(
-    r"liquidity|\bcash\b|credit (?:line|lines|facilit(?:y|ies))|lines? of credit|revolving|liquid assets"
+    r"liquidity|\bcash\b|credit (?:line|lines|facilit(?:y|ies))|lines? of credit|"
+    r"revolving|liquid assets"
 )
 NEGATIVE_LIQUIDITY_STATUSES = frozenset({"deteriorated", "concern"})
 
