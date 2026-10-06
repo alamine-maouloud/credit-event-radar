@@ -404,3 +404,62 @@ def test_a_month_named_may_is_not_a_hypothetical_modal():
         st, doc(text), ISSUER_NAMES, document_date=date(2026, 5, 11)
     )
     assert result.status == "VALID", result.reasons
+
+
+# A breach cited as history must not create a covenant event today (same protection as the
+# historical_reference guard of the rating extractor).
+OLD_BREACH = "During the second quarter of 2025, the Company was not in compliance with the leverage covenant under its Credit Agreement and obtained a waiver from the lenders."
+OLD_DATED = "As of September 30, 2025, the Company was not in compliance with the minimum net worth covenant, and the lender waived this covenant violation on November 6, 2025."
+RECENT = "As of March 31, 2026, the Company was not in compliance with the minimum net worth covenant, and the lender waived this covenant violation on May 6, 2026."
+HIST_TEXT = "Issuer Test A AG report\n" + OLD_BREACH + "\n" + OLD_DATED + "\n" + RECENT
+
+
+def _hist(quote, status, document_date, resolution="waived"):
+    start = HIST_TEXT.index(quote)
+    st = CovenantStatement(
+        risk_type="covenant",
+        status=status,
+        resolution=resolution,
+        evidence_quote=quote,
+        start_offset=start,
+        end_offset=start + len(quote),
+    )
+    return validate_covenant_statement(
+        st, doc(HIST_TEXT), ISSUER_NAMES, document_date=document_date
+    )
+
+
+@pytest.mark.parametrize("quote", [OLD_BREACH, OLD_DATED])
+def test_a_breach_older_than_a_year_is_a_historical_reference(quote):
+    result = _hist(quote, "breached", date(2026, 11, 10))
+    assert result.status == "INVALID" and result.checks["historical_reference"] is False
+    assert any("HISTORICAL_REFERENCE" in r for r in result.reasons)
+    kept = _hist(quote, "mentioned", date(2026, 11, 10))
+    assert kept.status == "VALID"  # the history stays a mention
+
+
+@pytest.mark.parametrize(
+    "quote,document_date",
+    [(RECENT, date(2026, 5, 11)), (OLD_DATED, date(2025, 11, 14)), (OLD_BREACH, date(2025, 8, 10))],
+)
+def test_a_breach_of_the_reporting_period_is_current(quote, document_date):
+    result = _hist(quote, "breached", document_date)
+    assert result.status == "VALID", result.reasons
+    assert result.checks["historical_reference"] is True
+
+
+def test_a_breach_without_a_date_is_not_assumed_historical():
+    quote = "The Company was not in compliance with the leverage covenant and obtained a waiver."
+    text = "Issuer Test A AG report\n" + quote
+    st = CovenantStatement(
+        risk_type="covenant",
+        status="breached",
+        resolution="waived",
+        evidence_quote=quote,
+        start_offset=text.index(quote),
+        end_offset=text.index(quote) + len(quote),
+    )
+    result = validate_covenant_statement(
+        st, doc(text), ISSUER_NAMES, document_date=date(2026, 11, 10)
+    )
+    assert result.status == "VALID" and result.checks["historical_reference"] is True

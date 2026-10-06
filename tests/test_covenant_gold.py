@@ -124,3 +124,51 @@ def test_scorer_adds_resolution_accuracy_and_breach_metrics(tmp_path):
     assert dev["document_flag"]["true_positives"] == 1 and dev["document_flag"]["precision"] == 1.0
     assert dev["rejections"] == {"STATUS_MISMATCH": 1}
     assert m["holdout"]["document_flag"]["false_positive_rate_on_negative_docs"] == 0.0
+
+
+def test_family_comparison_reports_the_three_levels(tmp_path):
+    """Extraction (passages found), qualification (status, resolution), decision (flag per
+    document and ERN-01): one table per run, read from the run directories."""
+    from radar.eval.flagfamily import compare_family_runs, render_family_markdown
+
+    gold = _gold(tmp_path)
+    rows = [
+        {
+            "gold_id": "C-1",
+            "run_status": "ok",
+            "has_covenant_statements": True,
+            "cost_usd": 0.1,
+            "latency_ms": 1000,
+            "statements": [_st("breached", "cured", 12, 60), _st("compliant", "none", 200, 240)],
+        },
+        {
+            "gold_id": "C-2",
+            "run_status": "ok",
+            "has_covenant_statements": False,
+            "cost_usd": 0.05,
+            "latency_ms": 500,
+            "statements": [],
+        },
+    ]
+    run = tmp_path / "run-a"
+    run.mkdir()
+    (run / "outputs.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+    (run / "run.json").write_text(
+        json.dumps({"run_id": "run-a", "model_id": "m-a", "kind": "covenant"})
+    )
+    table = compare_family_runs(
+        gold, [run], negative=frozenset({"breached"}), extra_fields=("resolution",)
+    )
+    a = table["runs"][0]
+    assert a["run_id"] == "run-a" and a["kind"] == "covenant"
+    assert (
+        a["all"]["statements"]["recall"] == 1.0
+        and a["all"]["statements"]["resolution_accuracy"] == 0.5
+    )
+    assert a["documents"] == [
+        {"gold_id": "C-1", "split": "dev", "expected": True, "predicted": True},
+        {"gold_id": "C-2", "split": "holdout", "expected": False, "predicted": False},
+    ]
+    md = render_family_markdown(table)
+    assert "Extraction: statement recall" in md and "Qualification: resolution accuracy" in md
+    assert "Decision: document flag recall" in md and "| C-1 | dev | FLAG | FLAG |" in md

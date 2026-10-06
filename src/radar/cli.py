@@ -535,6 +535,28 @@ def llm_compare(
     from radar.eval.compare import compare_runs, render_markdown
     from radar.eval.gold import load_gold
 
+    kind = json.loads((runs[0] / "run.json").read_text(encoding="utf-8")).get("kind", "guidance")
+    if kind in ("liquidity", "covenant"):
+        from radar.eval.flagfamily import compare_family_runs, render_family_markdown
+
+        if kind == "liquidity":
+            from radar.eval.liquidity import NEGATIVE as negative
+            from radar.eval.liquidity import load_liquidity_gold as loader
+
+            extra: tuple[str, ...] = ()
+        else:
+            from radar.eval.covenant import NEGATIVE as negative
+            from radar.eval.covenant import load_covenant_gold as loader
+
+            extra = ("resolution",)
+        family_table = compare_family_runs(
+            loader(gold), runs, negative=frozenset(negative), extra_fields=extra
+        )
+        markdown = render_family_markdown(family_table)
+        if out is not None:
+            out.write_text(markdown, encoding="utf-8")
+        typer.echo(markdown)
+        return
     table = compare_runs(load_gold(gold), runs)
     markdown = render_markdown(table)
     if out is not None:

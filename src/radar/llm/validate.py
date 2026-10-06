@@ -15,7 +15,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from rapidfuzz import fuzz
 
-from radar.extract.dates import find_dates
+from radar.extract.dates import find_dates, is_historical
 from radar.extract.spans import iter_sentences
 from radar.extract.structured import _issuer_named, _matches_issuer, find_named_entities
 from radar.llm.schemas import CovenantStatement, GuidanceStatement, LiquidityStatement
@@ -477,6 +477,15 @@ def validate_covenant_statement(
     checks["status_match"] = status_ok
     if status_reason:
         reasons.append(status_reason)
+    # a breach the passage dates more than a year before the document recalls history: it
+    # stays a mention, it never creates a covenant event today
+    historical = st.status == "breached" and is_historical(quote, document_date)
+    checks["historical_reference"] = not historical
+    if historical:
+        reasons.append(
+            "HISTORICAL_REFERENCE: the breach is dated more than a year before the document, "
+            "a mention of history, not a current breach"
+        )
     resolution_ok, resolution_reason = covenant_resolution_ok(quote, st.resolution)
     checks["resolution_match"] = resolution_ok
     if resolution_reason:

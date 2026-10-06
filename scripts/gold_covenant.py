@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -22,6 +23,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from radar.audit import stable_hash  # noqa: E402
 from radar.config import load_universe  # noqa: E402
 from radar.eval.gold import GoldDocument, load_gold_document  # noqa: E402
+from radar.extract.dates import is_historical  # noqa: E402
 from radar.llm.validate import covenant_resolution_ok, covenant_status_ok  # noqa: E402
 
 GUIDE = ROOT / "eval" / "COVENANT_LABELING_GUIDE.md"
@@ -89,6 +91,12 @@ def build(args) -> None:
             ok, reason = covenant_status_ok(st["evidence_quote"], status)
             if not ok:
                 problems.append(f"{item['gold_id']}: {reason} ({st['evidence_quote'][:60]!r})")
+            if status == "breached" and is_historical(
+                st["evidence_quote"], date.fromisoformat(_document_date(item, manifest))
+            ):
+                problems.append(
+                    f"{item['gold_id']}: breach dated more than a year before the document ({st['evidence_quote'][:60]!r})"
+                )
             ok, reason = covenant_resolution_ok(st["evidence_quote"], resolution)
             if not ok:
                 problems.append(f"{item['gold_id']}: {reason} ({st['evidence_quote'][:60]!r})")

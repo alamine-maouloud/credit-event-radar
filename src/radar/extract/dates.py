@@ -50,3 +50,29 @@ def find_dates(text: str) -> list[tuple[date, int, int]]:
 def first_date(text: str) -> tuple[date, int, int] | None:
     found = find_dates(text)
     return found[0] if found else None
+
+
+_QUARTER_RE = re.compile(
+    r"(?i)\b(first|second|third|fourth)\s+quarter\s+(?:of|ended|ending)?\s*(?:fiscal\s+)?(20\d\d)\b"
+)
+_QUARTER_END = {"first": (3, 31), "second": (6, 30), "third": (9, 30), "fourth": (12, 31)}
+HISTORICAL_DAYS = 365  # a passage dated more than a year before the document recalls history
+
+
+def latest_reference_date(text: str) -> date | None:
+    """The most recent date the passage refers to: explicit dates and quarter-of-year
+    expressions ("second quarter of 2025" is 2025-06-30). None when the passage is undated."""
+    found = [d for d, _, _ in find_dates(text)]
+    for m in _QUARTER_RE.finditer(text):
+        month, day = _QUARTER_END[m.group(1).lower()]
+        found.append(date(int(m.group(2)), month, day))
+    return max(found) if found else None
+
+
+def is_historical(text: str, document_date: date | None, days: int = HISTORICAL_DAYS) -> bool:
+    """True when every date the passage refers to lies more than ``days`` before the document
+    date. An undated passage is never assumed historical."""
+    if document_date is None:
+        return False
+    latest = latest_reference_date(text)
+    return latest is not None and (document_date - latest).days > days

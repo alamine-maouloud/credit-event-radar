@@ -24,8 +24,8 @@ def doc(text: str, title: str | None, published: date | None = date(2026, 4, 30)
 TITLE = "First Quarter: Issuer Test A makes progress in a challenging environment"
 
 
-def only(text: str, title: str | None = TITLE):
-    result = extract_earnings_events(doc(text, title), "ISSUER_TEST_A")
+def only(text: str, title: str | None = TITLE, published: date | None = date(2026, 4, 30)):
+    result = extract_earnings_events(doc(text, title, published), "ISSUER_TEST_A")
     assert len(result.events) == 1, (result.events, result.skipped)
     return result.events[0]
 
@@ -196,3 +196,11 @@ def test_covenant_flag_needs_a_breach_not_a_mention_or_a_preventive_amendment(se
 )
 def test_covenant_flag_on_a_stated_breach(sentence):
     assert only(f"Results. {sentence}").fields["flags"] == ["covenant"]
+
+
+def test_flags_ignore_sentences_dated_more_than_a_year_before_the_release():
+    """A 2026 release recalling a 2025 covenant breach does not raise the flag again."""
+    old = "In the second quarter of 2025, the company was not in compliance with its leverage covenant and obtained a waiver."
+    recent = "As of June 30, 2026, the company was not in compliance with its leverage covenant."
+    assert only(f"Results. {old}", published=date(2026, 8, 5)).fields["flags"] == []
+    assert only(f"Results. {recent}", published=date(2026, 8, 5)).fields["flags"] == ["covenant"]

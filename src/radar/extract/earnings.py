@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 from datetime import date
 
+from radar.extract.dates import is_historical
 from radar.extract.spans import exact_span, find_quote, iter_sentences
 from radar.extract.structured import Extraction, Skipped, event_id_for
 from radar.models import CreditEvent, EvidenceSpan, RawDocument
@@ -147,6 +148,18 @@ def extract_earnings_events(doc: RawDocument, issuer_id: str) -> Extraction:
                 statuses.append((status, sentence.start + m.start(), sentence.start + m.end()))
         for flag, pattern in _FLAGS:
             m = pattern.search(sentence.text)
+            if m and is_historical(
+                sentence.text, doc.published_at.date() if doc.published_at else None
+            ):
+                skipped.append(
+                    Skipped(
+                        "historical_flag:" + flag,
+                        sentence.start + m.start(),
+                        sentence.start + m.end(),
+                        sentence.text[:160],
+                    )
+                )
+                continue
             negated = _FLAG_NEGATIONS.get(flag)
             if m and negated is not None and negated.search(sentence.text):
                 skipped.append(
