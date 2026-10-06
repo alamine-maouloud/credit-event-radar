@@ -371,3 +371,21 @@ def test_ir_settings(settings):
     ir = settings.ingestion.ir
     assert ir.user_agent_env == "IR_USER_AGENT" and ir.respect_robots is True
     assert ir.min_interval_seconds >= 0.5
+
+
+# ------------------------------------------------------------- llm --- #
+
+
+def test_llm_settings_name_the_benchmark_models(settings):
+    roles = settings.llm.roles
+    assert roles["extraction"].provider == "openai" and roles["extraction"].model == "gpt-5.6-terra"
+    assert roles["extraction"].reasoning_effort == "low"
+    assert settings.llm.benchmark_alternatives["openai_sol"]["extraction"].model == "gpt-5.6-sol"
+    assert settings.llm.benchmark_alternatives["anthropic"]["extraction"].model == "TO_CONFIRM"
+    assert settings.llm.run_budget_usd_env == "LLM_RUN_BUDGET_USD"
+    assert settings.llm.pricing_file == "config/llm_pricing.yaml"
+
+
+def test_env_example_declares_the_run_budget():
+    text = (CONFIG_DIR.parent / ".env.example").read_text(encoding="utf-8")
+    assert "LLM_RUN_BUDGET_USD=10.00" in text
