@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/1828161/000119312526334042/ftci-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T21:28:22.107891+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "b3ab2466f271a61e73453f32143e0ef404f51de4345928008faef3e1474dbab4",
+  "raw_size_bytes": 3760171,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "3e8dddf729461743c793a481e0563637ebacb055d3551a47e2e334bf3954bac6",
+  "normalized_chars": 234411,
+  "extra": {
+    "cik": "0001828161",
+    "accession_number": "0001193125-26-334042",
+    "primary_document": "ftci-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-05"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "FTC_SOLAR"
+}

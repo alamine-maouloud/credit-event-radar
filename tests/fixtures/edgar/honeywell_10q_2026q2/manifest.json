@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/773840/000077384026000124/hon-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T21:28:23.739894+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "69a9fe97eaf69867e51820281cbc22375df75f34b7e9953459e9dbea3fe423a5",
+  "raw_size_bytes": 2754702,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "db15033e5de0c15df88c1951e6306a8167f28690e75e3dd384d85b98f34935b0",
+  "normalized_chars": 238709,
+  "extra": {
+    "cik": "0000773840",
+    "accession_number": "0000773840-26-000124",
+    "primary_document": "hon-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-07-23"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "HONEYWELL"
+}

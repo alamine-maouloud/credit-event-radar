@@ -1,0 +1,20 @@
+{
+  "guide_sha256": "e19f3af7c8e9d38432f9a72748f951a459c053bfd6054d6229d3673c60b0ad55",
+  "labels_sha256": "0a327c9039fcaf116f7ea7807364a00a98d85df6e4bd86799530f90478f69cfc",
+  "documents": {
+    "CH2-BOXL": "91dc221ccbef86e2400cdb49bb761f047c61cb91e646711f721d6ce8077cac32",
+    "CH2-AMS": "4f7dbb07bceeea168e9e46276eaa393edf25937202eb27195feb560e385f2b4f",
+    "CH2-FTCI": "3e8dddf729461743c793a481e0563637ebacb055d3551a47e2e334bf3954bac6",
+    "CH2-HON": "db15033e5de0c15df88c1951e6306a8167f28690e75e3dd384d85b98f34935b0",
+    "CH2-EMR": "763173fc390b77e71704e6406291f6f3f9e263776c8ea8a3f5207c254361f855"
+  },
+  "n_documents": 5,
+  "n_statements": 91,
+  "splits": {
+    "dev": 0,
+    "holdout": 5
+  },
+  "frozen_on": "2026-10-06",
+  "frozen_by": "Alamine",
+  "lock_sha256": "5176f8733f7d6e3bbd0342f3837e6896203a4b27b8cb944caf474b8d093251bc"
+}

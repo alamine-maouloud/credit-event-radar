@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/32604/000003260426000043/emr-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T21:28:25.309372+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "577d1adde4e024437352631d627f2dceed952dae56677f23efa3261ec9085ae6",
+  "raw_size_bytes": 1581800,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "763173fc390b77e71704e6406291f6f3f9e263776c8ea8a3f5207c254361f855",
+  "normalized_chars": 89897,
+  "extra": {
+    "cik": "0000032604",
+    "accession_number": "0000032604-26-000043",
+    "primary_document": "emr-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-04"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "EMERSON"
+}

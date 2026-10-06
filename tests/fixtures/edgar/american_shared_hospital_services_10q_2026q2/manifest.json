@@ -1,0 +1,24 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/744825/000143774926027716/asha20260630_10q.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T21:28:20.543538+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "b68109551deba358559b0c814ea92d73934a3de650849b383bd6e442f5b88ec0",
+  "raw_size_bytes": 1056955,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "4f7dbb07bceeea168e9e46276eaa393edf25937202eb27195feb560e385f2b4f",
+  "normalized_chars": 129852,
+  "extra": {
+    "cik": "0000744825",
+    "accession_number": "0001437749-26-027716",
+    "primary_document": "asha20260630_10q.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-13"
+  },
+  "title": null,
+  "anchors": [],
+  "expected": {},
+  "issuer_id": "AMERICAN_SHARED_HOSPITAL_SERVICES"
+}

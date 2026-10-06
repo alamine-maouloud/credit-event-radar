@@ -94,6 +94,11 @@ def test_universe_unverified_issuers_have_notes(universe):
         "PACCAR",
         "CUMMINS",
         "GENERAL_MOTORS",
+        "BOXLIGHT",
+        "AMERICAN_SHARED_HOSPITAL_SERVICES",
+        "FTC_SOLAR",
+        "HONEYWELL",
+        "EMERSON",
     }
     assert all(i.notes for i in unverified)
 

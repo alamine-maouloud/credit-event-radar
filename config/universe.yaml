@@ -430,3 +430,67 @@ issuers:
     rating_status: unverified
     segments: ["GM Financial", "Cruise", "GM International", "GM North America"]
     notes: Liquidity holdout V3 document only (10-Q 2026). Private fixture bytes.
+  # Covenant holdout V2 (blind): five filings chosen from EDGAR metadata only on 2026-10-06,
+  # never read before their labels; segments come from public company structure, not from the text.
+  - id: BOXLIGHT
+    name: Boxlight
+    legal_entity: Boxlight Corporation
+    aliases: ["Boxlight Corporation", "Boxlight Corp", "BOXL"]
+    sector: technology
+    country: "US"
+    sec_cik: "0001624512"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, covenant_holdout_v2]
+    rating_status: unverified
+    notes: Covenant holdout V2 document only (10-Q 2026). Private fixture bytes.
+  - id: AMERICAN_SHARED_HOSPITAL_SERVICES
+    name: American Shared Hospital Services
+    legal_entity: American Shared Hospital Services
+    aliases: ["American Shared Hospital Services", "AMS"]
+    sector: healthcare
+    country: "US"
+    sec_cik: "0000744825"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, covenant_holdout_v2]
+    rating_status: unverified
+    notes: Covenant holdout V2 document only (10-Q 2026). Private fixture bytes.
+  - id: FTC_SOLAR
+    name: FTC Solar
+    legal_entity: FTC Solar, Inc.
+    aliases: ["FTC Solar, Inc.", "FTC Solar Inc", "FTCI"]
+    sector: energy
+    country: "US"
+    sec_cik: "0001828161"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, covenant_holdout_v2]
+    rating_status: unverified
+    notes: Covenant holdout V2 document only (10-Q 2026). Private fixture bytes.
+  - id: HONEYWELL
+    name: Honeywell
+    legal_entity: Honeywell International Inc.
+    aliases: ["Honeywell International Inc.", "Honeywell International Inc", "HON"]
+    sector: industrial
+    country: "US"
+    sec_cik: "0000773840"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, covenant_holdout_v2]
+    rating_status: unverified
+    segments: ["Aerospace Technologies", "Industrial Automation", "Building Automation"]
+    notes: Covenant holdout V2 document only (10-Q 2026). Private fixture bytes.
+  - id: EMERSON
+    name: Emerson
+    legal_entity: Emerson Electric Co.
+    aliases: ["Emerson Electric Co.", "Emerson Electric Co", "EMR"]
+    sector: industrial
+    country: "US"
+    sec_cik: "0000032604"
+    ratings_page: null
+    ir_sources: []
+    tags: [historical_control, sec_filer, covenant_holdout_v2]
+    rating_status: unverified
+    segments: ["Intelligent Devices", "Software and Control", "AspenTech"]
+    notes: Covenant holdout V2 document only (10-Q 2026). Private fixture bytes.

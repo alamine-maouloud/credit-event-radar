@@ -1,0 +1,367 @@
+# Covenant holdout V2, the blind test (2026-10-06). Five 10-Q filings chosen from EDGAR metadata
+# only (full-text search hit counts on three covenant stress queries, then filing date, plus two
+# large investment-grade filers as controls), never read before these labels. Code frozen at
+# commit b73f2f1: no prompt, schema, validator, guide or label change after the selection.
+# Distribution as found: three issuers with stated current breaches (all three waived or under
+# forbearance), two stable issuers whose filings never speak of debt covenants. No trap document
+# this time. Passages the frozen wording rules cannot read as a breach or an anticipation are
+# labelled mentioned and named in the notes as limits.
+version: "1.0"
+documents:
+  - gold_id: CH2-BOXL
+    fixture: tests/fixtures/edgar/boxlight_10q_2026q2
+    split: holdout
+    expected_flag: true
+    notes: Serial non-compliance (Senior Leverage Ratio, borrowing base, Minimum Consolidated Adjusted EBITDA) under successive waivers and forbearance agreements. Limits, labelled mentioned because the frozen wording rules read no breach, "waived the underlying borrowing base defaults" and "limited waiver of the borrowing base and Minimum Consolidated Adjusted EBITDA defaults" (defaults of named covenants, no covenant word), "had not maintained compliance", "have not complied with certain covenants". Breaches dated before August 2025 are historical and not labelled. Nasdaq listing non-compliance is not a covenant.
+    statements:
+      - status: breached
+        resolution: none
+        covenant_label: "Senior Leverage Ratio covenant"
+        evidence_quote: "The Company was not in compliance with the Senior Leverage Ratio covenant as of September 30, 2025 and was not in compliance with the borrowing base covenant for the months ended August 31, 2025 through November 30, 2025."
+      - status: breached
+        resolution: none
+        evidence_quote: "Borrowing base non-compliance for the months ending July 31 through November 30, 2025."
+      - status: compliant
+        resolution: none
+        evidence_quote: "The Company was in compliance with the borrowing base covenant and the minimum qualified cash balance requirement under the Credit Agreement for the period ended December 31, 2025."
+      - status: mentioned
+        resolution: waived
+        evidence_quote: "Pursuant to the March 2026 Forbearance Agreement, the Lenders waived the underlying borrowing base defaults for January and February 2026."
+      - status: mentioned
+        resolution: waived
+        evidence_quote: "Pursuant to the May 2026 Forbearance Agreement, the Lenders granted a limited waiver of the borrowing base and Minimum Consolidated Adjusted EBITDA defaults for the periods ended March 31, 2026 and April 30, 2026."
+      - status: mentioned
+        resolution: waived
+        evidence_quote: "Pursuant to the August 2026 Forbearance Agreement, the Lenders granted a limited waiver of the borrowing base and Minimum Consolidated Adjusted EBITDA defaults for the periods ended May 31, 2026, June 30, 2026, and July 31, 2026."
+      - status: breached
+        resolution: waived
+        evidence_quote: "Although the Company has obtained waivers and amendments with respect to each of the foregoing instances of non-compliance, there can be no guarantee that the Company will not breach provisions of the Credit Agreement in the future."
+      - status: breached
+        resolution: waived
+        evidence_quote: "Although the Company obtained waivers with respect to the foregoing past instances of Credit Agreement noncompliance, in view of the Company’s history of noncompliance and its current situation, there can be no guarantee that the Company will not breach provisions of the Credit Agreement in the future, which could lead to declared events of default, acceleration of obligations and other material negative consequences."
+      - status: breached
+        resolution: waived
+        evidence_quote: "Although the Company obtained waivers with respect to the foregoing past instances of Credit Agreement noncompliance, in view of the Company’s history of noncompliance and its current situation, there can be no guarantee that the Company will not breach provisions of the Credit Agreement in the future, which could lead to declared events of default, acceleration of obligations, and other material negative consequences."
+      - status: breached
+        resolution: waived
+        evidence_quote: "The Company acknowledges that it has a history of operating losses, has incurred recurring negative cash flows from operations, and has required multiple amendments and waivers under its Credit Agreement due to non-compliance with financial covenants in prior periods."
+      - status: breached
+        resolution: waived
+        evidence_quote: "Although we have obtained waivers and amendments from the lender with respect to these instances of noncompliance, there can be no assurance that we will be able to maintain compliance with the Credit Agreement in the future or that additional waivers or amendments will be available on acceptable terms or at all."
+      - status: breached
+        resolution: amended
+        evidence_quote: "During the fiscal year ended December 31, 2025, the Company entered into the Eighth, Ninth, Tenth, and Eleventh Amendments to the Credit Agreement (collectively, the “2025 Amendments”) to address prior instances of non-compliance with certain financial covenants and to restructure key terms of the facility."
+      - status: breached
+        resolution: none
+        evidence_quote: "During 2024 and 2025, we did not comply with certain financial covenants, minimum liquidity requirements, and borrowing base requirements under the Credit Agreement."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "In particular, the Company had not maintained compliance with the Senior Leverage Ratio and borrowing base covenants at various measurement dates during 2025."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "We have not complied with certain covenants, minimum liquidity and borrowing base requirements under the Credit Agreement and this could cause us to be unable to continue to operate as a going concern."
+      - status: mentioned
+        resolution: waived
+        evidence_quote: "The Lender waived each of these events of default in connection with the respective amendments."
+      - status: mentioned
+        resolution: waived
+        evidence_quote: "The Lenders waived the right to receive the post-default interest rate with respect to these Specified Events of Default through December 31, 2025, provided the Company complies with the terms of the Tenth Amendment."
+      - status: mentioned
+        resolution: waived
+        evidence_quote: "In conjunction with obtaining the waiver, the Company was also required to comply with the following covenants:"
+      - status: mentioned
+        resolution: waived
+        evidence_quote: "On December 18, 2025, the Company entered into a forbearance agreement and eleventh amendment and waiver to the Credit Agreement with the Collateral Agent and Lender (the “Eleventh Amendment”)."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "Pursuant to the amendment, the financial covenant requiring compliance with the Senior Leverage Ratio was removed and the Company is subject to a Minimum Consolidated Adjusted EBITDA covenant commencing with the period ending March 31, 2026 (set at $1.9 million for such period), and varying thereafter as set forth in the Eleventh Amendment."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "In conjunction with the Eleventh Amendment, the Senior Leverage Ratio covenant was replaced with a Minimum Consolidated Adjusted EBITDA covenant commencing with the period ending March 31, 2026 (set at $1.9 million), the Company is required to maintain a minimum qualified cash of $1.5 million, and certain business, management, and governance covenants were added."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "Pursuant to the Eleventh Amendment, the Senior Leverage Ratio covenant was replaced with a minimum consolidated adjusted EBITDA covenant commencing with the period ending March 31, 2026."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "The Eleventh Amendment extended the final maturity date of the loans from December 31, 2025, to April 1, 2027, suspended mandatory quarterly amortization payments through June 30, 2026, and replaced the Senior Leverage Ratio financial covenant with a Minimum Consolidated Adjusted EBITDA covenant commencing with the quarter ending March 31, 2026."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "On December 18, 2025, the Company entered into the Eleventh Amendment to the Credit Agreement, which eliminated the Senior Leverage Ratio covenant and replaced it with a Minimum Consolidated Adjusted EBITDA covenant, commencing with the period ending March 31, 2026."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "In addition, the August 2026 Forbearance Agreement amended the Credit Agreement’s mandatory prepayment provisions to require that 50% (or 100% if an Event of Default exists) of net cash proceeds from subordinated indebtedness in addition to equity issuances be applied to prepay the Credit Agreement loan, with any retained proceeds restricted from being used to make payments on equity interests, redeemable preferred stock, or subordinated indebtedness."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Pursuant to the August 2026 Forbearance Agreement, the mandatory quarterly amortization payments on the initial term loan remain suspended through September 30, 2026, with the first payment due on December 31, 2026."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The replacement of the Senior Leverage Ratio covenant with the Minimum Consolidated Adjusted EBITDA covenant establishes a financial compliance framework that management believes is more achievable based on the Company’s current and projected operating performance;"
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The Company’s ability to continue as a going concern is dependent on generating profitable operating results, having sufficient liquidity, and maintaining compliance with the covenants and other requirements under the Whitehawk Capital Partners Credit Agreement (the “Whitehawk Capital Partners Credit Agreement”)."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The Company’s Credit Agreement, as amended to date, requires compliance with certain covenants, which include provisions regarding over advance limitations based upon a borrowing base, a minimum consolidated adjusted EBITDA covenant, a minimum liquidity requirement, and previously a Senior Leverage Ratio."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Notwithstanding the foregoing, there is substantial doubt as to the Company’s ability to continue as a going concern as the Company is dependent upon its ability to maintain compliance with the financial covenants under the Credit Agreement as amended, achieve positive cash flow from operations, and, if necessary, access additional financing."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "There can be no assurance that the Company will be successful in maintaining compliance with its financial covenants, achieving profitability, or raising additional capital on acceptable terms or at all."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Our ability to continue as a going concern is dependent upon our ability to generate sufficient cash flows from operations, obtain additional waivers or other relief under the Credit Agreement for any future covenant or borrowing base noncompliance, or refinance our indebtedness with the existing lender or a new lender."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "our ability to comply with certain covenants, minimum liquidity, and borrowing base requirements under our existing credit agreement, or in the alternative, to continue to obtain forbearances or waivers from the lender thereunder with respect to defaults thereunder, including existing defaults;"
+    ineligible:
+      - reason: not_covenant
+        evidence_quote: "On July 1, 2026, the Company received a determination letter from the Listing Qualifications Staff of The Nasdaq that it is not in compliance with the $2.5 million stockholders’ equity requirement for continued listing on Nasdaq under Nasdaq Listing Rule 5550(b)."
+      - reason: not_covenant
+        evidence_quote: "On July 1, 2026, the Company received written notice from the Listing Qualifications Staff of The Nasdaq Stock Market LLC that it is not in compliance with the $2.5 million stockholders’ equity requirement for continued listing on The Nasdaq Capital Market under Nasdaq Listing Rule 5550(b)."
+      - reason: not_covenant
+        evidence_quote: "On July 1, 2026, we received written notice from the Listing Qualifications Staff of The Nasdaq Stock Market LLC (“Nasdaq”) that we are not in compliance with the $2.5 million stockholders’ equity requirement for continued listing on The Nasdaq Capital Market under Nasdaq Listing Rule 5550(b)."
+      - reason: not_covenant
+        evidence_quote: "On April 20, 2026, the Company received a notice from Nasdaq indicating that, based on the Company’s Annual Report on Form 10-K for the year ended December 31, 2025, it no longer complied with the minimum stockholders’ equity requirement under Nasdaq Listing Rule 5550(b)(1), because the Company reported stockholders’ equity of approximately $1.255 million, which is below the $2.5 million minimum required for continued listing on the Nasdaq Capital Market."
+      - reason: not_covenant
+        evidence_quote: "In order to maintain compliance with NASDAQ Listing Rule 5550(a)(2) (the “Bid Price Rule”) and to manage its continued listing on Nasdaq, on June 17, 2026, the Company filed a Certificate of Change with the Nevada Secretary of State to effect a 1-for-6 reverse stock split of its Class A common stock, which became effective on June 22, 2026."
+
+  - gold_id: CH2-AMS
+    fixture: tests/fixtures/edgar/american_shared_hospital_services_10q_2026q2
+    split: holdout
+    expected_flag: true
+    notes: Stated non-compliance with three financial covenants of the Fifth Third Credit Agreement at three quarter ends, lender notices of events of default, forbearance under a Third Amendment. HoldCo's non-compliance with the DFC Loan is a subsidiary's covenant (ineligible, segment); HoldCo was not a configured segment at selection, so the frozen validator cannot reject those passages, a limit recorded here. The limited waiver of September 2025 demonstrates no breach in its span (mentioned, waived).
+    statements:
+      - status: breached
+        resolution: none
+        covenant_label: "Minimum Cash Covenant"
+        evidence_quote: "On December 10, 2025, the Loan Parties received a notice from Fifth Third asserting that a specified Event of Default (as defined in the Credit Agreement) occurred under the Credit Agreement due to the Borrower's failure to maintain minimum unrestricted domestic cash of at least an aggregate of $5,000,000 (the “Minimum Cash Covenant”) as of September 30, 2025."
+      - status: breached
+        resolution: none
+        evidence_quote: "As of December 31, 2025, March 31, 2026 and June 30, 2026, the Company was not in compliance with the minimum fixed-charge coverage ratio, the maximum funded debt-to-EBITDA ratio, and the Minimum Cash Covenant required by the Credit Agreement, and the Company put Fifth Third on notice that it was not in compliance with those covenants."
+      - status: breached
+        resolution: none
+        evidence_quote: "On December 16, 2025 and, May 29, 2026, the Loan Parties received a notice from the Lender (the “Notice”) asserting that certain Events of Default had occurred under the Credit Agreement, including that the Company was not in compliance with the minimum fixed-charge coverage ratio, the maximum funded debt-to-EBITDA ratio, and the Minimum Cash Covenant as of December 31, 2025 and as of March 31, 2026 and that the Company failed to pay outstanding obligations under the Credit Agreement when the Term Loan and DDTL by its original terms matured on April 9, 2026 (such alleged defaults being collectively referred to as the “Specified Events of Default”)."
+      - status: breached
+        resolution: none
+        evidence_quote: "On December 16, 2025 and May 29, 2026, the Loan Parties received a notice from the Lender (the “Notice”) asserting that certain Events of Default had occurred under the Credit Agreement, including that the Company was not in compliance with the minimum fixed-charge coverage ratio, the maximum funded debt-to-EBITDA ratio, and the Minimum Cash Covenant as of December 31, 2025 and as of March 31, 2026 and that the Company failed to pay outstanding obligations under the Credit Agreement when the Term Loan and DDTL matured on April 9, 2026 (such alleged defaults being collectively referred to as the “Specified Events of Default”)."
+      - status: breached
+        resolution: none
+        evidence_quote: "Additionally, as of June 30, 2026, the Company was not in compliance with minimum fixed-charge coverage ratio, the maximum funded debt-to-EBITDA ratio, and the Minimum Cash Covenant under the Credit Agreement."
+      - status: breached
+        resolution: none
+        evidence_quote: "As a result, the Loan Parties were not in compliance with the Credit Agreement as of such date."
+      - status: breached
+        resolution: none
+        evidence_quote: "Due to the Financial Covenant Defaults described above, the Loan Parties are not in compliance with the Credit Agreement as of June 30, 2026."
+      - status: breached
+        resolution: none
+        evidence_quote: "As a result of the Loan Parties’ Financial Covenant Defaults under the Credit Agreement with Fifth Third discussed above, ASHS has determined that the non-compliance with the Credit Agreement could be deemed to have resulted in an Event of Default (as defined in the DFC Loan) under the DFC Loan."
+      - status: breached
+        resolution: none
+        evidence_quote: "As a result of the Loan Parties’ Financial Covenant Defaults under the Credit Agreement with Fifth Third discussed above, ASHS determined that the non-compliance with the Credit Agreement could be deemed to have resulted in an Event of Default (as defined in the DFC Loan) under the DFC Loan."
+      - status: breached
+        resolution: none
+        evidence_quote: "As described in Item 2 of Part I of this Quarterly Report under the subheading “Long-Term Debt”, ASHS and certain of its subsidiaries are not in compliance with certain covenants under the Credit Agreements as of June 30, 2026."
+      - status: mentioned
+        resolution: waived
+        evidence_quote: "On September 30, 2025, the Company received a limited waiver from Fifth Third with respect to compliance with the maximum funded debt to EBITDA ratio covenant in the Credit Agreement as of June 30, 2025, and with respect to the delivery of items following the closing of the Second Amendment."
+      - status: mentioned
+        resolution: waived
+        evidence_quote: "On September 30, 2025, the Company received a limited waiver from Fifth Third with respect to compliance with the maximum funded debt to EBITDA ratio covenant in the Credit Agreement as of June 30, 2025 and with respect to the delivery of items following the closing of the Second Amendment."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "On July 22, 2026 (the “Third Amendment Effective Date”), the Loan Parties and Fifth Third entered into a Third Amendment to Credit Agreement and Forbearance Agreement (the “Third Amendment”)."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "In the Third Amendment, Fifth Third agreed to forbear from exercising certain rights and remedies in respect of certain Events of Default under the Credit Agreement (the “Designated Events of Default”), including the Specified Events of Default identified in a notice delivered to the Loan Parties on May 29, 2026, beginning on July 22, 2026 until June 30, 2027 (the “Standstill Period”), subject to certain forbearance termination events."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "In the Third Amendment, Fifth Third agreed to forbear from exercising certain rights and remedies in respect of certain events of default under the Credit Agreement (the “Designated Events of Default”), including the Specified Events of Default identified in a notice delivered to the Loan Parties on May 29, 2026, beginning on the Third Amendment Effective Date until June 30, 2027 (the “Standstill Period”), subject to certain forbearance termination events."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Fifth Third also agreed that the minimum fixed-charge coverage ratio, the maximum funded debt-to-EBITDA ratio, and the Minimum Cash Covenant covenants are not applicable during the Standstill Period."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "The Third Amendment imposes other covenants and obligations on the Loan Parties, including that the Company pursue a sale of all or a portion of the assets of the Company and its subsidiaries, achieve certain milestones with respect to a prospective sale, and pay certain fees to the Lender if such milestones are not achieved."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The Credit Agreement contains customary covenants and representations, including without limitation, a minimum fixed charge coverage ratio of 1.25 and maximum funded debt to EBITDA ratio of 3.0 to 1.0 (tested on a trailing twelve-month basis at the end of each fiscal quarter), an obligation that the Company maintain $5,000,000 of unrestricted cash, reporting obligations, limitations on dispositions, changes in ownership, mergers and acquisitions, indebtedness, encumbrances, distributions, investments, transactions with affiliates and capital expenditures."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The Company’s failure to comply with the covenants under the Credit Agreements could result in the Company’s credit commitments being terminated and the principal of any outstanding borrowings, together with any accrued but unpaid interest, under the Credit Agreements could be declared immediately due and payable."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Such statements address future events and conditions and include, but are not limited to, such things as capital expenditures, earnings, liquidity and capital resources, financing of our business, government programs and regulations, legislation affecting the health care industry, the expansion of our proton beam radiation therapy business, accounting matters, compliance with debt covenants, completed and potential acquisitions, competition, customer concentration, contractual obligations, timing of payments, technology and interest rates."
+    ineligible:
+      - reason: segment
+        evidence_quote: "As of June 30, 2026 and March 31, 2026, HoldCo was not in compliance with the cash-to-debt covenant under the DFC Loan."
+      - reason: segment
+        evidence_quote: "The Company notified DFC of this non-compliance and is in discussions for an extended waiver or amendment to the DFC Loan, but there can be no assurances regarding the outcome of such discussions."
+      - reason: segment
+        evidence_quote: "Furthermore, ASHS determined that HoldCo’s non-compliance with the DFC Loan could have been deemed to have resulted in an Event of Default (as defined in the Credit Agreement) of the Credit Agreement with Fifth Third."
+      - reason: segment
+        evidence_quote: "The DFC Loan contains customary covenants including without limitation, requirements that HoldCo maintain certain financial ratios related to liquidity and cash flow as well as depository requirements."
+      - reason: segment
+        evidence_quote: "On March 28, 2024, HoldCo received a waiver and amendment from DFC that, among other things, amended other covenants and definitions permanently."
+      - reason: segment
+        evidence_quote: "On March 3, 2025, the Company received an additional waiver from DFC for certain covenants as of December 31, 2024 and through December 31, 2025."
+      - reason: segment
+        evidence_quote: "HoldCo was not in compliance with the cash to debt covenant at June 30, 2026."
+      - reason: segment
+        evidence_quote: "Additionally, HoldCo was not in compliance with the cash-to-debt covenant under the DFC Loan as of March 31, 2026 and June 30, 2026."
+      - reason: segment
+        evidence_quote: "The Company notified DFC of this non-compliance and is in discussions for an extended waiver or amendment to the DFC Loan."
+      - reason: segment
+        evidence_quote: "Furthermore, ASHS has determined that HoldCo’s non-compliance with the DFC Loan could be deemed to have resulted in an Event of Default (as defined in the Credit Agreement) under the Credit Agreement with Fifth Third."
+      - reason: segment
+        evidence_quote: "On March 28, 2024, HoldCo received a waiver and amendment from DFC that waived certain covenants as of December 31, 2023 and through December 31, 2024 and amended other covenants and definitions permanently."
+      - reason: segment
+        evidence_quote: "HoldCo was not in compliance with the cash to debt covenant at March 31, 2026 and at June 30, 2026."
+
+  - gold_id: CH2-FTCI
+    fixture: tests/fixtures/edgar/ftc_solar_10q_2026q2
+    split: holdout
+    expected_flag: true
+    notes: Non-compliance with the minimum unrestricted cash and direct tracker margin covenants at June 30, 2026, waived on August 4, 2026; an earlier breach of the purchase order covenant waived by the Second Amendment; substantial doubt about the going concern. Limits, labelled mentioned because the frozen wording rules read neither a breach nor an anticipation, "failing to meet the required ... covenants" and "uncertainty as to our ability to fully meet all existing ... financial covenants" (an anticipation in substance), and the risk factor "We have a history of losses that may continue in the future, and we were not in compliance with ..." where the word "future" four words before the breach marker makes the frozen rules read a hypothetical. The sentence split by a page number in Part II is not labelled.
+    statements:
+      - status: breached
+        resolution: waived
+        covenant_label: "purchase order covenant"
+        evidence_quote: "As described further in Note 11, \"Debt\", on March 23, 2026, we entered into a Second Amendment and Limited Waiver to our Credit Agreement (the “Second Amendment”) pursuant to which the Lenders: (i) provided a waiver relating to our breach of the purchase order covenant in our Credit Agreement for the fiscal quarter ended December 31, 2025; (ii) agreed that a purchase order covenant will not apply to us until the fiscal quarter ending March 31, 2027; and (iii) agreed to further amend certain other existing financial covenants under the Credit Agreement, including (a) a required minimum unrestricted cash covenant of $10.0 million as of September 30, 2026 and a minimum revenue covenant of $50.0 million for the quarter ended September 30, 2026."
+      - status: breached
+        resolution: waived
+        covenant_label: "purchase order covenant"
+        evidence_quote: "On March 23, 2026, we entered into the Second Amendment pursuant to which: (i) the Lenders provided a waiver relating to our breach of the purchase order covenant for the fiscal quarter ended December 31, 2025; (ii) the Lenders agreed that a purchase order covenant will not apply to us until the fiscal quarter ending March 31, 2027; and (iii) agreed to further amend certain other existing financial covenants under the Credit Agreement, including (a) a required minimum unrestricted cash covenant of $10.0 million as of September 30, 2026 and a minimum revenue covenant of $50.0 million for the quarter ended September 30, 2026."
+      - status: breached
+        resolution: waived
+        covenant_label: "purchase order covenant"
+        evidence_quote: "On March 23, 2026, we entered into the Second Amendment pursuant to which the Lenders: (i) provided a waiver relating to our breach of the purchase order covenant in our Credit Agreement for the fiscal quarter ended December 31, 2025; (ii) agreed that a purchase order covenant will not apply to us until the fiscal quarter ending March 31, 2027; and (iii) agreed to further amend certain other existing financial covenants under the Credit Agreement, including (a) a required minimum unrestricted cash covenant of $10.0 million as of September 30, 2026 and a minimum revenue covenant of $50.0 million for the quarter ended September 30, 2026."
+      - status: breached
+        resolution: none
+        covenant_label: "minimum unrestricted cash covenant"
+        evidence_quote: "As a result, we were not in compliance with the required minimum unrestricted cash covenant of $15.0 million pursuant to the Second Amendment as of June 30, 2026."
+      - status: breached
+        resolution: none
+        covenant_label: "minimum direct tracker margin covenant"
+        evidence_quote: "We were also not in compliance with a required minimum direct tracker margin covenant for the three months ended June 30, 2026."
+      - status: breached
+        resolution: waived
+        evidence_quote: "On August 4, 2026, we entered into a Limited Waiver and Limited Consent to Credit Agreement (the \"Waiver\") with the Lenders in which the Lenders waived our noncompliance with the minimum unrestricted cash and minimum direct tracker margin covenants as described above."
+      - status: breached
+        resolution: waived
+        evidence_quote: "On August 4, 2026, we entered into a Limited Waiver and Limited Consent to Credit Agreement (the “Waiver”) with the Lenders in which the Lenders waived our noncompliance with the minimum unrestricted cash and minimum direct tracker margin covenants as described above."
+      - status: breached
+        resolution: waived
+        evidence_quote: "On August 4, 2026, we entered into the Waiver with the Lenders in which the Lenders waived our noncompliance with these minimum unrestricted cash and minimum direct tracker margin covenants as described above."
+      - status: breached
+        resolution: waived
+        evidence_quote: "On August 4, 2026, we entered into the Waiver with the Lenders in which the Lenders waived our noncompliance with these minimum unrestricted cash and minimum direct tracker margin covenants."
+      - status: breached
+        resolution: waived
+        evidence_quote: "On August 4, 2026, we entered into the Waiver with the Lenders in which the Lenders waived our noncompliance with the minimum unrestricted cash and minimum direct tracker margin covenants."
+      - status: breached
+        resolution: waived
+        evidence_quote: "The Waiver covers the periods of noncompliance but does not cover our ability to comply with covenants in future periods."
+      - status: breached
+        resolution: waived
+        evidence_quote: "The waiver covered the periods of noncompliance but did not cover our ability to comply with covenants in future periods."
+      - status: breached
+        resolution: none
+        evidence_quote: "As noted above, we were not in compliance with the required minimum cash and direct tracker margin covenants pursuant to the Second Amendment as of June 30, 2026."
+      - status: breached
+        resolution: none
+        evidence_quote: "At June 30, 2026, the Company was not in compliance with the required minimum unrestricted cash and direct tracker margin financial covenants under the Credit Agreement."
+      - status: breached
+        resolution: none
+        evidence_quote: "As noted above, at June 30, 2026, the Company was not in compliance with the required minimum unrestricted cash and direct tracker margin financial covenants under the Credit Agreement."
+      - status: breached
+        resolution: none
+        evidence_quote: "As described further in Note 11, \"Debt\" in Part I, Item 1 of this Quarterly Report, as of June 30, 2026, the Company was not in compliance with the required minimum unrestricted cash and direct tracker margin financial covenants under the Credit Agreement."
+      - status: breached
+        resolution: none
+        evidence_quote: "As described further in Note 11, “Debt”, we were not in compliance with the required minimum unrestricted cash covenant of $15.0 million pursuant to the Second Amendment as of June 30, 2026."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "We have a history of losses that may continue in the future, and we were not in compliance with the required minimum unrestricted cash and direct tracker margin financial covenants pursuant to the Second Amendment to our Credit Agreement as of June 30, 2026."
+      - status: breached
+        resolution: waived
+        evidence_quote: "Second Amendment to Credit Agreement, failure to meet cash and direct tracker margin covenants and Limited Waiver"
+      - status: breached
+        resolution: waived
+        evidence_quote: "Non-Compliance with Covenants and Waiver and Amendment"
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The decrease was largely attributable to the reclassification of our long-term debt to a current obligation as a result of failing to meet the required minimum unrestricted cash and direct tracker margin financial covenants as of June 30, 2026, the use of cash as described above, and changes in other working capital balances due to activity levels during the six months ended June 30, 2026."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "As a result of factors that are outside of our control in terms of timing of customer project activity and resulting revenue and cash flows, there is currently uncertainty as to our ability to fully meet all existing quarterly and annual financial covenants during the twelve-month period following the date of the consolidated financial statements included in this Quarterly Report."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "As a result of factors that are outside of our control in terms of timing of customer project activity and resulting revenue and cash flows, there is currently uncertainty as to our ability to fully meet all existing quarterly and annual financial covenants during the twelve-month period following the date of the consolidated financial statements included herein."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "we believe these factors create uncertainty as to our ability to fully meet the financial covenant requirements under the Credit Agreement during the twelve months following issuance of this Quarterly Report."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "In view of the requirements for quarterly cash interest payments, a specified prepayment of principal under the Credit Agreement, and principal and interest payments for the Acquisition Notes, as well as our history of operating losses and cash outflows, and considering that the availability of additional financing provided by the Credit Agreement in the form of Second Delayed Draw Term Loans or full utilization of the equity line of credit is not completely within our control, we believe these factors create uncertainty as to our ability to fully meet the financial covenant requirements under the Credit Agreement during the twelve months following issuance of this Quarterly Report."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "As a result of factors that are outside of our control in terms of timing of customer project activity and resulting revenue and cash flows, there is currently uncertainty as to our ability to fully meet all existing quarterly and annual financial covenants during the twelve-month period following the date of the consolidated financial statements included in our most recent Quarterly Report on Form 10-Q. Accordingly, we have classified all outstanding debt under our Credit Agreement as a current obligation as of June 30, 2026."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "On November 1, 2025 we entered into a First Amendment to Credit Agreement to amend certain of the financial covenants applicable to us and in connection with our agreement to acquire 100% of the membership interests in Alpha Steel."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "As amended by the Second Amendment, the Credit Agreement includes the following covenants."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The A&R Promissory Note amends and restates the original Senior Notes to remove the seniority terms of those notes, conform the original Senior Notes to the terms of the Credit Agreement and the Subordination Agreement, amend certain prepayment and make-whole terms under the original Senior Notes, delete certain covenants and event of default terms, reduce the interest rate under the original Senior Notes to 5% per annum paid in cash and 7% per annum paid in kind, both on the final business day of June and December in each year, and to delete the financial covenants set forth in the original Senior Notes."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The Company currently anticipates that this financial covenant will require the Company to have at least $10.0 million of unrestricted cash as of September 30, 2026, and each fiscal quarter thereafter."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Additionally, the Company’s direct tracker margin must exceed certain thresholds for each fiscal quarter in 2026, and the financial covenants also include a requirement that the amounts due to the Company under new purchase orders must meet certain thresholds beginning with the fiscal quarter ending March 31, 2027."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The Credit Agreement includes customary repayment and prepayment terms, affirmative and negative covenants and representations and warranties, including restrictions on payment of dividends and other covenants."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "The terms and covenants, including the financial covenants, set forth in the Credit Agreement, as amended, restrict our business."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "In addition, our operations may not provide sufficient cash to meet the repayment obligations under the Credit Agreement or to satisfy future minimum cash, revenue, purchase order and other financial covenants that apply to the Company under the Credit Agreement."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Defaults under the Credit Agreement, including breaches of the financial covenants, could adversely affect our financial condition and results of operations, including, without limitation as a result of the reclassification of the term loan balances under the Credit Agreement from long-term debt to current, such as shown in our Condensed Consolidated Balance Sheet as of June 30, 2026, or the Lenders' exercise of their rights under the Credit Agreement, including the requirement that the Company reasonably cooperate in good faith with the Lenders to pursue alternative strategic transactions, in the case of a breach of the financial covenants or the Lenders' foreclosure on their first priority security interest in substantially all of our assets."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Additionally, if we fail to comply with the covenants under the Credit Agreement, including the principal repayment obligations and financial covenants included in our Credit Agreement, as described above, we may default under the Credit Agreement and/or not have sufficient cash flow available to repay the Term Loans early, if they are accelerated following an event of default, or upon maturity of the Term Loans."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Given these and other factors, including financial covenant requirements and principal repayment obligations in our Credit Agreement, as further discussed in Note 2, \"Summary of significant accounting policies\" in our Condensed Consolidated Financial Statements included in in Part I, Item 1 of this Quarterly Report, there is substantial doubt about our ability to continue as a going concern during the next year."
+      - status: mentioned
+        resolution: none
+        evidence_quote: "Given these and other factors, including financial covenant requirements and principal repayment obligations in our Credit Agreement, as further discussed in the consolidated financial statements included in our Annual and Quarterly Reports incorporated herein by reference, there is substantial doubt about our ability to continue as a going concern during the next year."
+    ineligible: []
+
+  - gold_id: CH2-HON
+    fixture: tests/fixtures/edgar/honeywell_10q_2026q2
+    split: holdout
+    expected_flag: false
+    notes: No statement about debt covenants in the filing; the compliance wording concerns regulations, industry standards and data protection.
+    statements: []
+    ineligible:
+      - reason: not_covenant
+        evidence_quote: "Many of these laws impose stringent requirements as to how we collect, store, maintain, transfer, and otherwise process personal data and provide significant or material penalties for noncompliance."
+      - reason: not_covenant
+        evidence_quote: "Changes in such regulations and government policies could negatively impact us; for instance, noncompliance with legislation and regulations can result in fines and penalties, and compliance with any new regulations or policies may be burdensome and/or require significant expenditures."
+
+  - gold_id: CH2-EMR
+    fixture: tests/fixtures/edgar/emerson_10q_2026q3
+    split: holdout
+    expected_flag: false
+    notes: No covenant wording at all in the filing.
+    statements: []
+    ineligible: []
