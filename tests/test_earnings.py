@@ -1,4 +1,4 @@
-"""Deterministic earnings release classification (structured-earnings-1.0): explicit statements only."""
+"""Deterministic earnings release classification (structured-earnings-1.1): explicit statements only."""
 
 from __future__ import annotations
 
@@ -119,3 +119,27 @@ def test_forward_looking_first_half_title_is_not_a_results_release():
     assert extract_earnings_events(doc("Text.", title), "ISSUER_TEST_A").events == []
     title2 = "Issuer Test A improves profitability and increases incoming orders by 30% in the first half of 2026"
     assert extract_earnings_events(doc("Text.", title2), "ISSUER_TEST_A").events
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        # OMV Q4 2024 report, basis of preparation: the mention reassures, it does not warn.
+        "From today's perspective, we assume that the Company's ability to continue as a going concern is not impacted.",
+        "The financial statements have been prepared on a going concern basis.",
+        "Management concluded that no material uncertainty exists in relation to going concern.",
+    ],
+)
+def test_going_concern_flag_needs_doubt_wording(sentence):
+    assert only(f"Results. {sentence}").fields["flags"] == []
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "These conditions indicate that a material uncertainty exists that may cast significant doubt on the Group's ability to continue as a going concern.",
+        "Management has concluded that the company may be unable to continue as a going concern.",
+    ],
+)
+def test_going_concern_flag_on_doubt_wording(sentence):
+    assert only(f"Results. {sentence}").fields["flags"] == ["going_concern"]

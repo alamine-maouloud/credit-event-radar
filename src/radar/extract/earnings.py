@@ -1,4 +1,4 @@
-"""Deterministic classification of results releases (``structured-earnings-1.0``).
+"""Deterministic classification of results releases (``structured-earnings-1.1``).
 
 A document is a results release when its title (or first line) names a reporting period.
 The event carries only what the text states explicitly: a guidance statement
@@ -16,7 +16,7 @@ from radar.extract.spans import exact_span, find_quote, iter_sentences
 from radar.extract.structured import Extraction, Skipped, event_id_for
 from radar.models import CreditEvent, EvidenceSpan, RawDocument
 
-EARNINGS_EXTRACTOR_VERSION = "structured-earnings-1.0"
+EARNINGS_EXTRACTOR_VERSION = "structured-earnings-1.1"
 
 _RESULTS_TITLE_RE = re.compile(
     r"(?i)\b(?:(?:first|second|third|fourth)\s+quarter|Q[1-4]|half[- ]year|(?:first|second)\s+half|H[12]\b|nine[- ]months|9M\b|"  # noqa: E501
@@ -59,8 +59,26 @@ _STATEMENTS: list[tuple[str, re.Pattern[str]]] = [
         ),
     ),
 ]
+# A sentence that denies the doubt is a reassurance, not a warning.
+_FLAG_NEGATIONS: dict[str, re.Pattern[str]] = {
+    "going_concern": re.compile(
+        r"(?i)\bno\s+(?:substantial|significant|material)\s+(?:doubt|uncertaint(?:y|ies))\b"
+        r"|\bnot\s+(?:impacted|affected|in\s+doubt)\b|\bdoes\s+not\s+cast\b"
+    ),
+}
 _FLAGS: list[tuple[str, re.Pattern[str]]] = [
-    ("going_concern", re.compile(r"(?i)\bgoing concern\b")),
+    (
+        # Only doubt wording: "prepared on a going concern basis" or "ability to continue as a
+        # going concern is not impacted" (OMV quarterly reports) are reassurances, not warnings.
+        "going_concern",
+        re.compile(
+            r"(?i)\b(?:substantial|significant|material)\s+(?:doubt|uncertaint(?:y|ies))\b"
+            r"[^.;]{0,120}?\bgoing concern\b"
+            r"|\bgoing concern\b[^.;]{0,80}?\b(?:substantial|significant|material)"
+            r"\s+(?:doubt|uncertaint(?:y|ies))\b"
+            r"|\b(?:unable|not\s+be\s+able)\s+to\s+continue\s+as\s+a\s+going\s+concern\b"
+        ),
+    ),
     (
         "covenant",
         re.compile(
@@ -115,6 +133,17 @@ def extract_earnings_events(doc: RawDocument, issuer_id: str) -> Extraction:
                 statuses.append((status, sentence.start + m.start(), sentence.start + m.end()))
         for flag, pattern in _FLAGS:
             m = pattern.search(sentence.text)
+            negated = _FLAG_NEGATIONS.get(flag)
+            if m and negated is not None and negated.search(sentence.text):
+                skipped.append(
+                    Skipped(
+                        "negated_flag:" + flag,
+                        sentence.start + m.start(),
+                        sentence.start + m.end(),
+                        sentence.text[:160],
+                    )
+                )
+                continue
             if m and flag not in {f for f, _, _ in flags}:
                 flags.append((flag, sentence.start + m.start(), sentence.start + m.end()))
     guidance_status: str | None = None
