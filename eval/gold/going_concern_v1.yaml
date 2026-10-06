@@ -1,0 +1,405 @@
+# Going concern gold set V1, hand-written labels (eval/GOING_CONCERN_LABELING_GUIDE.md).
+# status doubt | alleviated | negated | mentioned ; the flag follows doubt alone.
+# Documents already in hand from the other families, labelled again on their own merits;
+# the final blind holdout of the family comes later, on filings never read.
+version: "1.0"
+documents:
+
+  # ---------------------------------------------------------------- dev --- #
+  - gold_id: GC-GPRO-01
+    fixture: tests/fixtures/edgar/gopro_10q_2026q1
+    split: dev
+    expected_flag: true
+    notes: Substantial doubt concluded and not alleviated, repeated in the note, the MD&A, the tax note, the goodwill note and the risk factors. The forward-looking list names the doubt as existing (doubt by the guide). The page-break fragments of the note and the tax sentence are not labelled.
+    statements:
+      - status: doubt
+        evidence_quote: "These conditions, considered in the aggregate, raise substantial doubt about the Company’s ability to continue as a going concern within one year after the date that these condensed consolidated financial statements are issued."
+      - status: doubt
+        evidence_quote: "As a result, substantial doubt about the Company’s ability to continue as a going concern has not been alleviated."
+      - status: doubt
+        evidence_quote: "In the first quarter of 2026, the Company identified goodwill impairment triggering events, including: (i) the conclusion of substantial doubt regarding the Company’s ability to continue as a going concern, which represents a negative qualitative indicator; and (ii) a significant decline in revenue and gross margin compared to the prior year period."
+      - status: doubt
+        evidence_quote: "Notwithstanding the waiver received on May 8, 2026, the Company concluded that substantial doubt exists about its ability to continue as a going concern, as further described in Note 1 Summary of business and significant accounting policies."
+      - status: doubt
+        evidence_quote: "The Company’s income tax expense for the three months ended March 31, 2026 primarily resulted from a tax expense of $1.2 million on pre-tax book income in certain tax jurisdictions and discrete items that included $1.3 million of nondeductible equity tax expense for employee stock-based compensation and $0.6 million from the establishment of valuation allowance on foreign deferred tax assets due to the substantial doubt about the Company’s ability to continue as a going concern, partially offset by a net decrease in the domestic valuation allowance of $1.2 million."
+      - status: doubt
+        evidence_quote: "In the assessment for the period ended March 31, 2026, the Company concluded that the substantial doubt about its ability to continue as a going concern as discussed in Note 1 Summary of business and significant accounting policies constituted significant negative evidence of the recoverability of its foreign deferred tax assets."
+      - status: doubt
+        evidence_quote: "In the first quarter of 2026, we identified goodwill impairment triggering events, including: (i) the conclusion of substantial doubt regarding our ability to continue as a going concern, which represents a negative qualitative indicator; and (ii) a significant decline in revenue and gross margin compared to the prior year period."
+      - status: doubt
+        evidence_quote: "In the assessment for the period ended March 31, 2026, we concluded that the substantial doubt about our ability to continue as a going concern discussed in Note 1 Summary of business and significant accounting policies constituted significant negative evidence of the recoverability of our foreign deferred tax assets."
+      - status: doubt
+        evidence_quote: "Notwithstanding the waiver received on May 8, 2026, we concluded that substantial doubt exists about our ability to continue as a going concern, as further described in Note 1 Summary of business and significant accounting"
+      - status: doubt
+        evidence_quote: "Notwithstanding the waiver received on May 8, 2026, we concluded that substantial doubt exists about our ability to continue as a going concern, as further described in Note 1 Summary of business and significant accounting policies."
+      - status: doubt
+        evidence_quote: "These conditions, considered in the aggregate, raise substantial doubt about our ability to continue as a going concern within one year after the date that these condensed consolidated financial statements are issued."
+      - status: doubt
+        evidence_quote: "As a result, substantial doubt about our ability to continue as a going concern has not been alleviated."
+      - status: doubt
+        evidence_quote: "Our history of operating losses and negative cash flows from operations has raised substantial doubt about our ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "We have expressed substantial doubt about our ability to continue as a going concern due to our history of operating losses and negative cash flows from operations, which have caused us to obtain relief from certain covenants in the 2021 Credit Agreement and 2025 Credit Agreement."
+      - status: doubt
+        evidence_quote: "The substantial doubt about our ability to continue as a going concern may adversely affect the price of our Class A common stock, our ability to raise capital or enter into strategic transactions and partnerships, our relationships with key stakeholders, and market perception."
+      - status: doubt
+        evidence_quote: "Forward-looking statements include, but are not limited to, statements regarding our ability to achieve or sustain revenue growth or profitability; substantial doubt about our ability to continue as a going concern; our plans to improve product offerings, including expansion into defense and aerospace markets;"
+      - status: mentioned
+        evidence_quote: "The accompanying condensed consolidated financial statements have been prepared assuming the Company will continue as a going concern, which contemplates the continuity of operations, realization of assets, and the satisfaction of liabilities and commitments in the normal course of business."
+      - status: mentioned
+        evidence_quote: "U.S. GAAP requires an evaluation of whether there are conditions or events, considered in the aggregate, that raise substantial doubt about an entity’s ability to continue as a going concern within one year after the date the financial statements are issued."
+      - status: mentioned
+        evidence_quote: "When substantial doubt exists, management evaluates the mitigating effect of its plans to the extent it is probable that (1) the plans will be effectively implemented within one year after the date the financial statements are issued, and (2) when implemented, the plans will mitigate the relevant conditions or events that raise substantial doubt about the entity’s ability to continue as a going concern within one year after the date the financial statements are issued."
+      - status: mentioned
+        evidence_quote: "The Company has evaluated whether the plans described above are sufficient to alleviate the substantial doubt about the Company’s ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "Without obtaining additional sources of financing or consummating a strategic transaction, the Company’s ability to continue as a going concern would be materially and adversely impacted, and the Company may be required to significantly reduce, restructure or cease operations."
+      - status: mentioned
+        evidence_quote: "The accompanying condensed consolidated financial statements have been prepared assuming we will continue as a going concern, which contemplates the continuity of operations, realization of assets, and the satisfaction of liabilities and commitments in the normal course of business."
+      - status: mentioned
+        evidence_quote: "We have evaluated whether the plans described above are sufficient to alleviate the substantial doubt about our ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "Under this evaluation, we assessed whether it is probable that (1) the plans will be effectively implemented within one year after the date the financial statements are issued, and (2) when implemented, the plans will mitigate the conditions and events that raise substantial doubt."
+      - status: mentioned
+        evidence_quote: "Without obtaining additional sources of financing or consummating a strategic transaction, our ability to continue as a going concern would be materially and adversely impacted, and we may be required to significantly reduce, restructure or cease operations."
+      - status: mentioned
+        evidence_quote: "Our unaudited condensed consolidated financial statements for the three months ended March 31, 2026 have been prepared assuming we will continue as a going concern, which contemplates the continuity of operations, realization of assets, and the satisfaction of liabilities and commitments in the normal course of business."
+      - status: mentioned
+        evidence_quote: "Our ability to continue operating as a going concern depends on, among other things, our ability to generate revenue in the future, the rate of revenue growth, our ability to utilize our properties and other assets, and our ability to obtain additional financing."
+      - status: mentioned
+        evidence_quote: "Our ability to continue as a going concern also may rely on additional strategies to mitigate costs, including potential restructuring or ongoing cost management, and those initiatives may fail."
+      - status: mentioned
+        evidence_quote: "In order to mitigate the going concern issues, we are actively considering strategic alternatives, realizing assets on our balance sheet, managing our continuing operations, implementing cost-cutting measures and seeking to sell or monetize certain assets."
+    ineligible:
+      - reason: not_going_concern
+        evidence_quote: "On the date of transfer, the Company assigned no value to the IEEPA Claim on the condensed consolidated balance sheet due to the significant uncertainty of any potential recovery prior to the U.S. Supreme Court’s ruling in Learning Resources, Inc. v. Trump."
+
+  - gold_id: GC-HYFM-01
+    fixture: tests/fixtures/edgar/hydrofarm_10q_2026q2
+    split: dev
+    expected_flag: true
+    statements:
+      - status: doubt
+        evidence_quote: "These conditions and events, considered in the aggregate, raise substantial doubt about the Company’s ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "As a result, the Company has concluded that management’s plans do not alleviate substantial doubt about the Company’s ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "These conditions and events, considered in the aggregate, raise substantial doubt about our ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "our ability to continue as a going concern;"
+      - status: mentioned
+        evidence_quote: "The accompanying condensed consolidated financial statements are prepared in accordance with generally accepted accounting principles applicable to a going concern, which contemplates the realization of assets and the satisfaction of liabilities in the normal course of business."
+      - status: mentioned
+        evidence_quote: "Management has evaluated whether conditions or events, considered in the aggregate, raise substantial doubt about the Company’s ability to continue as a going concern for a period of one year from the date that these financial statements are issued."
+      - status: mentioned
+        evidence_quote: "These condensed consolidated financial statements do not include any adjustments to the specific amounts and classifications of assets and liabilities, which might be necessary should we be unable to continue as a going concern."
+    ineligible: []
+
+  - gold_id: GC-MVST-01
+    fixture: tests/fixtures/edgar/microvast_10q_2026q2
+    split: dev
+    expected_flag: true
+    notes: Substantial doubt not alleviated, the plans not probable, restated throughout the risk factors ("The substantial doubt ... may adversely affect" presupposes the doubt, labelled doubt). One sentence of the risk factors is split by a page header and quoted as printed.
+    statements:
+      - status: doubt
+        evidence_quote: "These forward-looking statements include, but are not limited to, statements about the substantial doubt regarding our ability to continue as a going concern, our ability to implement our plans to alleviate that substantial doubt,"
+      - status: doubt
+        evidence_quote: "substantial doubt about our ability to continue as a going concern, which has not been alleviated, and the risk that our plans intended to alleviate that substantial doubt will not be effectively implemented within one year after the date the financial statements are issued or, when implemented, will not mitigate the conditions and events that raise substantial doubt;"
+      - status: doubt
+        evidence_quote: "the effect of the substantial doubt about our ability to continue as a going concern on our relationship with customers, suppliers and channel partners, our ability to attract and retain qualified personnel and our ability to raise capital;"
+      - status: doubt
+        evidence_quote: "These conditions and events raise substantial doubt about the Company's ability to continue as a going concern within one year after the date that these consolidated financial statements are issued."
+      - status: doubt
+        evidence_quote: "As a result, substantial doubt about the Company’s ability to continue as a going concern has not been alleviated."
+      - status: doubt
+        evidence_quote: "Given the uncertainties described in Note 1 to the unaudited consolidated financial statements of this Quarterly Report and in this Management's Discussion and Analysis of Financial Condition and Results of Operations, we have concluded that substantial doubt exists about our ability to continue as a going concern within one year after the date the financial statements are issued and that management's plans to alleviate the substantial doubt cannot be deemed probable, and thus the substantial doubt about our ability to continue as a going concern has not been alleviated."
+      - status: doubt
+        evidence_quote: "These conditions and events raise substantial doubt about the Company's ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "These conditions and events, considered in the aggregate, raise substantial doubt about our ability to continue as a going concern within one year after the date that these consolidated financial statements are issued."
+      - status: doubt
+        evidence_quote: "As a result, substantial doubt about our ability to continue as a going concern has not been alleviated."
+      - status: doubt
+        evidence_quote: "However, as discussed in Note 1 - Background and Basis of Presentation, this compliance does not alleviate the substantial doubt about our ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "Our history of operating losses and negative cash flows from operations has raised substantial doubt about our ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "We have expressed substantial doubt about our ability to continue as a going concern due to our history of operating losses and negative cash flows from operations."
+      - status: doubt
+        evidence_quote: "The substantial doubt about our ability to continue as a going concern may adversely affect the price of our common stock, our ability to raise capital or enter into strategic transactions and partnerships and market perception."
+      - status: doubt
+        evidence_quote: "Our plans to mitigate the substantial doubt may not be effectively implemented, and cost-reduction and restructuring actions may themselves strain near-term liquidity."
+      - status: doubt
+        evidence_quote: "In response to the substantial doubt about our ability to continue as a going concern, management has developed plans intended to improve our liquidity position, including:"
+      - status: doubt
+        evidence_quote: "Management has concluded that these plans cannot be deemed probable of being effectively implemented and, accordingly, substantial doubt about our ability to continue as a\n43\nTable of Contents\ngoing concern has not been alleviated."
+      - status: doubt
+        evidence_quote: "We may not be able to timely secure additional financing on favorable terms, or at all, due to, among other things, our history of operating losses and negative cash flows, the substantial doubt about our ability to continue as a going concern, general macroeconomic conditions, market volatility and the terms of our existing indebtedness."
+      - status: doubt
+        evidence_quote: "The substantial doubt about our ability to continue as a going concern may adversely affect our relationships with customers, suppliers and partners, our ability to attract and retain qualified personnel and our ability to raise capital or enter into strategic transactions."
+      - status: doubt
+        evidence_quote: "The substantial doubt about our ability to continue as a going concern, and any public disclosure thereof, may adversely affect the willingness of customers, suppliers, and partners to do business with us."
+      - status: doubt
+        evidence_quote: "In addition, the substantial doubt may make it more difficult for us to attract and retain qualified personnel, as current and prospective employees may seek employment with companies perceived to be more financially stable."
+      - status: doubt
+        evidence_quote: "The substantial doubt may also impair our ability to raise capital, enter into strategic transactions or partnerships or negotiate with counterparties on favorable terms."
+      - status: doubt
+        evidence_quote: "However, such compliance does not alleviate the substantial doubt about our ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "The accompanying consolidated financial statements of the Company have been prepared assuming the Company will continue as a going concern, which contemplates the continuity of operations, realization of assets, and the satisfaction of liabilities and commitments in the normal course of business."
+      - status: mentioned
+        evidence_quote: "Management evaluated whether conditions and events considered in the aggregate raise substantial doubt about the Company’s ability to continue as a going concern within one year after the date the consolidated financial statements are issued."
+      - status: mentioned
+        evidence_quote: "The Company has evaluated whether the plans described above are sufficient to alleviate the substantial doubt about the Company’s ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "Under this evaluation, the Company assessed whether it is probable that (1) the plans will be effectively implemented within one year after the date the financial statements are issued, and (2) when implemented, the plans will mitigate the conditions and events that raise substantial doubt."
+      - status: mentioned
+        evidence_quote: "Without additional sources of financing, the Company’s ability to continue as a going concern would be materially and adversely impacted, and the Company may be required to significantly reduce, restructure, or cease operations."
+      - status: mentioned
+        evidence_quote: "The consolidated financial statements have been prepared on a going concern basis and do not include any adjustments to the amounts and classification of assets and liabilities that may be necessary in the event the Company can no longer continue as a going concern."
+      - status: mentioned
+        evidence_quote: "In accordance with Accounting Standards Codification (“ASC”) Topic 205-40, Going Concern, we evaluate whether there are conditions or events, considered in the aggregate, that raise substantial doubt about our ability to continue as a going concern within one year after the date the financial statements are issued."
+      - status: mentioned
+        evidence_quote: "When substantial doubt exists, management evaluates the mitigating effect of its plans to the extent it is probable that 1) the plans will be effectively implemented within one year after the date the financial statements are issued, and 2) when implemented, the plans will mitigate the relevant conditions or events that raise substantial doubt."
+      - status: mentioned
+        evidence_quote: "We evaluated whether there are conditions or events considered in the aggregate, that raise substantial doubt about our ability to continue as a going concern within one year after the date the consolidated financial statements are issued."
+      - status: mentioned
+        evidence_quote: "We have evaluated whether the plans described above are sufficient to alleviate the substantial doubt about our ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "Under this evaluation, we assessed whether it is probable that (1) the plans will be effectively implemented within one year after the date the financial statements are issued, and (2) when implemented, the plans will mitigate the conditions and events that raise substantial doubt."
+      - status: mentioned
+        evidence_quote: "Without additional sources of financing, our ability to continue as a going concern would be materially and adversely impacted, and we may be required to significantly reduce, restructure or, cease operations."
+      - status: mentioned
+        evidence_quote: "Our unaudited consolidated financial statements for the six months ended June 30, 2026 have been prepared assuming we will continue as a going concern, which contemplates the continuity of operations, realization of assets, and the satisfaction of liabilities and commitments in the normal course of business."
+      - status: mentioned
+        evidence_quote: "Our ability to continue operating as a going concern depends on, among other things, our ability to generate sufficient revenue and cash flows from operations, the rate of revenue growth, our ability to manage operating expenses, our ability to refinance or extend maturing borrowings and our ability to obtain additional financing."
+      - status: mentioned
+        evidence_quote: "limit our ability to refinance our indebtedness, particularly given our going-concern qualification and negative operating cash flows;"
+      - status: mentioned
+        evidence_quote: "Without additional sources of financing, our ability to continue as a going concern would be materially and adversely impacted, and we may be required to significantly reduce, restructure or cease our operations or to pursue other alternatives, including, but not limited to, commencing a case under the U.S. Bankruptcy Code."
+      - status: mentioned
+        evidence_quote: "The going-concern conclusion and our recent operating losses may constitute significant negative evidence regarding the recoverability of our deferred tax assets, which could require an increase in the valuation allowance and result in an additional non-cash charge to income tax expense."
+    ineligible: []
+
+  - gold_id: GC-CVR-01
+    fixture: tests/fixtures/edgar/chicago_rivet_10q_2026q1
+    split: dev
+    expected_flag: true
+    statements:
+      - status: doubt
+        evidence_quote: "The Company’s declining revenues, recurring operating losses and negative cash flows, and continued reduction in liquidity, raise substantial doubt about the Company's ability to continue as a going concern within one year after the issuance date of these financial statements."
+      - status: doubt
+        evidence_quote: "As a result, substantial doubt remains regarding the Company’s ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "As a result, there remains substantial doubt regarding the Company’s ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "The Company evaluated whether there are conditions and events, considered in the aggregate, that raise substantial doubt about the Company’s ability to continue as a going concern within one year after the date on which this Quarterly Report on Form 10-Q is filed."
+      - status: mentioned
+        evidence_quote: "Management believes that these actions, if successfully executed, will mitigate the conditions giving rise to substantial doubt."
+      - status: mentioned
+        evidence_quote: "The accompanying consolidated financial statements have been prepared under the assumption that the Company will continue as a going concern, and they do not include any adjustments that might result from the outcome of this uncertainty."
+      - status: mentioned
+        evidence_quote: "The Company believes that if it successfully implements the foregoing strategic actions, it will mitigate the factors giving rise to substantial doubt, however, there is no guarantee that the Company will successfully implement these strategic actions."
+    ineligible:
+      - reason: not_going_concern
+        evidence_quote: "Significant uncertainty remains in the manufacturing sector as companies like ours continue to navigate the potential impacts of tariffs and numerous market factors and geopolitical events that may impact our business in the coming year."
+
+  - gold_id: GC-FTCI-01
+    fixture: tests/fixtures/edgar/ftc_solar_10q_2026q2
+    split: dev
+    expected_flag: true
+    notes: Headings ("Conclusion of substantial doubt") and cross-references are not labelled.
+    statements:
+      - status: doubt
+        evidence_quote: "As discussed further in \"Liquidity and Going Concern\" below, given the Company's current cash balances, subject to required reductions in the principal amount of our outstanding debt and required compliance with certain financial covenants during the remainder of 2026, as well as recurring operating losses and cash outflows from operations, management has concluded that there is substantial doubt about the Company's ability to continue as a going concern during the next year."
+      - status: doubt
+        evidence_quote: "Therefore, we have concluded that substantial doubt exists as to our ability to continue as a going concern within the next year."
+      - status: doubt
+        evidence_quote: "As a result, we have determined there is substantial doubt about our ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "Given these and other factors, including financial covenant requirements and principal repayment obligations in our Credit Agreement, as further discussed in Note 2, \"Summary of significant accounting policies\" in our Condensed Consolidated Financial Statements included in in Part I, Item 1 of this Quarterly Report, there is substantial doubt about our ability to continue as a going concern during the next year."
+      - status: doubt
+        evidence_quote: "Given these and other factors, including financial covenant requirements and principal repayment obligations in our Credit Agreement, as further discussed in the consolidated financial statements included in our Annual and Quarterly Reports incorporated herein by reference, there is substantial doubt about our ability to continue as a going concern during the next year."
+    ineligible: []
+
+  - gold_id: GC-BOXL-01
+    fixture: tests/fixtures/edgar/boxlight_10q_2026q2
+    split: dev
+    expected_flag: true
+    statements:
+      - status: doubt
+        evidence_quote: "The Company’s management has concluded as of June 30, 2026 that, due to uncertainties surrounding the Company’s ability to amend or refinance its current debt agreements and the uncertainty as to whether it will have sufficient liquidity to fund its business activities, substantial doubt exists as to its ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "The Company’s plans to alleviate the substantial doubt about its ability to continue as a going concern may not be successful, and it may be forced to limit its business activities or be unable to continue as a going concern, which would have a material adverse effect on its results of operations and financial condition."
+      - status: doubt
+        evidence_quote: "Notwithstanding the foregoing, there is substantial doubt as to the Company’s ability to continue as a going concern as the Company is dependent upon its ability to maintain compliance with the financial covenants under the Credit Agreement as amended, achieve positive cash flow from operations, and, if necessary, access additional financing."
+      - status: doubt
+        evidence_quote: "These conditions, together with our historical operating losses and liquidity constraints, raise substantial doubt about our ability to continue as a going concern for a period of one year following the issuance of these financial statements."
+      - status: doubt
+        evidence_quote: "Additionally, as we have previously disclosed, there is substantial doubt about our ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "The Company’s financial statements are prepared on a going concern basis, which contemplates the realization of assets and the satisfaction of obligations in the normal course of business."
+      - status: mentioned
+        evidence_quote: "The consolidated financial statements included herein have been prepared assuming that the Company will continue as a going concern and contemplating the realization of assets and the satisfaction of liabilities and commitments in the normal course of business."
+      - status: mentioned
+        evidence_quote: "The Company’s ability to continue as a going concern is dependent on generating profitable operating results, having sufficient liquidity, and maintaining compliance with the covenants and other requirements under the Whitehawk Capital Partners Credit Agreement (the “Whitehawk Capital Partners Credit Agreement”)."
+      - status: mentioned
+        evidence_quote: "our ability to continue to operate as a going concern;"
+      - status: mentioned
+        evidence_quote: "Past success is not indicative of future results and the Company has evaluated the going concern consideration as such."
+      - status: mentioned
+        evidence_quote: "The Company has evaluated conditions and events, in the aggregate, that may raise doubt about its ability to continue as a going concern within one year after the date these financial statements are issued, in accordance with ASC 205-40."
+      - status: mentioned
+        evidence_quote: "We have not complied with certain covenants, minimum liquidity and borrowing base requirements under the Credit Agreement and this could cause us to be unable to continue to operate as a going concern."
+      - status: mentioned
+        evidence_quote: "Our ability to continue as a going concern is dependent upon our ability to generate sufficient cash flows from operations, obtain additional waivers or other relief under the Credit Agreement for any future covenant or borrowing base noncompliance, or refinance our indebtedness with the existing lender or a new lender."
+    ineligible: []
+
+  - gold_id: GC-AMS-01
+    fixture: tests/fixtures/edgar/american_shared_hospital_services_10q_2026q2
+    split: dev
+    expected_flag: true
+    notes: The conditional sentence on an acceleration of the credit agreements ("if ... were to be accelerated ..., which raises substantial doubt") is a hypothetical, mentioned.
+    statements:
+      - status: doubt
+        evidence_quote: "As a result, these conditions raise substantial doubt about the Company’s ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "As a result of these conditions, in connection with management’s assessment of going-concern considerations in accordance with ASC 205-40 Presentation of Financial Statements - Going Concern, management has determined that the Company’s liquidity condition raises substantial doubt about the Company’s ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "The Company reassessed its ability to continue as a going concern in light of the Events of Default discussed above."
+      - status: mentioned
+        evidence_quote: "The Company’s condensed consolidated balance sheet as of June 30, 2026, does not contain any adjustments that might result from the uncertainty regarding the Company’s ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "Furthermore, if the Company’s payment obligations under the Credit Agreements were to be accelerated due to any new or uncured events of default under such agreements, the Company would not have sufficient cash on hand, cash flow from operations, and other cash resources to satisfy such accelerated payment obligations, which raises substantial doubt about the Company’s ability to continue as a going concern."
+    ineligible: []
+
+  - gold_id: GC-CODI-01
+    fixture: tests/fixtures/edgar/compass_diversified_10q_2026q2
+    split: dev
+    expected_flag: false
+    statements:
+      - status: mentioned
+        evidence_quote: "The accompanying consolidated financial statements have been prepared on a going concern basis, which assumes the Company will continue to realize its assets and satisfy its liabilities in the ordinary course of business."
+    ineligible:
+      - reason: not_going_concern
+        evidence_quote: "Because significant uncertainty remains regarding the availability, timing, and amount of any potential recovery, the Company has not recognized a receivable or gain related to potential tariff refunds as of June 30, 2026."
+
+  - gold_id: GC-OMV-Q4-24
+    fixture: tests/fixtures/gold/guidance/omv_q4_2024_report
+    split: dev
+    expected_flag: false
+    notes: The permanent control case, the first false P1 of the project (a negated sentence read as a warning).
+    statements:
+      - status: negated
+        evidence_quote: "From today’s perspective, we assume that based on the measures listed above, the Company’s ability to continue as a going concern is not impacted."
+    ineligible: []
+
+  - gold_id: GC-HOG-01
+    fixture: tests/fixtures/edgar/harley_davidson_inc_10q_2026q2
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible:
+      - reason: not_going_concern
+        evidence_quote: "In evaluating the probable-to-complete recognition threshold, consideration is given to whether there is significant uncertainty associated with the development activities of the software (\"significant development uncertainty\")."
+
+  - gold_id: GC-CAT-01
+    fixture: tests/fixtures/edgar/caterpillar_10q_2026q2
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: GC-F-01
+    fixture: tests/fixtures/edgar/ford_motor_10q_2026q2
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: GC-VW-FY25
+    fixture: tests/fixtures/gold/guidance/vw_fy2025_results
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: GC-OMV-Q4-25
+    fixture: tests/fixtures/gold/guidance/omv_q4_2025_report
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+
+  # ------------------------------------------------------------ holdout --- #
+  - gold_id: GC-NFE-01
+    fixture: tests/fixtures/edgar/new_fortress_energy_10q_2026q2
+    split: holdout
+    expected_flag: true
+    notes: Substantial doubt concluded under events of default and a restructuring support agreement that does not alleviate it.
+    statements:
+      - status: doubt
+        evidence_quote: "adequately addressing the substantial doubt as to our ability to continue as a going concern and satisfy our liquidity needs, including the consummation of certain items that management expects to occur and other transactions intended to enhance our liquidity;"
+      - status: doubt
+        evidence_quote: "Due, in part, to the events of default under the Company’s debt agreements detailed below, management has concluded that there is substantial doubt as to the Company’s ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "As there are conditions under the RSA that are not in the Company’s control, the execution of the RSA does not alleviate substantial doubt that the Company can continue as a going concern."
+      - status: doubt
+        evidence_quote: "Due to the events of default under our debt agreements detailed below, management has concluded that there is substantial doubt as to our ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "As discussed in Note 2 to the condensed consolidated financial statements included elsewhere in this Quarterly Report, management has concluded that, our current liquidity and forecasted cash flows from operations are not probable to be sufficient to support, in full, obligations as they become due over the next twelve-month period, and there is substantial doubt as to the Company’s ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "As such, even if the Restructuring Transaction is completed, substantial risks will remain that could adversely affect the Company’s financial condition, results of operations, and events of default under the Company’s debt agreements, and management has concluded that there is substantial doubt as to the Company’s ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "The accompanying condensed consolidated financial statements have been prepared on the basis that the Company will continue as a going concern over the next twelve months from the date of issuance of these financial statements, which assumes the realization of assets and the satisfaction of liabilities in the normal course of business."
+      - status: mentioned
+        evidence_quote: "The condensed consolidated financial statements do not include any adjustments to the carrying amounts and classification of assets, liabilities, and reported expenses that may be necessary if the Company were unable to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "As part of preparing the financial statements included in this Quarterly Report, we have evaluated whether conditions exist that give rise to substantial doubt as to our ability to continue as a going concern."
+      - status: mentioned
+        evidence_quote: "Our ability to continue as a going concern is dependent upon our ability to complete the Restructuring Transaction and delay capital expenditures;"
+      - status: mentioned
+        evidence_quote: "The successful implementation of the RSA, the Restructuring Plans and the Restructuring Transaction is critical to our ability to continue as a going concern and is subject to numerous conditions, milestones, and approvals."
+      - status: mentioned
+        evidence_quote: "Our ability to continue as a going concern is dependent upon our ability to complete the Restructuring Transaction and delay capital expenditures."
+    ineligible:
+      - reason: not_going_concern
+        evidence_quote: "A liability has not been recognized as of June 30, 2026, since the Company is unable to predict the outcome given the significant uncertainty with regard to whether such matters will proceed to trial, among other uncertainties."
+
+  - gold_id: GC-SNBR-01
+    fixture: tests/fixtures/edgar/sleep_number_10q_2026q1
+    split: holdout
+    expected_flag: true
+    notes: Wrapped lines are quoted as printed.
+    statements:
+      - status: doubt
+        evidence_quote: "These conditions and events raise substantial doubt about the Company’s ability to continue as a going concern."
+      - status: doubt
+        evidence_quote: "Management’s plan to address the substantial doubt about the Company’s ability to continue as a going concern, as\ndescribed above, includes the following ongoing actions:"
+      - status: doubt
+        evidence_quote: "As a result, the Company has concluded that\nmanagement’s plans do not alleviate substantial doubt about the Company’s ability to continue as a going concern for at\nleast one year from the date of issuance of these financial statements."
+      - status: doubt
+        evidence_quote: "The Company’s management\nhas concluded that there is substantial doubt about the Company’s ability to continue as a going concern, which is not\nalleviated, for one year from the date of issuance of this Quarterly Report on Form 10-Q."
+      - status: mentioned
+        evidence_quote: "The Company’s financial statements have been prepared under the assumption that the Company will continue as a going\nconcern, which contemplates the realization of assets and satisfaction of liabilities in the normal course of business for the\nforeseeable future."
+      - status: mentioned
+        evidence_quote: "Ability to continue as a going concern;"
+      - status: mentioned
+        evidence_quote: "As discussed above in Going Concern Considerations,\nthe cash anticipated to be generated from ongoing operations and cash available under its Credit Agreement are not\nexpected to be sufficient to generate adequate liquidity to meet the Company’s obligations over the next twelve months."
+    ineligible: []
+
+  - gold_id: GC-DE-01
+    fixture: tests/fixtures/edgar/deere_10q_2026q3
+    split: holdout
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: GC-TR-H1-26
+    fixture: tests/fixtures/ir/traton_h1_2026_results
+    split: holdout
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: GC-GM-01
+    fixture: tests/fixtures/edgar/general_motors_10q_2026q2
+    split: holdout
+    expected_flag: false
+    statements: []
+    ineligible: []

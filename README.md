@@ -64,6 +64,7 @@ radar llm-compare --run eval/runs/a --run eval/runs/b   # side by side, one cate
 radar llm-extract --events                                  # statements for the stored earnings events, events untouched
 radar llm-extract --events --kind liquidity                 # liquidity statements (flag set by code only)
 radar llm-extract --events --kind covenant                  # covenant statements (breach flag set by code only)
+radar llm-extract --events --kind going_concern --alternative openai_terra   # going concern (flag on a stated doubt only; routed default after its benchmark)
 radar llm-apply                                             # apply VALID statements, decide again, audit before/after
 ```
 

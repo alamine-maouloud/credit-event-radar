@@ -759,3 +759,22 @@ a future covenant test date inside a breach stated in the past tense; the wordin
 maintained compliance", "have not complied", "failing to meet", "defaults" of a named
 covenant; "uncertainty as to our ability to fully meet" as an anticipation; subsidiary
 borrowers (HoldCo) as configurable scope.
+
+### Going concern V1: gold frozen, no call yet (2026-10-07)
+
+The last family. Gold V1 (eval/gold/going_concern_v1, lock 92aca395) re-labels nineteen
+documents already in hand on their own merits: seven issuers with a substantial doubt not
+alleviated (GoPro, Hydrofarm, Microvast, Chicago Rivet, FTC Solar, Boxlight, American Shared
+Hospital Services) and the OMV Q4 2024 "not impacted" control in the dev split, New Fortress
+Energy and Sleep Number with the doubt in the holdout, nine documents without going concern
+wording (Compass Diversified, Harley-Davidson, Caterpillar, Ford, Volkswagen, OMV Q4 2025,
+Deere, TRATON, General Motors). 126 statements, 66 doubt, 5 ineligible "significant
+uncertainty" passages outside the going concern. No real "alleviated" conclusion exists in
+these filings: the status is covered by the offline tests only, a limit noted in the guide.
+
+Dry runs on the frozen set, no call made: Terra 9.82 USD estimated, Sol 17.15 USD estimated;
+on covenant V1 the real cost was 0.20 of the estimate, so about 2.0 USD for Terra and 3.4
+USD for Sol. The 1.9 USD of credits left cover neither run in full; the benchmark waits for
+a reload. Order kept: Terra, Sol, the blind holdout on filings never read, the routed
+default for the kind, Phase 3 closed.
+

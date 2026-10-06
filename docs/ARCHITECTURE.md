@@ -412,3 +412,32 @@ The covenant conclusion stays phrased as what it is: on covenant gold V1 and its
 Sol gives the better decision-level recall without an observed rise in false flags, not a
 general claim.
 
+## ADR-021 · Going concern statements: the strictest family, one wording rule shared by the deterministic flag and the validator (Phase 3.4c, 2026-10-07)
+
+The last flag family follows the liquidity and covenant mould with four statuses: doubt
+(stated for now), alleviated (management's plans alleviate it, stated as a conclusion),
+negated (the doubt or the impact denied), mentioned (the basis of preparation, the
+description of the evaluation, a hypothetical, a dependency). The code sets the flag on
+doubt alone and feeds ERN-01; an alleviated doubt is recorded on the event without a flag,
+so the history of the doubt is kept; negated and mentioned set nothing.
+
+The liquidity lesson is written once, in `radar.extract.going_concern`, and read by both
+passes: a modal before the doubt wording ("could raise substantial doubt"), a condition
+("if we cannot raise capital"), or the description of the evaluation ("evaluated whether
+there are conditions that raise substantial doubt") is a hypothetical, not a doubt, unless
+a conclusion word precedes ("management has concluded that the company may be unable to
+continue as a going concern" is a doubt); "plans to alleviate", "will mitigate" and the
+standard's own test are not an alleviation; "may not alleviate", "do not alleviate", "has
+not been alleviated" keep the doubt. The deterministic extractor (structured-earnings-1.2)
+now skips those passages with a reason (hypothetical_flag, alleviated_flag, negated_flag)
+instead of raising a P1 the enrichment could never remove; the OMV "not impacted" sentence
+stays the permanent control of both passes.
+
+Gold V1 (lock 92aca395): 19 documents already in hand, labelled again on their own merits,
+126 statements, 66 doubt, 9 documents with the flag, 14 dev and 5 holdout. Future dates in
+a going concern passage are legitimate for every status (the assessment looks a year ahead
+by construction); the period named by the model is still checked. The routing keeps
+TO_BENCHMARK for this kind until its benchmark: `radar llm-extract --kind going_concern`
+refuses the default and takes `--alternative`. Dry runs, no call: Terra 9.82 USD estimated
+(about 2 USD calibrated on the covenant V1 ratio), Sol 17.15 USD estimated (about 3.4 USD).
+

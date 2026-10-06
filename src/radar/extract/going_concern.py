@@ -23,23 +23,28 @@ DENIAL_RE = re.compile(
     r"|\bno\s+longer\s+(?:raises?|exists?|have|has)\b"
 )
 NEGATION_RE = re.compile(r"(?i)\b(?:no|not|without|never|neither|nor|free\s+of|absence\s+of)\b")
-ALLEVIATE_RE = re.compile(r"(?i)\b(?:alleviat|mitigat)(?:e|es|ed|ing)\b")
+# the verb only: "the mitigating effect of its plans" describes the standard's test
+ALLEVIATE_RE = re.compile(r"(?i)\b(?:alleviat|mitigat)(?:e|es|ed)\b")
 # before an alleviation verb: plans that may not, are intended to or would alleviate the
 # doubt leave the doubt in place
+# "plans to alleviate", "will mitigate", "when implemented, the plans will mitigate": the
+# standard's test or a purpose, not the conclusion that the doubt is alleviated
 UNCERTAIN_ALLEVIATION_RE = re.compile(
-    r"(?i)\b(?:not|cannot|may|might|could|would|intended|designed|expected|sufficient|"
-    r"probable|whether|if|unless|should)\b"
+    r"(?i)\b(?:not|cannot|may|might|could|would|will|when|to|intended|designed|expected|"
+    r"sufficient|probable|whether|if|unless|should)\b"
 )
 # before a doubt marker: a hypothetical ("could raise substantial doubt") or the description
 # of the evaluation ("evaluate whether ... raise substantial doubt"), unless a conclusion
 # follows the evaluation word ("evaluated ... and concluded that substantial doubt exists")
 HYPOTHETICAL_RE = re.compile(
-    r"(?i)\b(?:may|might|could|would|can|if|should|unless|potential|future|any|whether)\b"
+    r"(?i)\b(?:may|might|could|would|can|if|when|should|unless|potential|future|any)\b"
 )
 EVALUATION_RE = re.compile(
-    r"(?i)\b(?:whether|evaluat(?:e|es|ed|ing|ion)|assess(?:es|ed|ing|ment)?|required?\s+to)\b"
+    r"(?i)\b(?:evaluat(?:e|es|ed|ing|ion)|assess(?:es|ed|ing|ment)?|required?\s+to)\b"
 )
-CONCLUSION_RE = re.compile(r"(?i)\b(?:concluded|determined|identified|believes?|exists?|existed)\b")
+# a conclusion word clears what precedes it: "even if the transaction is completed, ...
+# management has concluded that there is substantial doubt" is a doubt stated
+CONCLUSION_RE = re.compile(r"(?i)\b(?:concluded|determined|identified|believes?)\b")
 CONDITIONAL_START_RE = re.compile(r"(?i)\s*(?:if|should|unless|were)\b")
 CONDITION_RE = re.compile(r"(?i)\b(?:if|unless)\b")
 
@@ -69,21 +74,19 @@ def reading(sentence: str, doubt_in_quote: bool | None = None) -> dict[str, bool
             denied = True  # "no substantial doubt", "not ... raise substantial doubt"
             continue
         # "management has concluded that the company may be unable to continue as a going
-        # concern" is a conclusion of doubt: a modal after a conclusion word is the standard's
-        # own wording, not a hypothetical; "if", "unless" anywhere before the marker is one
-        conditional = bool(CONDITIONAL_START_RE.match(before)) or bool(CONDITION_RE.search(before))
-        concluded = bool(CONCLUSION_RE.search(before))
+        # concern" is a conclusion of doubt: after a conclusion word the modal is the
+        # standard's own wording; a condition ("if", "unless") or the description of the
+        # evaluation ("evaluated whether ... raise substantial doubt") makes a hypothetical
+        # only when no conclusion word follows it
+        conclusions = [cm.end() for cm in CONCLUSION_RE.finditer(before)]
+        tail = before[conclusions[-1] :] if conclusions else before
         modal = (
-            any(HYPOTHETICAL_RE.fullmatch(w) for w in window)
+            not conclusions
+            and any(HYPOTHETICAL_RE.fullmatch(w) for w in window)
             and not alleviation_near
-            and not concluded
         )
-        last_evaluation = None
-        for em in EVALUATION_RE.finditer(before):
-            last_evaluation = em.end()
-        described = last_evaluation is not None and not CONCLUSION_RE.search(
-            before[last_evaluation:]
-        )
+        conditional = bool(CONDITIONAL_START_RE.match(tail)) or bool(CONDITION_RE.search(tail))
+        described = bool(EVALUATION_RE.search(tail))
         if modal or described or conditional:
             hypothetical = True
             continue

@@ -1,7 +1,7 @@
 """Flag families (liquidity, covenant, going concern): from validated statements to one flag
-decision, in code only. The model qualifies each passage, the validator has rejected what the words do
-not support, and here the flag follows one rule: at least one VALID statement with a
-negative status at Group level. Every statement is kept for the audit.
+decision, in code only. The model qualifies each passage, the validator has rejected what the
+words do not support, and here the flag follows one rule: at least one VALID statement with
+a negative status at Group level. Every statement is kept for the audit.
 """
 
 from __future__ import annotations
