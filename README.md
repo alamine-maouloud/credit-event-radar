@@ -11,10 +11,12 @@ investment recommendation.
 
 ## Status
 
-Phases 1 and 2 done: schemas, rating scales, hand-verified seed, EDGAR ingestion with raw
-snapshots and hashes, deterministic rating-action extraction and an audit trail. The
-historical control case (a real 10-Q where S&P moved an issuer from BBB- to BB+) runs end to
-end offline without any LLM. See `CLAUDE.md` for the phase checklist, `docs/SPEC.md` for the
+Phases 1, 2 and 4 done: schemas, rating scales, hand-verified seed, EDGAR ingestion with raw
+snapshots and hashes, deterministic rating-action and ratings-table extraction, a pure
+materiality engine on agency ratings with a rule-by-rule explanation, and an audit trail.
+The historical control case (a real 10-Q where S&P moved an issuer from BBB- to BB+ while
+Moody's and Fitch stayed investment grade) is scored P1 by RAT-01 and RAT-02 end to end,
+offline, without any LLM. See `CLAUDE.md` for the phase checklist, `docs/SPEC.md` for the
 specification and `docs/ARCHITECTURE.md` for the decisions.
 
 ## Quick start
@@ -27,6 +29,7 @@ uv run radar seed
 uv run radar ingest --since 2026-01-01 --source fixtures
 uv run radar process
 uv run radar events
+uv run radar show-event <event_id> --explain
 uv run pytest -q && uv run ruff check .
 ```
 

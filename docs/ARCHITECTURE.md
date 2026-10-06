@@ -97,3 +97,50 @@ SHA-256 of the normalised text produced by `normalizer_version`. Deduplication o
 documents uses the raw hash. A change of normaliser changes `doc_id` and every stored
 offset, which is why `normalizer_version` is recorded on each document and checked by the
 fixture tests.
+
+## ADR-007 · Rating state at the event date, anti look-ahead
+
+Date: 2026-10-06. Status: accepted.
+
+**Context.** Several rules (RAT-02, RAT-04, RAT-06, MOD-01, MOD-02, MOD-03) need to know
+what the other agencies, the previous outlook or prior events looked like when the event
+happened. For a historical backtest, using anything published after the event would
+contaminate the decision.
+
+**Decision.** The engine receives a `RatingState` built for the event's effective date D
+from dated candidates only: seed rows, rating observations extracted from documents, and
+previously stored rating events. A candidate is used only if its `as_of` is on or before
+D, its date is complete, its age is at most `max_rating_age_days`, its agency is in
+`admissible_agencies` and its rating type is issuer-level. Every refused candidate is kept
+with its reason and shown in the explanation. Windows for MOD-02 and MOD-03 use
+effective dates and as-of dates, never ingestion timestamps. The parameters live in
+`config/rules.yaml` under `rating_state`.
+
+400 days is a conservative prototype freshness threshold, not a statement about rating
+validity. It is configurable and should be calibrated against production data and team
+requirements. Undated seed rows therefore never influence a decision; they remain
+displayable reference data.
+
+**Consequences.** The Harley-Davidson control case is decided with Moody's Baa3 and Fitch
+BBB as of 2026-06-30, read from the same 10-Q by `structured-ratings-table-1.0`, eight
+days before the S&P action. DBRS ratings are kept in the seed but ignored by the rules.
+
+## ADR-008 · No priority when no rule applies
+
+Date: 2026-10-06. Status: accepted.
+
+An event that triggers no base rule receives `priority = null` with
+`decision_status = NO_APPLICABLE_RULE`. P3 means "relevant but weak", never "nothing
+matched". Modifiers are not applied without a base rule. This keeps precision and recall
+measurable: an alert exists only when a rule fired.
+
+## ADR-009 · Orthogonal rules, one explanation per rule
+
+Date: 2026-10-06. Status: accepted.
+
+Rules describe properties of an event and can be true together (a two-notch downgrade
+that crosses IG/HY triggers RAT-01 and RAT-03). The only exclusions are the ones the
+specification states: RAT-05 excludes the IG/HY crossing, RAT-07 excludes the boundary
+case of RAT-04, RAT-09 excludes the rising star of RAT-08, ISS-04 excludes ISS-01 and
+ISS-02. Every rule and modifier is evaluated and reported, triggered or not, with the
+data it used, so `radar show-event <id> --explain` is the engine's own output.

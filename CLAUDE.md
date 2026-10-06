@@ -68,7 +68,7 @@ credit-event-radar/
 │   ├── connectors/            # base.py, edgar.py, ir_feeds.py, news_rss.py
 │   ├── resolve.py             # rattachement document → émetteur
 │   ├── extract/               # structured.py, llm_extract.py, spans.py
-│   ├── materiality/           # engine.py, explain.py (pur, sans I/O ni LLM)
+│   ├── materiality/           # engine.py, state.py, explain.py (pur, sans I/O ni LLM)
 │   ├── llm/                   # provider.py, anthropic_client.py, openai_client.py, cache.py
 │   ├── context/               # fundamentals.py, summarize.py
 │   ├── verify/                # claims.py
@@ -104,6 +104,8 @@ uv run radar ingest --since 2026-01-01 --source fixtures   # rejoue les fixtures
 uv run radar process                       # rattachement → extraction → dédup → audit (matérialité en Phase 4)
 uv run radar events                        # liste des événements stockés
 uv run radar show-event <id>               # champs, passages sources, hashes, trace d'audit
+uv run radar show-event <id> --explain     # panneau « Why this priority? » : règles évaluées, état des notations, provenance
+uv run radar decide                        # recalcule les décisions après un changement de rules.yaml
 uv run radar alert --dry-run               # rendu local HTML/JSON, aucun envoi
 uv run radar note --event-id <id> --lang fr
 uv run radar eval --models extract_a,extract_b
@@ -134,7 +136,7 @@ uv run pytest -q && uv run ruff check .
 
 - [x] Phase 1 · Fondations : repo, schémas, échelles de notation, notation composite, config, seeds (2026-10-06)
 - [x] Phase 2 · Ingestion : EDGAR, snapshots, hash, déduplication, extraction structurée déterministe, audit, P1 Harley de bout en bout sans LLM (2026-10-06). Flux IR et news RSS reportés en Phase 2b, après le moteur de matérialité (ADR-004)
-- [ ] Phase 4 · Moteur de matérialité : rules.yaml, modificateurs, explication « Why? » (exécutée avant la Phase 3, ADR-004)
+- [x] Phase 4 · Moteur de matérialité : rules.yaml v1.2, 19 règles et 3 modificateurs testés avant implémentation, état des notations à D anti look-ahead, observations de tableaux, `show-event --explain`, Harley P1 par RAT-01 et RAT-02 (2026-10-06)
 - [ ] Phase 3 · Extraction LLM : schémas stricts + validation des spans
 - [ ] Phase 5 · Contexte, vérification des claims, notes de comité FR/EN
 - [ ] Phase 6 · Alertes (Teams, email, local) et viewer Streamlit
