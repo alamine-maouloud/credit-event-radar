@@ -54,6 +54,40 @@ class GuidanceExtraction(BaseModel):
     statements: list[GuidanceStatement] = Field(default_factory=list)
 
 
+LIQUIDITY_SCHEMA_VERSION = "liquidity-1.0"
+LiquidityStatus = Literal["deteriorated", "concern", "stable", "improved", "mentioned"]
+
+
+class LiquidityStatement(BaseModel):
+    """One statement of the issuer about its own liquidity, qualified by the model from the
+    words of the text. The code alone decides whether a flag follows (Phase 3.4a)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    risk_type: Literal["liquidity"]
+    status: LiquidityStatus
+    metric_label: str | None = Field(default=None, description="Metric named by the text, if any")
+    value: float | None = None
+    unit: Unit | None = None
+    period: str | None = None
+    evidence_quote: str = Field(min_length=1)
+    start_offset: int = Field(ge=0)
+    end_offset: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _offsets(self) -> LiquidityStatement:
+        if self.end_offset <= self.start_offset:
+            raise ValueError("end_offset must be greater than start_offset")
+        return self
+
+
+class LiquidityExtraction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    has_liquidity_statements: bool
+    statements: list[LiquidityStatement] = Field(default_factory=list)
+
+
 def _close(schema: dict[str, Any]) -> None:
     """OpenAI strict mode needs every object closed and every property required."""
     if schema.get("type") == "object" or "properties" in schema:
@@ -76,5 +110,11 @@ def _close(schema: dict[str, Any]) -> None:
 
 def guidance_json_schema() -> dict[str, Any]:
     schema = GuidanceExtraction.model_json_schema()
+    _close(schema)
+    return schema
+
+
+def liquidity_json_schema() -> dict[str, Any]:
+    schema = LiquidityExtraction.model_json_schema()
     _close(schema)
     return schema

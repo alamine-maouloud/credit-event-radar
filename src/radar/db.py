@@ -20,7 +20,7 @@ from radar.config import Universe
 from radar.materiality.engine import Decision
 from radar.models import AgencyRating, CreditEvent, EvidenceSpan, RatingObservation, RawDocument
 
-SCHEMA_VERSION = "7"
+SCHEMA_VERSION = "8"
 TABLES = frozenset(
     {
         "issuers", "issuer_aliases", "ratings", "documents", "events", "event_evidence",
@@ -184,7 +184,8 @@ CREATE TABLE IF NOT EXISTS llm_statements (
     validation_json TEXT NOT NULL,
     change_json TEXT NOT NULL,
     validation_status TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    statement_kind TEXT NOT NULL DEFAULT 'guidance'
 );
 CREATE TABLE IF NOT EXISTS event_enrichments (
     enrichment_id TEXT PRIMARY KEY,
@@ -256,6 +257,12 @@ class Database:
             columns = {r["name"] for r in c.execute("PRAGMA table_info(events)")}
             if "enrichment_method" not in columns:  # schema 6 to 7
                 c.execute("ALTER TABLE events ADD COLUMN enrichment_method TEXT")
+            statement_columns = {r["name"] for r in c.execute("PRAGMA table_info(llm_statements)")}
+            if "statement_kind" not in statement_columns:  # schema 7 to 8
+                c.execute(
+                    "ALTER TABLE llm_statements ADD COLUMN statement_kind TEXT NOT NULL "
+                    "DEFAULT 'guidance'"
+                )
             c.execute(
                 "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', ?)",
                 (SCHEMA_VERSION,),
@@ -660,7 +667,7 @@ class Database:
     STATEMENT_COLUMNS = (
         "statement_id", "llm_call_id", "doc_id", "issuer_id", "event_id", "model_id",
         "resolved_model", "prompt_version", "schema_version", "statement_json",
-        "validation_json", "change_json", "validation_status",
+        "validation_json", "change_json", "validation_status", "statement_kind",
     )  # fmt: skip
 
     def insert_statements(self, rows: Iterable[dict[str, Any]]) -> int:
@@ -675,6 +682,7 @@ class Database:
                     else row.get(k)
                     for k in self.STATEMENT_COLUMNS
                 ]
+                values[-1] = values[-1] or "guidance"
                 cursor = c.execute(
                     f"INSERT OR IGNORE INTO llm_statements ({', '.join(self.STATEMENT_COLUMNS)}, "
                     f"created_at) VALUES ({', '.join('?' for _ in self.STATEMENT_COLUMNS)}, ?)",

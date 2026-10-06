@@ -18,7 +18,7 @@ from rapidfuzz import fuzz
 from radar.extract.dates import find_dates
 from radar.extract.spans import iter_sentences
 from radar.extract.structured import _issuer_named, _matches_issuer, find_named_entities
-from radar.llm.schemas import GuidanceStatement
+from radar.llm.schemas import GuidanceStatement, LiquidityStatement
 from radar.models import RawDocument
 from radar.ratings import RatingScales
 
@@ -141,6 +141,154 @@ def _segment_named(label: str, quote: str, segments: list[str]) -> str | None:
     return None
 
 
+def _entity_check(
+    quote: str, issuer_names: list[str], scales: RatingScales | None
+) -> tuple[bool, str | None]:
+    sc = scales or _default_scales()
+    others = [e for e in find_named_entities(quote, sc) if not _matches_issuer(e[0], issuer_names)]
+    if others and not _issuer_named(quote, issuer_names, [(e[1], e[2]) for e in others]):
+        return False, f"quote is about another entity: {others[0][0]}"
+    return True, None
+
+
+def _temporal_check(
+    quote: str, document_date: date | None, period: str | None
+) -> tuple[bool, str | None]:
+    if document_date is None:
+        return True, None
+    for found, _, _ in find_dates(quote):
+        if found > document_date + timedelta(days=FUTURE_TOLERANCE_DAYS):
+            return False, f"quote dated {found.isoformat()}, after the document date"
+    if period:
+        years = [int(y) for y in re.findall(r"\b(20\d\d)\b", period)]
+        if years and not all(
+            document_date.year - PERIOD_PAST_YEARS <= y <= document_date.year + PERIOD_FUTURE_YEARS
+            for y in years
+        ):
+            return (
+                False,
+                f"period {period!r} is not a plausible period for {document_date.isoformat()}",
+            )
+    return True, None
+
+
+# --------------------------------------------------------------- liquidity --- #
+
+# Words of a deterioration or a worry about liquidity, as issuers write them.
+_LIQUIDITY_NEGATIVE_RE = re.compile(
+    r"(?i)\b(?:constrain(?:ed|ts?)|tighten(?:ed|ing|s)?|tight|strain(?:ed|s)?|stress(?:ed)?|"
+    r"pressures?|shortfalls?|squeeze[sd]?|insufficien(?:t|cy)|deteriorat(?:ed|ing|ion|es)|"
+    r"weaken(?:ed|ing|s)?|concerns?|unable\s+to\s+(?:meet|fund|service|repay)|"
+    r"difficult(?:y|ies)\s+(?:in\s+)?(?:meeting|funding|refinancing)|at\s+risk|risk\s+of)\b"
+)
+_NEGATION_RE = re.compile(r"(?i)\b(?:no|not|without|never|neither|nor|free\s+of|absence\s+of)\b")
+NEGATIVE_LIQUIDITY_STATUSES = frozenset({"deteriorated", "concern"})
+
+
+def _negated(sentence: str, marker_start: int) -> bool:
+    """A negation word within the five words before the marker in the same sentence."""
+    before = sentence[:marker_start].split()
+    return any(_NEGATION_RE.fullmatch(w.strip(",;:()")) for w in before[-5:])
+
+
+def liquidity_polarity_ok(quote: str, status: str) -> tuple[bool, str | None]:
+    """A negative status needs a negative marker that is not negated in its sentence.
+    Positive and neutral statuses are never rejected here: "no liquidity concerns" read as
+    stable or mentioned is right, read as concern it is a POLARITY_MISMATCH."""
+    if status not in NEGATIVE_LIQUIDITY_STATUSES:
+        return True, None
+    sentences = [s.text for s in iter_sentences(quote)] or [quote]
+    found_negated = False
+    for sentence in sentences:
+        for m in _LIQUIDITY_NEGATIVE_RE.finditer(sentence):
+            if _negated(sentence, m.start()):
+                found_negated = True
+                continue
+            return True, None
+    if found_negated:
+        return (
+            False,
+            f"POLARITY_MISMATCH: the passage negates the worry, status {status} contradicts it",
+        )  # noqa: E501
+    return False, f"POLARITY_MISMATCH: no deterioration or worry wording supports status {status}"  # noqa: E501
+
+
+def validate_liquidity_statement(
+    st: LiquidityStatement,
+    doc: RawDocument,
+    issuer_names: list[str],
+    *,
+    document_date: date | None,
+    scales: RatingScales | None = None,
+    segments: list[str] | None = None,
+) -> ValidationResult:
+    checks: dict[str, bool] = {}
+    reasons: list[str] = []
+    quote = st.evidence_quote
+    low = quote.casefold()
+
+    kind, score, m_start, m_end = _span_match(quote, doc.text, st.start_offset, st.end_offset)
+    checks["span_match"] = kind != "none"
+    if kind == "none":
+        reasons.append(f"quote not found in the document (best partial ratio {score:.0f})")
+
+    numbers_ok = True
+    if st.value is not None:
+        numbers_ok = _contains(_numbers_in(quote), float(st.value))
+        if not numbers_ok:
+            reasons.append(f"numbers not in the quote: [{st.value}]")
+    checks["numbers_match"] = numbers_ok
+
+    unit_ok = True
+    if st.value is not None and st.unit is not None:
+        currency_tokens, scale_tokens = _UNIT_TOKENS[st.unit]
+        unit_ok = any(t in low for t in scale_tokens) and (
+            not currency_tokens or any(t in low for t in currency_tokens)
+        )
+        if not unit_ok:
+            reasons.append(f"unit {st.unit} not supported by the quote")
+    checks["unit_match"] = unit_ok
+
+    label = (st.metric_label or "").casefold().strip()
+    label_ok = not label or label in low
+    checks["metric_match"] = label_ok
+    if not label_ok:
+        reasons.append(f"metric label {st.metric_label!r} not in the quote")
+
+    checks["liquidity_named"] = "liquidity" in low or "cash" in low or "credit line" in low
+    if not checks["liquidity_named"]:
+        reasons.append("the passage does not speak of liquidity, cash or credit lines")
+
+    polarity_ok, polarity_reason = liquidity_polarity_ok(quote, st.status)
+    checks["polarity_match"] = polarity_ok
+    if polarity_reason:
+        reasons.append(polarity_reason)
+
+    entity_ok, entity_reason = _entity_check(quote, issuer_names, scales)
+    checks["entity_match"] = entity_ok
+    if entity_reason:
+        reasons.append(entity_reason)
+
+    temporal_ok, temporal_reason = _temporal_check(quote, document_date, st.period)
+    checks["temporal_consistency"] = temporal_ok
+    if temporal_reason:
+        reasons.append(temporal_reason)
+
+    segment = _segment_named(st.metric_label or "", quote, segments or [])
+    checks["scope_match"] = segment is None
+    if segment is not None:
+        reasons.append(
+            f"OUT_OF_SCOPE_SEGMENT: {segment} is a segment of the issuer, liquidity is read at "
+            "Group level or for the principal division"
+        )
+
+    status = "VALID" if all(checks.values()) else "INVALID"
+    return ValidationResult(
+        status=status, checks=checks, reasons=reasons, match_kind=kind, match_score=score,
+        matched_start=m_start, matched_end=m_end,
+    )  # fmt: skip
+
+
 def validate_statement(
     st: GuidanceStatement,
     doc: RawDocument,
@@ -196,34 +344,15 @@ def validate_statement(
     if not attached:
         reasons.append("numbers are not in the sentence that names the metric")
 
-    entity_ok = True
-    sc = scales or _default_scales()
-    others = [e for e in find_named_entities(quote, sc) if not _matches_issuer(e[0], issuer_names)]
-    if others and not _issuer_named(quote, issuer_names, [(e[1], e[2]) for e in others]):
-        entity_ok = False
-        reasons.append(f"quote is about another entity: {others[0][0]}")
+    entity_ok, entity_reason = _entity_check(quote, issuer_names, scales)
     checks["entity_match"] = entity_ok
+    if entity_reason:
+        reasons.append(entity_reason)
 
-    temporal_ok = True
-    if document_date is not None:
-        for found, _, _ in find_dates(quote):
-            if found > document_date + timedelta(days=FUTURE_TOLERANCE_DAYS):
-                temporal_ok = False
-                reasons.append(f"quote dated {found.isoformat()}, after the document date")
-                break
-        if st.period:
-            years = [int(y) for y in re.findall(r"\b(20\d\d)\b", st.period)]
-            if years and not all(
-                document_date.year - PERIOD_PAST_YEARS
-                <= y
-                <= document_date.year + PERIOD_FUTURE_YEARS
-                for y in years
-            ):
-                temporal_ok = False
-                reasons.append(
-                    f"period {st.period!r} is not a plausible guidance period for {document_date.isoformat()}"  # noqa: E501
-                )
+    temporal_ok, temporal_reason = _temporal_check(quote, document_date, st.period)
     checks["temporal_consistency"] = temporal_ok
+    if temporal_reason:
+        reasons.append(temporal_reason)
 
     segment = _segment_named(st.metric_label, quote, segments or [])
     checks["scope_match"] = segment is None

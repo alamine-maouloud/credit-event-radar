@@ -340,6 +340,7 @@ EVENTS_OPTION = typer.Option(
 ISSUER_OPTION = typer.Option(None, "--issuer", help="Restrict to one issuer id")
 DOC_OPTION = typer.Option(None, "--doc", help="Restrict to one document id")
 EVENT_OPTION = typer.Option(None, "--event", help="Restrict to one event id")
+KIND_OPTION = typer.Option("guidance", "--kind", help="Extraction kind: guidance | liquidity")
 GOLD_OPTION = typer.Option(GOLD_V1, "--gold", help="Frozen gold JSONL")
 RUN_OPTION = typer.Option(..., "--run", help="Run directory written by llm-extract")
 
@@ -348,6 +349,7 @@ RUN_OPTION = typer.Option(..., "--run", help="Run directory written by llm-extra
 def llm_extract(
     out: Path | None = OUT_OPTION,
     events: bool = EVENTS_OPTION,
+    kind: str = KIND_OPTION,
     issuer: str | None = ISSUER_OPTION,
     doc: str | None = DOC_OPTION,
     gold: Path = GOLD_OPTION,
@@ -394,18 +396,23 @@ def llm_extract(
 
         if dry_run:
             raise typer.BadParameter("--dry-run applies to the benchmark mode only")
+        from radar.enrich.extract import KINDS
+
+        if kind not in KINDS:
+            raise typer.BadParameter(f"unknown kind {kind!r}, expected one of {sorted(KINDS)}")
         result = extract_events(
             database,
             load_universe(),
             provider=provider,
             cache=LLMCache(database),
             budget=budget,
-            prompt=load_prompt(ROOT / "prompts" / "extraction" / "guidance.v1.yaml"),
+            prompt=load_prompt(ROOT / "prompts" / "extraction" / f"{kind}.v1.yaml"),
             model_id=role.model,
             reasoning_effort=role.reasoning_effort,
             temperature=role.temperature,
             issuer_id=issuer,
             doc_id=doc,
+            kind=kind,
         )
         typer.echo(
             f"{result.documents} document(s): {result.calls} call(s), {result.cached} cached, "

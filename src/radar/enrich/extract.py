@@ -13,14 +13,43 @@ from radar.llm.cache import LLMCache
 from radar.llm.compute import compute_guidance_change
 from radar.llm.prompts import Prompt
 from radar.llm.provider import LLMProvider
-from radar.llm.requests import DEFAULT_MAX_OUTPUT_TOKENS, build_guidance_request
+from radar.llm.requests import DEFAULT_MAX_OUTPUT_TOKENS, build_extraction_request
 from radar.llm.runner import run_extraction
-from radar.llm.schemas import GUIDANCE_SCHEMA_VERSION, GuidanceExtraction
-from radar.llm.validate import validate_statement
+from radar.llm.schemas import (
+    GUIDANCE_SCHEMA_VERSION,
+    LIQUIDITY_SCHEMA_VERSION,
+    GuidanceExtraction,
+    LiquidityExtraction,
+    guidance_json_schema,
+    liquidity_json_schema,
+)
+from radar.llm.validate import validate_liquidity_statement, validate_statement
 from radar.pipeline import issuer_names
 from radar.snapshot import sha256_hex
 
 EXTRACTOR_VERSION = "llm-guidance-1.0"
+
+# One extraction kind = one schema, one prompt, one validator, one cache namespace.
+KINDS: dict[str, dict] = {
+    "guidance": {
+        "model": GuidanceExtraction,
+        "schema_name": "GuidanceExtraction",
+        "json_schema": guidance_json_schema,
+        "schema_version": GUIDANCE_SCHEMA_VERSION,
+        "extractor_version": "llm-guidance-1.0",
+        "validate": validate_statement,
+        "change": compute_guidance_change,
+    },
+    "liquidity": {
+        "model": LiquidityExtraction,
+        "schema_name": "LiquidityExtraction",
+        "json_schema": liquidity_json_schema,
+        "schema_version": LIQUIDITY_SCHEMA_VERSION,
+        "extractor_version": "llm-liquidity-1.0",
+        "validate": validate_liquidity_statement,
+        "change": None,
+    },
+}
 
 
 @dataclass
@@ -48,8 +77,11 @@ def extract_events(
     max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
     issuer_id: str | None = None,
     doc_id: str | None = None,
-    extractor_version: str = EXTRACTOR_VERSION,
+    kind: str = "guidance",
+    extractor_version: str | None = None,
 ) -> ExtractSummary:
+    spec = KINDS[kind]
+    extractor_version = extractor_version or spec["extractor_version"]
     issuers = {i.id: i for i in universe.issuers}
     summary = ExtractSummary()
     seen: set[str] = set()
@@ -69,11 +101,13 @@ def extract_events(
             document_date = event.effective_date or (
                 doc.published_at.date() if doc.published_at else None
             )
-            request = build_guidance_request(
+            request = build_extraction_request(
                 doc,
                 issuer.name,
                 document_date.isoformat() if document_date else "unknown",
                 prompt,
+                schema_name=spec["schema_name"],
+                json_schema=spec["json_schema"](),
                 model_id=model_id,
                 temperature=temperature,
                 reasoning_effort=reasoning_effort,
@@ -82,7 +116,7 @@ def extract_events(
             result = run_extraction(
                 db,
                 request,
-                GuidanceExtraction,
+                spec["model"],
                 provider=provider,
                 cache=cache,
                 budget=budget,
@@ -91,6 +125,7 @@ def extract_events(
                 prompt_version=prompt.version,
                 doc_id=doc.doc_id,
                 event_id=event.event_id,
+                schema_version=spec["schema_version"],
             )
             summary.calls += result.status == "ok"
             summary.cached += result.status == "cached"
@@ -98,13 +133,14 @@ def extract_events(
             if result.parsed is None:
                 summary.skipped.append((doc.doc_id, result.status, result.error))
                 continue
-            parsed: GuidanceExtraction = result.parsed
+            parsed = result.parsed
             names = issuer_names(issuer)
             rows = []
             for index, st in enumerate(parsed.statements):
-                validation = validate_statement(
+                validation = spec["validate"](
                     st, doc, names, document_date=document_date, segments=issuer.segments
                 )
+                change = asdict(spec["change"](st)) if spec["change"] else {}
                 rows.append(
                     {
                         "statement_id": sha256_hex(f"{result.cache_key}:{index}"),
@@ -117,11 +153,12 @@ def extract_events(
                         if result.response
                         else None,
                         "prompt_version": prompt.version,
-                        "schema_version": GUIDANCE_SCHEMA_VERSION,
+                        "schema_version": spec["schema_version"],
                         "statement_json": st.model_dump(),
                         "validation_json": validation.model_dump(),
-                        "change_json": asdict(compute_guidance_change(st)),
+                        "change_json": change,
                         "validation_status": validation.status,
+                        "statement_kind": kind,
                     }
                 )
             db.insert_statements(rows)
@@ -138,7 +175,7 @@ def extract_events(
                     cost_usd=result.cost_usd,
                     status="ok",
                     message=(
-                        f"{result.status}: {len(rows)} statement(s), {n_valid} valid, "
+                        f"{kind} {result.status}: {len(rows)} statement(s), {n_valid} valid, "
                         f"events untouched"
                     ),
                 )
