@@ -246,3 +246,88 @@ extractor (structured, structured-earnings-1.1)", "Enriched by: validated LLM st
 (gpt-5.6-terra, prompt 1.1.0, schema guidance-1.0, 1 statement applied, 5 recorded)" and
 "Priority decided by: deterministic rules engine (rules.yaml 1.5)", with the LLM evidence
 span quoted from the document at its verified offsets.
+
+## Liquidity gold set V1 (Phase 3.4a, 2026-10-06)
+
+Frozen set eval/gold/liquidity_v1.jsonl, lock 051341a0: 20 documents, 15 dev and 5
+holdout, 52 statements of which 18 negative, 9 ineligible passages (agency reports,
+subsidiary instruments, investment policy), 3 documents that must carry the flag (GoPro,
+Microvast and Chicago Rivet 10-Q filings of 2026, private fixtures). Prompt
+extraction.liquidity 1.0.0, schema liquidity-1.0, reasoning effort low for both models.
+
+Four results are kept, two per model: the raw run and the same cached answers re-scored
+under the validator corrected after the Terra run (credit facilities and lines count as the
+liquidity topic; a statement found in an agency report is THIRD_PARTY_DOCUMENT). Both
+corrections were motivated by dev documents only (OMV debt page, DBRS report).
+
+| Metric | Terra raw | Sol raw | Terra revalidated | Sol revalidated |
+|---|---|---|---|---|
+| [dev] documents | 15 | 15 | 15 | 15 |
+| [dev] statements gold / proposed / valid / matched | 41 / 54 / 38 / 25 | 41 / 76 / 41 / 28 | 41 / 54 / 38 / 26 | 41 / 76 / 38 / 29 |
+| [dev] statement precision (valid) | 0.658 | 0.683 | 0.684 | 0.763 |
+| [dev] statement recall | 0.610 | 0.683 | 0.634 | 0.707 |
+| [dev] status accuracy on matched | 0.760 | 0.857 | 0.769 | 0.862 |
+| [dev] negative statements gold / valid / matched | 18 / 13 / 8 | 18 / 19 / 13 | 18 / 13 / 8 | 18 / 19 / 13 |
+| [dev] negative statement precision | 0.615 | 0.684 | 0.615 | 0.684 |
+| [dev] negative statement recall | 0.444 | 0.722 | 0.444 | 0.722 |
+| [dev] document flag precision | 1.000 | 1.000 | 1.000 | 1.000 |
+| [dev] document flag recall | 1.000 | 1.000 | 1.000 | 1.000 |
+| [dev] false flag rate on documents without flag | 0.000 (of 12) | 0.000 (of 12) | 0.000 (of 12) | 0.000 (of 12) |
+| [dev] ineligible passages proposed as valid | 3 | 3 | 0 | 0 |
+| [holdout] documents | 5 | 5 | 5 | 5 |
+| [holdout] statements gold / proposed / valid / matched | 11 / 16 / 7 / 7 | 11 / 14 / 8 / 7 | 11 / 16 / 7 / 7 | 11 / 14 / 8 / 7 |
+| [holdout] statement precision (valid) | 1.000 | 0.875 | 1.000 | 0.875 |
+| [holdout] statement recall | 0.636 | 0.636 | 0.636 | 0.636 |
+| [holdout] status accuracy on matched | 0.571 | 0.429 | 0.571 | 0.429 |
+| [holdout] negative statements gold / valid / matched | 0 / 0 / 0 | 0 / 1 / 0 | 0 / 0 / 0 | 0 / 1 / 0 |
+| [holdout] negative statement precision | n/a | 0.000 | n/a | 0.000 |
+| [holdout] negative statement recall | n/a | n/a | n/a | n/a |
+| [holdout] document flag precision | n/a | 0.000 | n/a | 0.000 |
+| [holdout] document flag recall | n/a | n/a | n/a | n/a |
+| [holdout] false flag rate on documents without flag | 0.000 (of 5) | 0.200 (of 5) | 0.000 (of 5) | 0.200 (of 5) |
+| [holdout] ineligible passages proposed as valid | 0 | 0 | 0 | 0 |
+| cost USD | 0.96 | 1.82 | 0.00 | 0.00 |
+
+### Reading
+
+- Document flag, the output that feeds ERN-01: both models find the three stress cases
+  and flag none of the 12 dev documents without a flag. On the holdout Terra flags nothing;
+  Sol flags Harley-Davidson once, on a generic risk factor ("its liquidity could be
+  adversely impacted by changes in tariffs, inflation, work stoppages ...") read as concern
+  where the gold says mentioned. The validator accepts it because the wording holds a
+  negative marker; whether a generic forward-looking risk factor is a worry is exactly the
+  judgment the benchmark measures, and it is not encoded in code.
+- Negative statements: Sol finds 13 of the 18 (recall 0.72) against 8 for Terra (0.44).
+  Terra misses the "we" variants of the GoPro note and most Microvast risk sentences.
+- Statement precision is understated for both models by omissions of gold V1: several
+  validated negative predictions are true worries that the labels do not carry ("our
+  projected cash flow may not be sufficient to fund operations and meet debt obligations
+  over the next twelve months", "certain elements of these plans have not been fully
+  implemented"). They count against precision here; a gold V2 should add them. The gold is
+  not edited.
+- Status accuracy: the main disagreement is a labeling convention. Both models read
+  "continues to pursue its objective of maintaining a solid financing and liquidity policy"
+  as stable where the guide says mentioned (five occurrences); the models' reading is
+  defensible.
+- The corrected validator removes the three DBRS passages accepted as the issuer's
+  statements (ineligible proposed 3 to 0 for both) and recovers the OMV credit facilities
+  sentence; nothing else moves, which is what a guardrail should do.
+- Cost: Terra 0.96 USD, Sol 1.82 USD for the same 20 documents.
+
+### Transparency on the holdout
+
+The two post-run validator corrections come from dev documents, so the five holdout
+documents remain unseen for them. One reserve: before the freeze, a sentence of the
+Harley-Davidson 10-Q ("believes its current cash ... are sufficient to meet its liquidity
+requirements") was used in a unit test as a positive example that must reject a negative
+status. No rule was derived from it, but that document is not strictly never seen. A
+holdout V2 of five documents never read, selected without any later change to prompt,
+schema or validator, is the final blind test to run before Phase 3.4a is closed.
+
+### Decision proposal
+
+For the flag that reaches the rules, Terra plus the deterministic guardrails gives the same
+three true positives and no false positive on 17 documents, at half the price; Sol reads
+more of the individual negative sentences and sets one false flag on a generic risk factor.
+Terra stays the default extraction backend for liquidity as for guidance, Sol the
+challenger; the conclusion holds for this V1 set and its three stress cases only.
