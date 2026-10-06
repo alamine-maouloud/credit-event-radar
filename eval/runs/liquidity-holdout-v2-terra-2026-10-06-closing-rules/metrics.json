@@ -1,0 +1,113 @@
+{
+  "dev": {
+    "documents": 0,
+    "statements": {
+      "gold": 0,
+      "predicted": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null,
+      "status_accuracy": null
+    },
+    "negative_statements": {
+      "gold": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null
+    },
+    "document_flag": {
+      "gold_true": 0,
+      "predicted_true": 0,
+      "true_positives": 0,
+      "precision": null,
+      "recall": null,
+      "false_positive_rate_on_negative_docs": null,
+      "negative_docs": 0
+    },
+    "ineligible_proposed": 0,
+    "rejections": {}
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 24,
+      "predicted": 40,
+      "predicted_valid": 26,
+      "matched": 11,
+      "precision": 0.4230769230769231,
+      "recall": 0.4583333333333333,
+      "status_accuracy": 0.8181818181818182
+    },
+    "negative_statements": {
+      "gold": 6,
+      "predicted_valid": 6,
+      "matched": 3,
+      "precision": 0.5,
+      "recall": 0.5
+    },
+    "document_flag": {
+      "gold_true": 2,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 3
+    },
+    "ineligible_proposed": 3,
+    "rejections": {
+      "the passage does not speak of liquidity, cash or credit lines": 6,
+      "POLARITY_MISMATCH": 5,
+      "quote dated 2026-07-01, after the document date": 1,
+      "numbers not in the quote": 1,
+      "unit USD_BN not supported by the quote": 1,
+      "unit USD_MN not supported by the quote": 2,
+      "quote is about another entity": 1
+    }
+  },
+  "all": {
+    "documents": 5,
+    "statements": {
+      "gold": 24,
+      "predicted": 40,
+      "predicted_valid": 26,
+      "matched": 11,
+      "precision": 0.4230769230769231,
+      "recall": 0.4583333333333333,
+      "status_accuracy": 0.8181818181818182
+    },
+    "negative_statements": {
+      "gold": 6,
+      "predicted_valid": 6,
+      "matched": 3,
+      "precision": 0.5,
+      "recall": 0.5
+    },
+    "document_flag": {
+      "gold_true": 2,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 3
+    },
+    "ineligible_proposed": 3,
+    "rejections": {
+      "the passage does not speak of liquidity, cash or credit lines": 6,
+      "POLARITY_MISMATCH": 5,
+      "quote dated 2026-07-01, after the document date": 1,
+      "numbers not in the quote": 1,
+      "unit USD_BN not supported by the quote": 1,
+      "unit USD_MN not supported by the quote": 2,
+      "quote is about another entity": 1
+    }
+  },
+  "cost": {
+    "total_usd": 0.0,
+    "input_tokens": 300710,
+    "output_tokens": 9448
+  }
+}

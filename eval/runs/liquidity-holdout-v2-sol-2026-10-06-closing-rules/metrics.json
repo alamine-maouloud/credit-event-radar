@@ -1,0 +1,119 @@
+{
+  "dev": {
+    "documents": 0,
+    "statements": {
+      "gold": 0,
+      "predicted": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null,
+      "status_accuracy": null
+    },
+    "negative_statements": {
+      "gold": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null
+    },
+    "document_flag": {
+      "gold_true": 0,
+      "predicted_true": 0,
+      "true_positives": 0,
+      "precision": null,
+      "recall": null,
+      "false_positive_rate_on_negative_docs": null,
+      "negative_docs": 0
+    },
+    "ineligible_proposed": 0,
+    "rejections": {}
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 24,
+      "predicted": 52,
+      "predicted_valid": 26,
+      "matched": 13,
+      "precision": 0.5,
+      "recall": 0.5416666666666666,
+      "status_accuracy": 0.8461538461538461
+    },
+    "negative_statements": {
+      "gold": 6,
+      "predicted_valid": 8,
+      "matched": 4,
+      "precision": 0.5,
+      "recall": 0.6666666666666666
+    },
+    "document_flag": {
+      "gold_true": 2,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 3
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "numbers not in the quote": 4,
+      "unit USD_MN not supported by the quote": 6,
+      "the passage does not speak of liquidity, cash or credit lines": 7,
+      "OUT_OF_SCOPE_SEGMENT": 4,
+      "POLARITY_MISMATCH": 7,
+      "quote dated 2026-07-01, after the document date": 2,
+      "unit USD_BN not supported by the quote": 2,
+      "metric label 'unused worldwide lines of credit' not in the quote": 1,
+      "quote is about another entity": 1,
+      "metric label 'minimum aggregate liquidity covenant' not in the quote": 1
+    }
+  },
+  "all": {
+    "documents": 5,
+    "statements": {
+      "gold": 24,
+      "predicted": 52,
+      "predicted_valid": 26,
+      "matched": 13,
+      "precision": 0.5,
+      "recall": 0.5416666666666666,
+      "status_accuracy": 0.8461538461538461
+    },
+    "negative_statements": {
+      "gold": 6,
+      "predicted_valid": 8,
+      "matched": 4,
+      "precision": 0.5,
+      "recall": 0.6666666666666666
+    },
+    "document_flag": {
+      "gold_true": 2,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 3
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "numbers not in the quote": 4,
+      "unit USD_MN not supported by the quote": 6,
+      "the passage does not speak of liquidity, cash or credit lines": 7,
+      "OUT_OF_SCOPE_SEGMENT": 4,
+      "POLARITY_MISMATCH": 7,
+      "quote dated 2026-07-01, after the document date": 2,
+      "unit USD_BN not supported by the quote": 2,
+      "metric label 'unused worldwide lines of credit' not in the quote": 1,
+      "quote is about another entity": 1,
+      "metric label 'minimum aggregate liquidity covenant' not in the quote": 1
+    }
+  },
+  "cost": {
+    "total_usd": 0.0,
+    "input_tokens": 300710,
+    "output_tokens": 9810
+  }
+}

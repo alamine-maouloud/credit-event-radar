@@ -1,0 +1,119 @@
+{
+  "dev": {
+    "documents": 15,
+    "statements": {
+      "gold": 41,
+      "predicted": 76,
+      "predicted_valid": 36,
+      "matched": 27,
+      "precision": 0.75,
+      "recall": 0.6585365853658537,
+      "status_accuracy": 0.8888888888888888
+    },
+    "negative_statements": {
+      "gold": 18,
+      "predicted_valid": 17,
+      "matched": 11,
+      "precision": 0.6470588235294118,
+      "recall": 0.6111111111111112
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 3,
+      "true_positives": 3,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 12
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "POLARITY_MISMATCH": 10,
+      "the passage does not speak of liquidity, cash or credit lines": 23,
+      "quote dated 2026-06-30, after the document date": 2,
+      "numbers not in the quote": 6,
+      "unit USD_MN not supported by the quote": 5,
+      "unit EUR_MN not supported by the quote": 2,
+      "THIRD_PARTY_DOCUMENT": 5
+    }
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 11,
+      "predicted": 14,
+      "predicted_valid": 7,
+      "matched": 6,
+      "precision": 0.8571428571428571,
+      "recall": 0.5454545454545454,
+      "status_accuracy": 0.5
+    },
+    "negative_statements": {
+      "gold": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null
+    },
+    "document_flag": {
+      "gold_true": 0,
+      "predicted_true": 0,
+      "true_positives": 0,
+      "precision": null,
+      "recall": null,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 5
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "unit EUR_MN not supported by the quote": 2,
+      "POLARITY_MISMATCH": 4,
+      "numbers not in the quote": 1,
+      "unit USD_MN not supported by the quote": 1,
+      "the passage does not speak of liquidity, cash or credit lines": 1
+    }
+  },
+  "all": {
+    "documents": 20,
+    "statements": {
+      "gold": 52,
+      "predicted": 90,
+      "predicted_valid": 43,
+      "matched": 33,
+      "precision": 0.7674418604651163,
+      "recall": 0.6346153846153846,
+      "status_accuracy": 0.8181818181818182
+    },
+    "negative_statements": {
+      "gold": 18,
+      "predicted_valid": 17,
+      "matched": 11,
+      "precision": 0.6470588235294118,
+      "recall": 0.6111111111111112
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 3,
+      "true_positives": 3,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 17
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "POLARITY_MISMATCH": 14,
+      "the passage does not speak of liquidity, cash or credit lines": 24,
+      "quote dated 2026-06-30, after the document date": 2,
+      "numbers not in the quote": 7,
+      "unit USD_MN not supported by the quote": 6,
+      "unit EUR_MN not supported by the quote": 4,
+      "THIRD_PARTY_DOCUMENT": 5
+    }
+  },
+  "cost": {
+    "total_usd": 0.0,
+    "input_tokens": 306644,
+    "output_tokens": 29593
+  }
+}
