@@ -1,0 +1,33 @@
+{
+  "run_id": "sol-full-2026-10-06-current-rules-1.5",
+  "started_at": "2026-10-06T18:36:52.123372+00:00",
+  "finished_at": "2026-10-06T18:36:53.416067+00:00",
+  "provider": "openai",
+  "model_id": "gpt-5.6-sol",
+  "resolved_models": [
+    "gpt-5.6-sol"
+  ],
+  "reasoning_effort": "low",
+  "temperature": 0.0,
+  "max_output_tokens": 32768,
+  "prompt_id": "extraction.guidance",
+  "prompt_version": "1.1.0",
+  "prompt_content_hash": "e29ce3ad82a3251742460ce08f979a51a5245611d693281e5a58e9af21a3ddd4",
+  "schema_version": "guidance-1.0",
+  "extractor_version": "llm-guidance-1.0",
+  "gold_path": "/Users/al-aminemaouloud/credit-event-radar/eval/gold/guidance_v1.jsonl",
+  "gold_labels_sha256": "ef8d82413ae45fd96ae997e573e00dda65ce142326ccf48c1cb1bab5758e1553",
+  "gold_lock_sha256": "ee2670bd9af39275dae96b519934848118582ed194c9c0fe7a37abeb1fe0d283",
+  "n_documents": 30,
+  "statuses": {
+    "cached": 30
+  },
+  "total_cost_usd": 0.0,
+  "estimated_cost_usd": 21.08642,
+  "budget_limit_usd": 10.0,
+  "budget_remaining_usd": 10.0,
+  "input_tokens": 266282,
+  "output_tokens": 44773,
+  "dry_run": false,
+  "limit": null
+}

@@ -189,3 +189,35 @@ Decision (Phase 3.3, validated 2026-10-06): gpt-5.6-terra with the deterministic
 is the default backend for guidance extraction, gpt-5.6-sol the reference and challenger
 model for evaluation. This holds for gold set V1, 30 documents of three issuers, and is not
 a universal conclusion: a new issuer, document type or gold version reopens it.
+
+## Performance under the current code (validator and rules 1.5, re-scored from the cache)
+
+The runs above are the performance at the time of the benchmark and stay untouched. Since
+then the validator changed twice (a statement without numbers no longer needs a unit token,
+and the scope guard) and rules.yaml moved to 1.5. The same cached answers re-scored under
+the current code, zero cost, are the runs suffixed current-rules-1.5:
+
+| Metric | terra-full-2026-10-06-guarded (gpt-5.6-terra) | terra-full-2026-10-06-current-rules-1.5 (gpt-5.6-terra) | sol-full-2026-10-06-guarded (gpt-5.6-sol) | sol-full-2026-10-06-current-rules-1.5 (gpt-5.6-sol) |
+|---|---|---|---|---|
+| Gold occurrences found | 55/57 | 56/57 | 56/57 | 57/57 |
+| Recall (occurrences) | 0.965 | 0.982 | 0.982 | 1.000 |
+| Precision on validated statements | 1.000 | 0.982 | 1.000 | 0.983 |
+| Precision on all statements | 0.724 | 0.737 | 0.949 | 0.966 |
+| Documents with the correct behaviour | 29/30 | 29/30 | 29/30 | 29/30 |
+| No-guidance documents with a false guidance | 0/9 | 0/9 | 0/9 | 0/9 |
+| Statements proposed | 76 | 76 | 59 | 59 |
+| Supported (validated and in the gold) | 55 | 56 | 56 | 57 |
+| Scope violations (valid quote, outside the gold scope) | 0 | 1 | 0 | 1 |
+| Scope violations rejected by the guard | 12 | 12 | 0 | 0 |
+| Field inconsistencies (numbers, unit or metric not in the quote) | 8 | 6 | 3 | 1 |
+| Span failures (quote not in the document) | 1 | 1 | 0 | 0 |
+| Ungrounded (other entity or impossible date) | 0 | 0 | 0 | 0 |
+| Cost USD | 0.00 | 0.00 | 0.00 | 0.00 |
+| Mean latency s | n/a | n/a | n/a | n/a |
+
+What moved: the two "in line with the previous year" statements the models had given a EUR
+unit are now accepted, since a statement without a number has no unit to support. The VW
+Q3 2025 one matches its gold occurrence (recall 56/57 for Terra, 57/57 for Sol); the
+TRATON H1 2026 one is a mention of net cash flow the gold did not label, counted as a scope
+violation on both models (one each). Gold V1 stays as frozen; whether that mention belongs
+in the gold is a question for a V2, not an edit.
