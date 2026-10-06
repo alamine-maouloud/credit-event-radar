@@ -1,0 +1,105 @@
+{
+  "dev": {
+    "documents": 0,
+    "statements": {
+      "gold": 0,
+      "predicted": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null,
+      "status_accuracy": null
+    },
+    "negative_statements": {
+      "gold": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null
+    },
+    "document_flag": {
+      "gold_true": 0,
+      "predicted_true": 0,
+      "true_positives": 0,
+      "precision": null,
+      "recall": null,
+      "false_positive_rate_on_negative_docs": null,
+      "negative_docs": 0
+    },
+    "ineligible_proposed": 0,
+    "rejections": {}
+  },
+  "holdout": {
+    "documents": 1,
+    "statements": {
+      "gold": 26,
+      "predicted": 10,
+      "predicted_valid": 7,
+      "matched": 2,
+      "precision": 0.2857142857142857,
+      "recall": 0.07692307692307693,
+      "status_accuracy": 0.5
+    },
+    "negative_statements": {
+      "gold": 2,
+      "predicted_valid": 3,
+      "matched": 1,
+      "precision": 0.3333333333333333,
+      "recall": 0.5
+    },
+    "document_flag": {
+      "gold_true": 1,
+      "predicted_true": 1,
+      "true_positives": 1,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": null,
+      "negative_docs": 0
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "numbers not in the quote": 1,
+      "unit USD_MN not supported by the quote": 1,
+      "POLARITY_MISMATCH": 2
+    }
+  },
+  "all": {
+    "documents": 1,
+    "statements": {
+      "gold": 26,
+      "predicted": 10,
+      "predicted_valid": 7,
+      "matched": 2,
+      "precision": 0.2857142857142857,
+      "recall": 0.07692307692307693,
+      "status_accuracy": 0.5
+    },
+    "negative_statements": {
+      "gold": 2,
+      "predicted_valid": 3,
+      "matched": 1,
+      "precision": 0.3333333333333333,
+      "recall": 0.5
+    },
+    "document_flag": {
+      "gold_true": 1,
+      "predicted_true": 1,
+      "true_positives": 1,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": null,
+      "negative_docs": 0
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "numbers not in the quote": 1,
+      "unit USD_MN not supported by the quote": 1,
+      "POLARITY_MISMATCH": 2
+    }
+  },
+  "cost": {
+    "total_usd": 0.175848,
+    "input_tokens": 33267,
+    "output_tokens": 2139
+  }
+}
