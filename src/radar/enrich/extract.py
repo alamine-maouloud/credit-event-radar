@@ -18,17 +18,21 @@ from radar.llm.requests import DEFAULT_MAX_OUTPUT_TOKENS, build_extraction_reque
 from radar.llm.runner import run_extraction
 from radar.llm.schemas import (
     COVENANT_SCHEMA_VERSION,
+    GOING_CONCERN_SCHEMA_VERSION,
     GUIDANCE_SCHEMA_VERSION,
     LIQUIDITY_SCHEMA_VERSION,
     CovenantExtraction,
+    GoingConcernExtraction,
     GuidanceExtraction,
     LiquidityExtraction,
     covenant_json_schema,
+    going_concern_json_schema,
     guidance_json_schema,
     liquidity_json_schema,
 )
 from radar.llm.validate import (
     validate_covenant_statement,
+    validate_going_concern_statement,
     validate_liquidity_statement,
     validate_statement,
 )
@@ -64,6 +68,15 @@ KINDS: dict[str, dict] = {
         "schema_version": COVENANT_SCHEMA_VERSION,
         "extractor_version": "llm-covenant-1.0",
         "validate": validate_covenant_statement,
+        "change": None,
+    },
+    "going_concern": {
+        "model": GoingConcernExtraction,
+        "schema_name": "GoingConcernExtraction",
+        "json_schema": going_concern_json_schema,
+        "schema_version": GOING_CONCERN_SCHEMA_VERSION,
+        "extractor_version": "llm-going-concern-1.0",
+        "validate": validate_going_concern_statement,
         "change": None,
     },
 }

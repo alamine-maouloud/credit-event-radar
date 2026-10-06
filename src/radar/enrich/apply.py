@@ -276,6 +276,8 @@ def _span_field(row: dict[str, Any]) -> str:
     if kind == "covenant":
         resolution = st.get("resolution") or "none"
         return "flag:covenant" + (f" (resolution {resolution})" if resolution != "none" else "")
+    if kind == "going_concern" and st.get("status") != "doubt":
+        return f"flag:going_concern ({st.get('status')}, no flag)"
     return f"flag:{kind}"
 
 

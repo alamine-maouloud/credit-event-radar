@@ -125,6 +125,38 @@ class CovenantExtraction(BaseModel):
     statements: list[CovenantStatement] = Field(default_factory=list)
 
 
+GOING_CONCERN_SCHEMA_VERSION = "going_concern-1.0"
+GoingConcernStatus = Literal["doubt", "alleviated", "negated", "mentioned"]
+
+
+class GoingConcernStatement(BaseModel):
+    """One statement of the issuer about its ability to continue as a going concern
+    (Phase 3.4c): a doubt stated, a doubt alleviated by management's plans, a doubt denied,
+    or the going concern named without an assessment. The code alone decides what follows."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    risk_type: Literal["going_concern"]
+    status: GoingConcernStatus
+    period: str | None = None
+    evidence_quote: str = Field(min_length=1)
+    start_offset: int = Field(ge=0)
+    end_offset: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _offsets(self) -> GoingConcernStatement:
+        if self.end_offset <= self.start_offset:
+            raise ValueError("end_offset must be greater than start_offset")
+        return self
+
+
+class GoingConcernExtraction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    has_going_concern_statements: bool
+    statements: list[GoingConcernStatement] = Field(default_factory=list)
+
+
 def _close(schema: dict[str, Any]) -> None:
     """OpenAI strict mode needs every object closed and every property required."""
     if schema.get("type") == "object" or "properties" in schema:
@@ -159,5 +191,11 @@ def liquidity_json_schema() -> dict[str, Any]:
 
 def covenant_json_schema() -> dict[str, Any]:
     schema = CovenantExtraction.model_json_schema()
+    _close(schema)
+    return schema
+
+
+def going_concern_json_schema() -> dict[str, Any]:
+    schema = GoingConcernExtraction.model_json_schema()
     _close(schema)
     return schema

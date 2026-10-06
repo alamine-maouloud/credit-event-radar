@@ -1,5 +1,5 @@
-"""Flag families (liquidity, covenant): from validated statements to one flag decision, in
-code only. The model qualifies each passage, the validator has rejected what the words do
+"""Flag families (liquidity, covenant, going concern): from validated statements to one flag
+decision, in code only. The model qualifies each passage, the validator has rejected what the words do
 not support, and here the flag follows one rule: at least one VALID statement with a
 negative status at Group level. Every statement is kept for the audit.
 """
@@ -12,6 +12,8 @@ from typing import Any
 FAMILIES: dict[str, dict[str, Any]] = {
     "liquidity": {"flag": "liquidity", "negative": frozenset({"deteriorated", "concern"})},
     "covenant": {"flag": "covenant", "negative": frozenset({"breached"})},
+    # an alleviated doubt is recorded (the history of the doubt is kept) and never a flag
+    "going_concern": {"flag": "going_concern", "negative": frozenset({"doubt"})},
 }
 
 
@@ -47,7 +49,7 @@ def build_flag_enrichment(rows: list[dict[str, Any]], family: str) -> FlagEnrich
                 "value": st.get("value"),
                 "unit": st.get("unit"),
             }
-        else:
+        elif family == "covenant":
             summary |= {
                 "resolution": st.get("resolution", "none"),
                 "covenant_label": st.get("covenant_label"),

@@ -1,4 +1,4 @@
-"""Deterministic earnings release classification (structured-earnings-1.1): explicit statements only."""
+"""Deterministic earnings release classification (structured-earnings-1.2): explicit statements only."""
 
 from __future__ import annotations
 
@@ -204,3 +204,41 @@ def test_flags_ignore_sentences_dated_more_than_a_year_before_the_release():
     recent = "As of June 30, 2026, the company was not in compliance with its leverage covenant."
     assert only(f"Results. {old}", published=date(2026, 8, 5)).fields["flags"] == []
     assert only(f"Results. {recent}", published=date(2026, 8, 5)).fields["flags"] == ["covenant"]
+
+
+@pytest.mark.parametrize(
+    "sentence,reason",
+    [
+        # the liquidity lesson applied to the deterministic flag (structured-earnings-1.2):
+        # a hypothetical risk factor is not a doubt stated
+        (
+            "If we are unable to raise additional capital, there could be substantial doubt about our ability to continue as a going concern.",
+            "hypothetical",
+        ),
+        (
+            "Management is required to evaluate whether there are conditions and events that raise substantial doubt about the Company's ability to continue as a going concern.",
+            "hypothetical",
+        ),
+        # plans that alleviate the doubt: the ASC 205-40 conclusion, no current flag
+        (
+            "Management believes its plans alleviate the substantial doubt about the Company's ability to continue as a going concern.",
+            "alleviated",
+        ),
+    ],
+)
+def test_going_concern_flag_skips_hypotheticals_and_alleviated_doubts(sentence, reason):
+    extraction = extract_earnings_events(doc(f"Results. {sentence}", TITLE), "ISSUER_TEST_A")
+    assert extraction.events[0].fields["flags"] == []
+    assert any(s.reason == f"{reason}_flag:going_concern" for s in extraction.skipped)
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "Management's plans may not alleviate the substantial doubt about the Company's ability to continue as a going concern.",
+        "These plans do not alleviate the substantial doubt about the Company's ability to continue as a going concern.",
+        "Management has concluded that there is substantial doubt about our ability to continue as a going concern during the next year.",
+    ],
+)
+def test_going_concern_flag_stays_when_the_doubt_is_not_alleviated(sentence):
+    assert only(f"Results. {sentence}").fields["flags"] == ["going_concern"]

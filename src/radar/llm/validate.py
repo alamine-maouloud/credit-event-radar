@@ -15,10 +15,16 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from rapidfuzz import fuzz
 
+from radar.extract import going_concern as gc
 from radar.extract.dates import find_dates, is_historical
 from radar.extract.spans import iter_sentences
 from radar.extract.structured import _issuer_named, _matches_issuer, find_named_entities
-from radar.llm.schemas import CovenantStatement, GuidanceStatement, LiquidityStatement
+from radar.llm.schemas import (
+    CovenantStatement,
+    GoingConcernStatement,
+    GuidanceStatement,
+    LiquidityStatement,
+)
 from radar.models import RawDocument
 from radar.ratings import RatingScales
 
@@ -570,6 +576,134 @@ def validate_covenant_statement(
     return ValidationResult(
         status=status, checks=checks, reasons=reasons, match_kind=kind, match_score=score,
         matched_start=m_start, matched_end=m_end, salvaged=salvaged,
+    )  # fmt: skip
+
+
+# ----------------------------------------------------------- going concern --- #
+# the wording rules live in radar.extract.going_concern, shared with the deterministic flag
+
+
+def going_concern_status_ok(quote: str, status: str) -> tuple[bool, str | None]:
+    """status against the words of the passage: doubt needs a doubt stated for now (neither
+    negated, hypothetical, described nor alleviated), alleviated needs an effective
+    alleviation of a doubt named in the passage, negated needs a denial; mentioned is never
+    rejected here."""
+    if status == "mentioned":
+        return True, None
+    doubt_in_quote = bool(gc.DOUBT_RE.search(quote))
+    readings = [gc.reading(s.text, doubt_in_quote) for s in iter_sentences(quote)] or [
+        gc.reading(quote, doubt_in_quote)
+    ]
+    stated = any(r["stated"] for r in readings)
+    hypothetical = any(r["hypothetical"] for r in readings)
+    denied = any(r["denied"] for r in readings)
+    alleviated = any(r["alleviated"] for r in readings)
+    if status == "doubt":
+        if alleviated:
+            return False, "STATUS_MISMATCH: the passage says management's plans alleviate the doubt"
+        if stated:
+            return True, None
+        if denied:
+            return (
+                False,
+                "NEGATED_DOUBT: the passage denies the doubt or the impact on the going concern",
+            )
+        if hypothetical:
+            return False, (
+                "HYPOTHETICAL_RISK: a doubt that could arise, or the description of the "
+                "evaluation, is not a doubt stated"
+            )
+        return (
+            False,
+            "STATUS_MISMATCH: no substantial doubt stated for the going concern in the passage",
+        )
+    if status == "alleviated":
+        if alleviated:
+            return True, None
+        return False, (
+            "STATUS_MISMATCH: no alleviation of the doubt stated (plans that may not alleviate "
+            "it leave the doubt)"
+        )
+    if status == "negated":
+        if stated:
+            return False, "STATUS_MISMATCH: the passage states a doubt, negated contradicts it"
+        if denied:
+            return True, None
+        return False, "STATUS_MISMATCH: the passage does not deny the doubt"
+    return True, None
+
+
+def validate_going_concern_statement(
+    st: GoingConcernStatement,
+    doc: RawDocument,
+    issuer_names: list[str],
+    *,
+    document_date: date | None,
+    scales: RatingScales | None = None,
+    segments: list[str] | None = None,
+) -> ValidationResult:
+    checks: dict[str, bool] = {}
+    reasons: list[str] = []
+    quote = st.evidence_quote
+
+    kind, score, m_start, m_end = _span_match(quote, doc.text, st.start_offset, st.end_offset)
+    checks["span_match"] = kind != "none"
+    if kind == "none":
+        reasons.append(f"quote not found in the document (best partial ratio {score:.0f})")
+
+    # "risks could affect our ability to continue operations" is not a going concern
+    # statement: the passage must name the going concern itself
+    checks["going_concern_named"] = bool(gc.TOPIC_RE.search(quote))
+    if not checks["going_concern_named"]:
+        reasons.append("the passage does not speak of the going concern")
+
+    status_ok, status_reason = going_concern_status_ok(quote, st.status)
+    checks["status_match"] = status_ok
+    if status_reason:
+        reasons.append(status_reason)
+
+    checks["historical_reference"] = not (
+        st.status == "doubt" and is_historical(quote, document_date)
+    )
+    if not checks["historical_reference"]:
+        reasons.append(
+            "HISTORICAL_REFERENCE: the doubt is dated more than a year before the document, "
+            "a mention of history, not a current doubt"
+        )
+
+    document_type = (doc.extra or {}).get("document_type") if isinstance(doc.extra, dict) else None
+    checks["issuer_voice"] = document_type != "rating_report"
+    if not checks["issuer_voice"]:
+        reasons.append(
+            "THIRD_PARTY_DOCUMENT: an agency report never carries the issuer's own going "
+            "concern statement"
+        )
+
+    entity_ok, entity_reason = _entity_check(quote, issuer_names, scales)
+    checks["entity_match"] = entity_ok
+    if entity_reason:
+        reasons.append(entity_reason)
+
+    # a going concern assessment looks twelve months ahead by construction (the maturity
+    # of the notes, the end of the assessment horizon): a future date in the passage is
+    # legitimate for every status; the period named by the model is still checked
+    temporal_ok, temporal_reason = _temporal_check("", document_date, st.period)
+    checks["temporal_consistency"] = temporal_ok
+    if temporal_reason:
+        reasons.append(temporal_reason)
+
+    segment = _segment_named("", quote, segments or [])
+    checks["scope_match"] = segment is None
+    if segment is not None:
+        reasons.append(
+            f"OUT_OF_SCOPE_SEGMENT: {segment} is a segment of the issuer, the going concern is "
+            "read at Group level"
+        )
+
+    status = "VALID" if all(checks.values()) else "INVALID"
+    return ValidationResult(
+        status=status, checks=checks, reasons=reasons, match_kind=kind, match_score=score,
+        matched_start=m_start, matched_end=m_end,
     )  # fmt: skip
 
 

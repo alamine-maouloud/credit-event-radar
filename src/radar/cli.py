@@ -346,7 +346,7 @@ ISSUER_OPTION = typer.Option(None, "--issuer", help="Restrict to one issuer id")
 DOC_OPTION = typer.Option(None, "--doc", help="Restrict to one document id")
 EVENT_OPTION = typer.Option(None, "--event", help="Restrict to one event id")
 KIND_OPTION = typer.Option(
-    "guidance", "--kind", help="Extraction kind: guidance | liquidity | covenant"
+    "guidance", "--kind", help="Extraction kind: guidance | liquidity | covenant | going_concern"
 )
 GOLD_OPTION = typer.Option(GOLD_V1, "--gold", help="Frozen gold JSONL")
 RUN_OPTION = typer.Option(..., "--run", help="Run directory written by llm-extract")
@@ -388,8 +388,10 @@ def llm_extract(
     settings, selection = _select_model(kind, alternative, challenger)
     role = selection.model
     pricing = load_pricing(ROOT / settings.llm.pricing_file)
-    if kind not in ("guidance", "liquidity", "covenant"):
-        raise typer.BadParameter(f"unknown kind {kind!r}, expected guidance, liquidity or covenant")
+    if kind not in ("guidance", "liquidity", "covenant", "going_concern"):
+        raise typer.BadParameter(
+            f"unknown kind {kind!r}, expected guidance, liquidity, covenant or going_concern"
+        )
     if dry_run:
         budget = RunBudget(limit_usd=1.0, pricing=pricing)
         provider = FakeProvider(name=role.provider, raw_json="{}")
@@ -449,6 +451,10 @@ def llm_extract(
         from radar.eval.covenant import load_covenant_gold
 
         gold_rows = load_covenant_gold(gold)
+    elif kind == "going_concern":
+        from radar.eval.going_concern import load_going_concern_gold
+
+        gold_rows = load_going_concern_gold(gold)
     else:
         gold_rows = load_gold(gold)
     summary = run_benchmark(
@@ -549,14 +555,16 @@ def llm_compare(
     from radar.eval.gold import load_gold
 
     kind = json.loads((runs[0] / "run.json").read_text(encoding="utf-8")).get("kind", "guidance")
-    if kind in ("liquidity", "covenant"):
+    if kind in ("liquidity", "covenant", "going_concern"):
         from radar.eval.flagfamily import compare_family_runs, render_family_markdown
 
+        extra: tuple[str, ...] = ()
         if kind == "liquidity":
             from radar.eval.liquidity import NEGATIVE as negative
             from radar.eval.liquidity import load_liquidity_gold as loader
-
-            extra: tuple[str, ...] = ()
+        elif kind == "going_concern":
+            from radar.eval.going_concern import NEGATIVE as negative
+            from radar.eval.going_concern import load_going_concern_gold as loader
         else:
             from radar.eval.covenant import NEGATIVE as negative
             from radar.eval.covenant import load_covenant_gold as loader

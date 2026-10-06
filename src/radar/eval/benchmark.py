@@ -17,6 +17,7 @@ from radar.config import ROOT, Universe
 from radar.db import Database
 from radar.enrich.extract import KINDS
 from radar.eval.covenant import score_covenant
+from radar.eval.going_concern import score_going_concern
 from radar.eval.gold import GoldDocument, load_gold_document
 from radar.eval.liquidity import score_liquidity
 from radar.eval.metrics import score
@@ -197,7 +198,12 @@ def run_benchmark(
         encoding="utf-8",
     )
     write_results(out_dir, rows)
-    scorers = {"guidance": score, "liquidity": score_liquidity, "covenant": score_covenant}
+    scorers = {
+        "guidance": score,
+        "liquidity": score_liquidity,
+        "covenant": score_covenant,
+        "going_concern": score_going_concern,
+    }
     metrics = scorers[kind](gold_rows, rows)
     statuses: dict[str, int] = {}
     for r in rows:

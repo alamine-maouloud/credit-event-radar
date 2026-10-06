@@ -1,4 +1,4 @@
-"""Deterministic classification of results releases (``structured-earnings-1.1``).
+"""Deterministic classification of results releases (``structured-earnings-1.2``).
 
 A document is a results release when its title (or first line) names a reporting period.
 The event carries only what the text states explicitly: a guidance statement
@@ -13,11 +13,12 @@ import re
 from datetime import date
 
 from radar.extract.dates import is_historical
+from radar.extract.going_concern import doubt_stated_now
 from radar.extract.spans import exact_span, find_quote, iter_sentences
 from radar.extract.structured import Extraction, Skipped, event_id_for
 from radar.models import CreditEvent, EvidenceSpan, RawDocument
 
-EARNINGS_EXTRACTOR_VERSION = "structured-earnings-1.1"
+EARNINGS_EXTRACTOR_VERSION = "structured-earnings-1.2"
 
 _RESULTS_TITLE_RE = re.compile(
     r"(?i)\b(?:(?:first|second|third|fourth)\s+quarter|Q[1-4]|half[- ]year|(?:first|second)\s+half|H[12]\b|nine[- ]months|9M\b|"  # noqa: E501
@@ -171,6 +172,20 @@ def extract_earnings_events(doc: RawDocument, issuer_id: str) -> Extraction:
                     )
                 )
                 continue
+            if m and flag == "going_concern":
+                # structured-earnings-1.2: the shared wording rules, a doubt only stated for
+                # now (not hypothetical, not described, not alleviated by plans) is a flag
+                stated, why = doubt_stated_now(sentence.text)
+                if not stated:
+                    skipped.append(
+                        Skipped(
+                            f"{why}_flag:going_concern",
+                            sentence.start + m.start(),
+                            sentence.start + m.end(),
+                            sentence.text[:160],
+                        )
+                    )
+                    continue
             if m and flag not in {f for f, _, _ in flags}:
                 flags.append((flag, sentence.start + m.start(), sentence.start + m.end()))
     guidance_status: str | None = None
