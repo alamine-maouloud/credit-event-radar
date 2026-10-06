@@ -352,6 +352,104 @@ GOLD_OPTION = typer.Option(GOLD_V1, "--gold", help="Frozen gold JSONL")
 RUN_OPTION = typer.Option(..., "--run", help="Run directory written by llm-extract")
 
 
+@app.command("alert")
+def alert(
+    event_id: Annotated[str | None, typer.Argument(help="Event id (omit with --all)")] = None,
+    all_events: Annotated[
+        bool, typer.Option("--all", help="Every decided event that carries a priority")
+    ] = False,
+    out: Annotated[Path, typer.Option("--out", help="Alert directory")] = ROOT
+    / "outputs"
+    / "alerts",
+    send: Annotated[
+        bool,
+        typer.Option(
+            "--send",
+            help="Post the Teams card and the e-mail when configured in .env; never by default",
+        ),
+    ] = False,
+    db: DbOption = None,
+) -> None:
+    """Build the Alert object of a decided event and render it locally (JSON, HTML, Adaptive
+    Card). The local channel is always on; Teams and e-mail only with --send and .env."""
+    import os
+    from datetime import UTC, datetime
+
+    from radar.alerts import build_alert, write_alert
+    from radar.alerts.render import render_html, render_teams_message
+    from radar.alerts.send import send_email, send_teams
+    from radar.audit import AuditEntry
+
+    if (event_id is None) == (not all_events):
+        raise typer.BadParameter("give an event id or --all")
+    database = _db(db)
+    settings = _settings()
+    rules = load_rules(CONFIG_DIR / "rules.yaml")
+    universe = load_universe(CONFIG_DIR / "universe.yaml")
+    if send:
+        load_dotenv()
+    events = database.list_events() if all_events else [database.get_event(event_id or "")]
+    day = datetime.now(UTC).date().isoformat()
+    rendered = 0
+    for ev in events:
+        if ev is None:
+            raise typer.BadParameter(f"unknown event {event_id}")
+        decision = database.get_decision(ev.event_id)
+        if decision is None or (all_events and decision.final_priority is None):
+            if not all_events:
+                raise typer.BadParameter(
+                    f"no decision stored for {ev.event_id}; run `radar decide`"
+                )
+            continue
+        documents = {d: doc for d in ev.source_doc_ids if (doc := database.get_document(d))}
+        try:
+            issuer = universe.by_id(ev.issuer_id)
+        except KeyError:
+            issuer = None
+        built = build_alert(ev, decision, documents, issuer, rules=rules, alerts=settings.alerts)
+        paths = write_alert(built, out, day=day, viewer_base_url=settings.alerts.viewer_base_url)
+        outcomes = []
+        if send and built.route is not None:
+            if "teams" in built.route.channels:
+                outcomes.append(
+                    send_teams(
+                        render_teams_message(built, settings.alerts.viewer_base_url),
+                        os.environ.get(settings.alerts.teams_webhook_env),
+                    )
+                )
+            if "email" in built.route.channels:
+                subject = f"[{built.priority}] {built.issuer_name}: {built.title}"
+                outcomes.append(send_email(subject, render_html(built), os.environ))
+        route = f"{', '.join(built.route.channels)} ({built.route.mode})" if built.route else "none"
+        sent = (
+            "; ".join(
+                f"{o['channel']} {'sent' if o['sent'] else 'not sent'}: {o['detail']}"
+                for o in outcomes
+            )
+            or "nothing sent (local rendering only)"
+        )
+        database.audit(
+            AuditEntry(
+                step="alert",
+                event_id=ev.event_id,
+                doc_id=ev.source_doc_ids[0] if ev.source_doc_ids else None,
+                rules_version=decision.rules_version,
+                status="ok",
+                message=(
+                    f"{built.priority or 'NONE'} alert {built.alert_id[:12]}: {len(paths)} files in "
+                    f"{paths[0].parent}; route {route}; {sent}"
+                ),
+            )
+        )
+        typer.echo(f"{built.priority or 'NONE':<5} {built.issuer_name}: {built.title}")
+        typer.echo(f"      {built.summary}")
+        for path in paths:
+            typer.echo(f"      {path}")
+        typer.echo(f"      route {route}; {sent}")
+        rendered += 1
+    typer.echo(f"{rendered} alert(s) rendered")
+
+
 @app.command("llm-extract")
 def llm_extract(
     out: Path | None = OUT_OPTION,

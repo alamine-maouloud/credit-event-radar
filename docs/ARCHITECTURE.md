@@ -451,3 +451,26 @@ layer is complete (ratings, guidance, liquidity, covenants, going concern); the 
 moves to what an analyst sees, the alert, the explanation, the source proof and the
 interface.
 
+## ADR-022 · The Alert object is the contract of the product layer (Phase P1, 2026-10-07)
+
+Everything an analyst sees is built from one object, `radar.alerts.model.Alert`, assembled
+from a stored decision, its event, the source documents and the issuer: the priority and
+the status, the issuer and its universe (live watchlist, historical stress case, other,
+from the universe tags, never mixed), a title written by code from the event fields, the
+facts as the documents' own passages tied to numbered sources with offsets and hashes, the
+triggered rules with their description and reason, the rating state after the action, the
+model provenance per family (model, prompt, schema, routed role and benchmark reason) and
+the decision provenance (decided by the rules engine, composite never used, the LLM role).
+The full "Why this priority?" text travels with it. The alert id is a stable hash of the
+event, the priority, the rules version, the triggered rules and the fact offsets, so the
+same decision yields the same alert.
+
+Renders are code, not prompts: a self-contained HTML page with no external resource and
+every value escaped (the local channel, always on, SPEC 11.4), an Adaptive Card 1.4 with
+the badge, three sourced facts, the rules, the provenance and the links to the sources and
+to the viewer's notes, wrapped as a Teams Workflows message. `radar alert` writes the
+three files under outputs/alerts/<date>/ and records the route and the files in the audit
+log; Teams and e-mail are sent only with `--send` and when .env names a webhook or an SMTP
+host, never by default. The viewer (P2) and the committee note (P3) consume the same
+object.
+

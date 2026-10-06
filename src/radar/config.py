@@ -167,6 +167,8 @@ class AlertsSettings(BaseModel):
 
     routing: dict[Priority, AlertRoute]
     teams_webhook_env: str = "TEAMS_WEBHOOK_URL"
+    # the viewer the Teams card links to ("Note FR", "Note EN"); Streamlit's default port
+    viewer_base_url: str = "http://localhost:8501"
 
 
 class Settings(BaseModel):

@@ -64,7 +64,9 @@ radar llm-compare --run eval/runs/a --run eval/runs/b   # side by side, one cate
 radar llm-extract --events                                  # statements for the stored earnings events, events untouched
 radar llm-extract --events --kind liquidity                 # liquidity statements (flag set by code only)
 radar llm-extract --events --kind covenant                  # covenant statements (breach flag set by code only)
-radar llm-extract --events --kind going_concern --alternative openai_terra   # going concern (flag on a stated doubt only; routed default after its benchmark)
+radar llm-extract --events --kind going_concern          # going concern (flag on a stated doubt only; routed to Terra)
+radar alert <event_id>                                      # Alert object rendered locally: outputs/alerts/<date>/<event_id>.{json,html,card.json}
+radar alert --all                                           # every decided event with a priority; --send posts Teams/e-mail only when .env is configured
 radar llm-apply                                             # apply VALID statements, decide again, audit before/after
 ```
 

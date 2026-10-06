@@ -324,3 +324,38 @@ def test_ingest_by_url_dedups_against_existing(pipeline):
 
 def test_manifest_is_json(pipeline):
     assert json.loads((HARLEY / "manifest.json").read_text())["issuer_id"] == "HARLEY_DAVIDSON_INC"
+
+
+def test_alert_command_renders_the_p1_locally_without_sending(pipeline, tmp_path):
+    """Phase P1: the Alert object of the real Harley P1, rendered as JSON, HTML and an
+    Adaptive Card, nothing sent, the audit trail records the files and the route."""
+    db = Database(pipeline["db"])
+    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    db.close()
+    out = run("alert", ev.event_id, "--out", str(tmp_path / "alerts"), *pipeline["common"])
+    assert "P1    Harley-Davidson" in out and "BBB- → BB+, IG → HY" in out
+    assert "nothing sent (local rendering only)" in out and "1 alert(s) rendered" in out
+    folder = next((tmp_path / "alerts").iterdir())
+    files = sorted(p.name for p in folder.iterdir())
+    assert files == [f"{ev.event_id}.card.json", f"{ev.event_id}.html", f"{ev.event_id}.json"]
+    data = json.loads((folder / f"{ev.event_id}.json").read_text())
+    assert data["priority"] == "P1" and data["universe"] == "historical_stress_case"
+    assert [r["id"] for r in data["triggered_rules"]] == ["RAT-01", "RAT-02"]
+    assert data["decision_provenance"]["composite_used"] is False
+    assert data["sources"][0]["raw_sha256"] == load_fixture(HARLEY).manifest["raw_sha256"]
+    assert any(
+        "lowered the Company's long-term credit rating from BBB- to BB+" in f["text"]
+        for f in data["facts"]
+    )
+    html = (folder / f"{ev.event_id}.html").read_text()
+    assert "Why this priority?" in html and "RAT-02" in html and "Historical stress case" in html
+    card = json.loads((folder / f"{ev.event_id}.card.json").read_text())
+    assert card["type"] == "AdaptiveCard" and any(
+        a["title"] == "Source [1]" for a in card["actions"]
+    )
+    db = Database(pipeline["db"])
+    entries = [e for e in db.audit_entries(event_id=ev.event_id) if e["step"] == "alert"]
+    db.close()
+    assert (
+        entries and "route teams, email, local (immediate); nothing sent" in entries[-1]["message"]
+    )
