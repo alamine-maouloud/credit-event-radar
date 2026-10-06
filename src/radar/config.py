@@ -55,13 +55,16 @@ def load_rating_scales(path: Path = CONFIG_DIR / "rating_scales.yaml") -> Rating
 # --------------------------------------------------------------------------- #
 
 
+ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"]
+
+
 class ModelRole(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     provider: Literal["anthropic", "openai", "azure_openai"]
     model: str
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
-    reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"] | None = None
+    reasoning_effort: ReasoningEffort | None = None
 
 
 class LLMSettings(BaseModel):
