@@ -88,6 +88,43 @@ class LiquidityExtraction(BaseModel):
     statements: list[LiquidityStatement] = Field(default_factory=list)
 
 
+COVENANT_SCHEMA_VERSION = "covenant-1.0"
+CovenantStatus = Literal["compliant", "risk_of_breach", "breached", "mentioned"]
+CovenantResolution = Literal["none", "waived", "cured", "amended"]
+
+
+class CovenantStatement(BaseModel):
+    """One statement of the issuer about its covenants (Phase 3.4b). A breach actually
+    stated stays "breached" whatever happened next; the resolution is kept apart so that
+    the explanation can say it was waived, cured or amended. The code alone decides what
+    follows from it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    risk_type: Literal["covenant"]
+    status: CovenantStatus
+    resolution: CovenantResolution = "none"
+    covenant_label: str | None = Field(default=None, description="Covenant named by the text")
+    agreement: str | None = Field(default=None, description="Agreement or facility named")
+    period: str | None = None
+    evidence_quote: str = Field(min_length=1)
+    start_offset: int = Field(ge=0)
+    end_offset: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _offsets(self) -> CovenantStatement:
+        if self.end_offset <= self.start_offset:
+            raise ValueError("end_offset must be greater than start_offset")
+        return self
+
+
+class CovenantExtraction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    has_covenant_statements: bool
+    statements: list[CovenantStatement] = Field(default_factory=list)
+
+
 def _close(schema: dict[str, Any]) -> None:
     """OpenAI strict mode needs every object closed and every property required."""
     if schema.get("type") == "object" or "properties" in schema:
@@ -116,5 +153,11 @@ def guidance_json_schema() -> dict[str, Any]:
 
 def liquidity_json_schema() -> dict[str, Any]:
     schema = LiquidityExtraction.model_json_schema()
+    _close(schema)
+    return schema
+
+
+def covenant_json_schema() -> dict[str, Any]:
+    schema = CovenantExtraction.model_json_schema()
     _close(schema)
     return schema

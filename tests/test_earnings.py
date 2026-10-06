@@ -77,7 +77,10 @@ def test_conflicting_statements_give_no_status():
             "There is substantial doubt about the company's ability to continue as a going concern.",
             "going_concern",
         ),
-        ("The company obtained a covenant waiver from its lenders.", "covenant"),
+        (
+            "The company obtained a covenant waiver from its lenders after breaching the leverage covenant.",
+            "covenant",
+        ),
         ("A material impairment of EUR 2 billion was recognised.", "impairment"),
         ("Management notes liquidity constraints in the second half.", "liquidity"),
     ],
@@ -168,3 +171,28 @@ def test_liquidity_flag_ignores_negations_and_generic_risk_sections(sentence):
 )
 def test_liquidity_flag_on_explicit_deterioration(sentence):
     assert only(f"Results. {sentence}").fields["flags"] == ["liquidity"]
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "As of June 30, 2026, we were in compliance with all material terms and covenants under our loan agreements.",
+        "We obtained an amendment to the Credit Agreement to provide additional covenant headroom.",
+        "The credit agreement contains customary covenants and events of default.",
+        "There was no breach of any financial covenant during the period.",
+    ],
+)
+def test_covenant_flag_needs_a_breach_not_a_mention_or_a_preventive_amendment(sentence):
+    assert only(f"Results. {sentence}").fields["flags"] == []
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "The company obtained a covenant waiver from its lenders after breaching the leverage covenant.",
+        "As of March 31, 2026, the Company was not in compliance with the minimum net worth covenant.",
+        "The lender waived this covenant violation on May 6, 2026.",
+    ],
+)
+def test_covenant_flag_on_a_stated_breach(sentence):
+    assert only(f"Results. {sentence}").fields["flags"] == ["covenant"]

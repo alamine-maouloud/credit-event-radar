@@ -9,8 +9,8 @@ from typing import Any
 from radar.audit import AuditEntry, stable_hash
 from radar.config import Rules
 from radar.db import Database
+from radar.enrich.flags import FAMILIES, FlagEnrichment, build_flag_enrichment
 from radar.enrich.guidance import GuidanceEnrichment, build_enrichment
-from radar.enrich.liquidity import LiquidityEnrichment, build_liquidity_enrichment
 from radar.models import EvidenceSpan
 from radar.pipeline import decide_event
 from radar.ratings import RatingScales
@@ -49,12 +49,14 @@ def apply_event(
     if event is None:
         raise KeyError(event_id)
     rows = [r for d in event.source_doc_ids for r in db.statements_for_document(d)]
-    by_kind: dict[str, list[dict[str, Any]]] = {"guidance": [], "liquidity": []}
+    by_kind: dict[str, list[dict[str, Any]]] = {"guidance": [], **{f: [] for f in FAMILIES}}
     for r in rows:
         by_kind.setdefault(r.get("statement_kind") or "guidance", []).append(r)
     valid_guidance = [r for r in by_kind["guidance"] if r["validation_status"] == "VALID"]
-    valid_liquidity = [r for r in by_kind["liquidity"] if r["validation_status"] == "VALID"]
-    valid = valid_guidance + valid_liquidity
+    valid_families = {
+        f: [r for r in by_kind[f] if r["validation_status"] == "VALID"] for f in FAMILIES
+    }
+    valid = valid_guidance + [r for rows_ in valid_families.values() for r in rows_]
     before = db.priority_of(event_id)
     priority_before = before[0] if before else None
     if not valid:
@@ -68,7 +70,7 @@ def apply_event(
         )
         return ApplyResult(event_id, "no_valid_statement", priority_before, priority_before)
     enrichment = build_enrichment(valid_guidance, rules) if valid_guidance else None
-    liquidity = build_liquidity_enrichment(valid_liquidity) if valid_liquidity else None
+    families = {f: build_flag_enrichment(rows_, f) for f, rows_ in valid_families.items() if rows_}
     statement_ids = sorted(r["statement_id"] for r in valid)
     enrichment_id = stable_hash({"event_id": event_id, "statements": statement_ids, "v": version})
     if db.enrichment_exists(enrichment_id):
@@ -87,7 +89,7 @@ def apply_event(
         {
             "fields": enrichment.decisional_fields if enrichment else None,
             "conflicts": enrichment.conflicts if enrichment else [],
-            "liquidity_flag": liquidity.flag if liquidity else None,
+            "flags": {f: e.flag for f, e in families.items()},
             "v": version,
         }
     )
@@ -121,14 +123,14 @@ def apply_event(
         }
         if g_conflicts:
             fields_after["llm_guidance_conflicts"] = g_conflicts
-    if liquidity is not None:
-        fields_after, l_conflicts, l_applied = _merge_liquidity(fields_after, liquidity)
-        conflicts += l_conflicts
-        applied += l_applied
-        fields_after["llm_liquidity"] = liquidity.statements
-        fields_after["liquidity_source"] = _source(valid_liquidity, l_applied, version)
-        if l_conflicts:
-            fields_after["llm_liquidity_conflicts"] = l_conflicts
+    for family, flag_enrichment in families.items():
+        fields_after, f_conflicts, f_applied = _merge_flag(fields_after, flag_enrichment)
+        conflicts += f_conflicts
+        applied += f_applied
+        fields_after[f"llm_{family}"] = flag_enrichment.statements
+        fields_after[f"{family}_source"] = _source(valid_families[family], f_applied, version)
+        if f_conflicts:
+            fields_after[f"llm_{family}_conflicts"] = f_conflicts
     spans = _spans(db, [by_id[s] for s in applied])
     db.update_event_enrichment(event_id, fields_after, spans, "llm_validated")
     updated = db.get_event(event_id)
@@ -184,30 +186,6 @@ def _source(rows: list[dict[str, Any]], applied: list[str], version: str) -> dic
     }
 
 
-def _merge_liquidity(
-    fields: dict[str, Any], liquidity: LiquidityEnrichment
-) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
-    """The code alone sets the flag: a VALID negative statement adds "liquidity" to the
-    flags; a deterministic flag is never removed, a disagreement is recorded."""
-    after = dict(fields)
-    flags = list(after.get("flags") or [])
-    conflicts: list[dict[str, Any]] = []
-    if liquidity.flag:
-        if "liquidity" not in flags:
-            flags.append("liquidity")
-        after["flags"] = flags
-        return after, conflicts, list(liquidity.negative_ids)
-    if "liquidity" in flags:
-        conflicts.append(
-            {
-                "field": "flags:liquidity",
-                "deterministic": True,
-                "llm": liquidity.statuses[0] if liquidity.statuses else None,
-            }
-        )
-    return after, conflicts, []
-
-
 def apply_all(
     db: Database, rules: Rules, scales: RatingScales, issuer_id: str | None = None
 ) -> list[ApplyResult]:
@@ -239,6 +217,31 @@ def _merge(
     return after, conflicts, list(enrichment.applied_statement_ids)
 
 
+def _merge_flag(
+    fields: dict[str, Any], enrichment: FlagEnrichment
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
+    """The code alone sets the flag of a family: a VALID negative statement adds it to the
+    flags; a deterministic flag is never removed, a disagreement is recorded."""
+    after = dict(fields)
+    flags = list(after.get("flags") or [])
+    conflicts: list[dict[str, Any]] = []
+    name = enrichment.flag_name
+    if enrichment.flag:
+        if name not in flags:
+            flags.append(name)
+        after["flags"] = flags
+        return after, conflicts, list(enrichment.negative_ids)
+    if name in flags:
+        conflicts.append(
+            {
+                "field": f"flags:{name}",
+                "deterministic": True,
+                "llm": enrichment.statuses[0] if enrichment.statuses else None,
+            }
+        )
+    return after, conflicts, []
+
+
 def _spans(db: Database, rows: list[dict[str, Any]]) -> list[EvidenceSpan]:
     spans = []
     for row in rows:
@@ -256,14 +259,21 @@ def _spans(db: Database, rows: list[dict[str, Any]]) -> list[EvidenceSpan]:
                 evidence_type="llm_statement",
                 extractor_version=f"{row['model_id']}/{row['prompt_version']}",
                 match_score=float(v.get("match_score") or 0.0),
-                field=(
-                    "flag:liquidity"
-                    if (row.get("statement_kind") or "guidance") == "liquidity"
-                    else f"guidance:{row['statement_json'].get('metric')}"
-                ),
+                field=_span_field(row),
             )
         )
     return spans
+
+
+def _span_field(row: dict[str, Any]) -> str:
+    kind = row.get("statement_kind") or "guidance"
+    st = row["statement_json"]
+    if kind == "guidance":
+        return f"guidance:{st.get('metric')}"
+    if kind == "covenant":
+        resolution = st.get("resolution") or "none"
+        return "flag:covenant" + (f" (resolution {resolution})" if resolution != "none" else "")
+    return f"flag:{kind}"
 
 
 def _one(values: set) -> Any:

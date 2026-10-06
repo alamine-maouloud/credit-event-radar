@@ -340,7 +340,9 @@ EVENTS_OPTION = typer.Option(
 ISSUER_OPTION = typer.Option(None, "--issuer", help="Restrict to one issuer id")
 DOC_OPTION = typer.Option(None, "--doc", help="Restrict to one document id")
 EVENT_OPTION = typer.Option(None, "--event", help="Restrict to one event id")
-KIND_OPTION = typer.Option("guidance", "--kind", help="Extraction kind: guidance | liquidity")
+KIND_OPTION = typer.Option(
+    "guidance", "--kind", help="Extraction kind: guidance | liquidity | covenant"
+)
 GOLD_OPTION = typer.Option(GOLD_V1, "--gold", help="Frozen gold JSONL")
 RUN_OPTION = typer.Option(..., "--run", help="Run directory written by llm-extract")
 
@@ -377,6 +379,8 @@ def llm_extract(
     load_dotenv()
     settings, role = _llm_role(alternative)
     pricing = load_pricing(ROOT / settings.llm.pricing_file)
+    if kind not in ("guidance", "liquidity", "covenant"):
+        raise typer.BadParameter(f"unknown kind {kind!r}, expected guidance, liquidity or covenant")
     if dry_run:
         budget = RunBudget(limit_usd=1.0, pricing=pricing)
         provider = FakeProvider(name=role.provider, raw_json="{}")
@@ -426,19 +430,30 @@ def llm_extract(
     config = BenchmarkConfig(
         model_id=role.model, reasoning_effort=role.reasoning_effort, temperature=role.temperature
     )
+    if kind == "liquidity":
+        from radar.eval.liquidity import load_liquidity_gold
+
+        gold_rows = load_liquidity_gold(gold)
+    elif kind == "covenant":
+        from radar.eval.covenant import load_covenant_gold
+
+        gold_rows = load_covenant_gold(gold)
+    else:
+        gold_rows = load_gold(gold)
     summary = run_benchmark(
-        load_gold(gold),
+        gold_rows,
         db=database,
         universe=load_universe(),
         provider=provider,
         cache=LLMCache(database),
         budget=budget,
-        prompt=load_prompt(ROOT / "prompts" / "extraction" / "guidance.v1.yaml"),
+        prompt=load_prompt(ROOT / "prompts" / "extraction" / f"{kind}.v1.yaml"),
         config=config,
         out_dir=out,
         limit=limit,
         dry_run=dry_run,
         gold_path=gold,
+        kind=kind,
     )
     typer.echo(
         f"run {summary.run_id}: {summary.n_documents} documents, statuses {summary.statuses}, "
@@ -449,7 +464,10 @@ def llm_extract(
         f"{summary.estimated_cost_usd:.4f}), budget {summary.budget_limit_usd:.2f}, "
         f"remaining {summary.budget_remaining_usd:.4f}"
     )
-    _echo_metrics(summary.metrics)
+    if kind == "guidance":
+        _echo_metrics(summary.metrics)
+    else:
+        typer.echo(json.dumps(summary.metrics, indent=2))
     typer.echo(f"written: {out / 'outputs.jsonl'}, {out / 'run.json'}, {out / 'metrics.json'}")
 
 

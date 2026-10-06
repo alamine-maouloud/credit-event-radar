@@ -18,7 +18,7 @@ from rapidfuzz import fuzz
 from radar.extract.dates import find_dates
 from radar.extract.spans import iter_sentences
 from radar.extract.structured import _issuer_named, _matches_issuer, find_named_entities
-from radar.llm.schemas import GuidanceStatement, LiquidityStatement
+from radar.llm.schemas import CovenantStatement, GuidanceStatement, LiquidityStatement
 from radar.models import RawDocument
 from radar.ratings import RatingScales
 
@@ -131,6 +131,13 @@ def _segment_named(label: str, quote: str, segments: list[str]) -> str | None:
     for segment in sorted(segments, key=len, reverse=True):
         word = re.compile(r"(?<![\w&])" + re.escape(segment) + r"(?![\w&])", re.IGNORECASE)
         if word.search(label):
+            return segment
+        # the segment as the subject of the sentence ("Cat Financial was not in compliance",
+        # "Ford Credit's liquidity profile ...")
+        subject = re.compile(
+            r"^\s*(?:the\s+)?" + re.escape(segment) + r"(?:\u2019s|'s)?(?![\w&])", re.IGNORECASE
+        )
+        if any(subject.match(sentence) for sentence in metric_sentences):
             return segment
         introduced = re.compile(
             r"\b(?:for|of|in|at)\s+(?:the\s+)?" + re.escape(segment) + r"(?![\w&])",
@@ -327,6 +334,173 @@ def validate_liquidity_statement(
     if segment is not None:
         reasons.append(
             f"OUT_OF_SCOPE_SEGMENT: {segment} is a segment of the issuer, liquidity is read at "
+            "Group level or for the principal division"
+        )
+
+    status = "VALID" if all(checks.values()) else "INVALID"
+    return ValidationResult(
+        status=status, checks=checks, reasons=reasons, match_kind=kind, match_score=score,
+        matched_start=m_start, matched_end=m_end,
+    )  # fmt: skip
+
+
+# --------------------------------------------------------------- covenants --- #
+
+_COVENANT_TOPIC_RE = re.compile(
+    r"(?i)covenant|non-?compliance|in\s+compliance\s+with|compl(?:y|ied)\s+with|waiv(?:er|ed)|forbearance"
+)
+# A breach actually stated (present or past). "event of default" counts only when the window
+# ties it to a covenant or a non-compliance.
+_BREACH_RE = re.compile(
+    r"(?i)\bnot\s+in\s+compliance\b|\bnon-?compliance\b|\bbreach(?:ed|es|ing)?\b|"
+    r"\bviolat(?:ed|ion|ions)\b|\bfail(?:ed|ure)\s+to\s+(?:comply|meet|maintain|satisfy)\b|"
+    r"\b(?:has|have|had)\s+not\s+met\b|\bdid\s+not\s+(?:meet|comply|satisfy)\b|"
+    r"\bevents?\s+of\s+default\b"
+)
+_DEFAULT_RE = re.compile(r"(?i)\bevents?\s+of\s+default\b")
+_COVENANT_LINK_RE = re.compile(r"(?i)covenant|compliance")
+_COMPLIANT_RE = re.compile(
+    r"(?i)(?<!not )(?<!not\n)\bin\s+compliance\s+with\b|\bremained\s+in\s+compliance\b|"
+    r"\bcomplied\s+with\b|\bno\s+(?:breach|violation|default|event\s+of\s+default)\b|"
+    r"\bnot\s+in\s+(?:breach|default)\b"
+)
+_RISK_RE = re.compile(
+    r"(?i)\bwill\s+not\s+(?:remain|be)\s+in\s+compliance\b|\banticipates?\s+that\s+it\s+will\s+not\b|"
+    r"\b(?:does|do)\s+not\s+expect\s+to\s+be\s+able\b|\bexpects?\s+(?:to\s+be\s+unable|not\s+to\s+be\s+able)\b|"
+    r"\bmay\s+(?:not\s+)?(?:breach|comply|be\s+able\s+to\s+(?:meet|comply|maintain))\b|"
+    r"\bcould\s+(?:breach|result\s+in)\b|\brisk\s+of\s+(?:a\s+)?(?:breach|non-?compliance|default)\b|"
+    r"\b(?:future|potential)\s+non-?compliance\b|\bunable\s+to\s+(?:meet|comply|maintain)\b"
+)
+_HYPOTHETICAL_PREFIX_RE = re.compile(r"(?i)\b(?:future|potential|any|if|should|were)\b")
+_RESOLUTION_RE = {
+    "waived": re.compile(r"(?i)\bwaiv(?:ed|er|ers)\b"),
+    "cured": re.compile(r"(?i)\bcured?\b|\bremed(?:ied|iation|y)\b"),
+    "amended": re.compile(r"(?i)\bamend(?:ed|ment|ments)\b"),
+}
+
+
+def _actual_breach(sentence: str) -> bool:
+    """A breach stated for the issuer, neither negated nor hypothetical; an event of default
+    only with a covenant or compliance word in the window."""
+    for m in _BREACH_RE.finditer(sentence):
+        if _negated(sentence, m.start()):
+            continue
+        before = sentence[: m.start()]
+        words = before.split()[-4:]
+        if any(_HYPOTHETICAL_PREFIX_RE.fullmatch(w.strip(",;:()")) for w in words):
+            continue
+        if _HYPOTHETICAL_MODAL_RE.search(before) and not re.search(
+            r"(?i)\b(?:was|were|is|are|has|have|had)\b", before
+        ):
+            continue
+        if _DEFAULT_RE.fullmatch(m.group(0)) and not _COVENANT_LINK_RE.search(sentence):
+            continue
+        return True
+    return False
+
+
+def covenant_status_ok(quote: str, status: str) -> tuple[bool, str | None]:
+    """status against the words of the passage: breached needs a breach actually stated,
+    compliant needs a compliance statement and no stated breach, risk_of_breach needs an
+    anticipation, mentioned is never rejected here."""
+    if status == "mentioned":
+        return True, None
+    sentences = [s.text for s in iter_sentences(quote)] or [quote]
+    breach = any(_actual_breach(s) for s in sentences)
+    compliant = any(_COMPLIANT_RE.search(s) for s in sentences)
+    risk = any(_RISK_RE.search(s) for s in sentences)
+    if status == "breached":
+        if breach:
+            return True, None
+        return False, (
+            "STATUS_MISMATCH: no breach or non-compliance actually stated for a covenant "
+            "(a payment default, a hypothetical or a negated breach does not count)"
+        )
+    if status == "compliant":
+        if compliant and not breach:
+            return True, None
+        if breach:
+            return False, "STATUS_MISMATCH: the passage states a breach, compliant contradicts it"
+        return False, "STATUS_MISMATCH: no compliance statement in the passage"
+    if status == "risk_of_breach":
+        if risk:
+            return True, None
+        return False, "STATUS_MISMATCH: no anticipation of a breach in the passage"
+    return True, None
+
+
+def covenant_resolution_ok(quote: str, resolution: str) -> tuple[bool, str | None]:
+    pattern = _RESOLUTION_RE.get(resolution)
+    if pattern is None or pattern.search(quote):
+        return True, None
+    return (
+        False,
+        f"RESOLUTION_MISMATCH: resolution {resolution} has no supporting word in the passage",
+    )
+
+
+def validate_covenant_statement(
+    st: CovenantStatement,
+    doc: RawDocument,
+    issuer_names: list[str],
+    *,
+    document_date: date | None,
+    scales: RatingScales | None = None,
+    segments: list[str] | None = None,
+) -> ValidationResult:
+    checks: dict[str, bool] = {}
+    reasons: list[str] = []
+    quote = st.evidence_quote
+    low = quote.casefold()
+
+    kind, score, m_start, m_end = _span_match(quote, doc.text, st.start_offset, st.end_offset)
+    checks["span_match"] = kind != "none"
+    if kind == "none":
+        reasons.append(f"quote not found in the document (best partial ratio {score:.0f})")
+
+    checks["covenant_named"] = bool(_COVENANT_TOPIC_RE.search(quote))
+    if not checks["covenant_named"]:
+        reasons.append("the passage does not speak of covenants or contractual compliance")
+
+    for field_name, value in (("covenant_label", st.covenant_label), ("agreement", st.agreement)):
+        if value and value.casefold().strip() not in low:
+            checks[f"{field_name}_match"] = False
+            reasons.append(f"{field_name} {value!r} not in the quote")
+        else:
+            checks[f"{field_name}_match"] = True
+
+    status_ok, status_reason = covenant_status_ok(quote, st.status)
+    checks["status_match"] = status_ok
+    if status_reason:
+        reasons.append(status_reason)
+    resolution_ok, resolution_reason = covenant_resolution_ok(quote, st.resolution)
+    checks["resolution_match"] = resolution_ok
+    if resolution_reason:
+        reasons.append(resolution_reason)
+
+    document_type = (doc.extra or {}).get("document_type") if isinstance(doc.extra, dict) else None
+    checks["issuer_voice"] = document_type != "rating_report"
+    if not checks["issuer_voice"]:
+        reasons.append(
+            "THIRD_PARTY_DOCUMENT: an agency report never carries the issuer's own "
+            "covenant statement"
+        )
+
+    entity_ok, entity_reason = _entity_check(quote, issuer_names, scales)
+    checks["entity_match"] = entity_ok
+    if entity_reason:
+        reasons.append(entity_reason)
+
+    temporal_ok, temporal_reason = _temporal_check(quote, document_date, st.period)
+    checks["temporal_consistency"] = temporal_ok
+    if temporal_reason:
+        reasons.append(temporal_reason)
+
+    segment = _segment_named(st.covenant_label or "", quote, segments or [])
+    checks["scope_match"] = segment is None
+    if segment is not None:
+        reasons.append(
+            f"OUT_OF_SCOPE_SEGMENT: {segment} is a segment of the issuer, covenants are read at "
             "Group level or for the principal division"
         )
 

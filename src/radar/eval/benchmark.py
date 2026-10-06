@@ -15,17 +15,17 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from radar.config import ROOT, Universe
 from radar.db import Database
+from radar.enrich.extract import KINDS
+from radar.eval.covenant import score_covenant
 from radar.eval.gold import GoldDocument, load_gold_document
+from radar.eval.liquidity import score_liquidity
 from radar.eval.metrics import score
 from radar.llm.budget import RunBudget
 from radar.llm.cache import LLMCache
-from radar.llm.compute import compute_guidance_change
 from radar.llm.prompts import Prompt
 from radar.llm.provider import ExtractionRequest, LLMProvider
-from radar.llm.requests import build_guidance_request
+from radar.llm.requests import build_extraction_request
 from radar.llm.runner import run_extraction
-from radar.llm.schemas import GUIDANCE_SCHEMA_VERSION, GuidanceExtraction
-from radar.llm.validate import validate_statement
 from radar.models import RawDocument
 from radar.pipeline import issuer_names
 
@@ -42,7 +42,7 @@ class BenchmarkConfig(BaseModel):
     # Reasoning tokens count against the ceiling: 4096 left no text at all on the second
     # real document (2026-10-06). The budget reserves the ceiling before every call.
     max_output_tokens: int = Field(default=32768, ge=1)
-    extractor_version: str = EXTRACTOR_VERSION
+    extractor_version: str | None = None  # per kind when None
 
 
 class RunSummary(BaseModel):
@@ -58,13 +58,21 @@ class RunSummary(BaseModel):
 
 
 def build_request(
-    doc: RawDocument, issuer_name: str, document_date: str, prompt: Prompt, config: BenchmarkConfig
+    doc: RawDocument,
+    issuer_name: str,
+    document_date: str,
+    prompt: Prompt,
+    config: BenchmarkConfig,
+    kind: str = "guidance",
 ) -> ExtractionRequest:
-    return build_guidance_request(
+    spec = KINDS[kind]
+    return build_extraction_request(
         doc,
         issuer_name,
         document_date,
         prompt,
+        schema_name=spec["schema_name"],
+        json_schema=spec["json_schema"](),
         model_id=config.model_id,
         temperature=config.temperature,
         reasoning_effort=config.reasoning_effort,
@@ -72,21 +80,16 @@ def build_request(
     )
 
 
-def _statement_entries(
-    parsed: GuidanceExtraction, doc, names, document_date, segments: list[str] | None = None
-) -> list[dict]:
+def _statement_entries(parsed, doc, names, document_date, segments=None, kind="guidance"):
+    spec = KINDS[kind]
     entries = []
     for st in parsed.statements:
-        validation = validate_statement(
+        validation = spec["validate"](
             st, doc, names, document_date=document_date, segments=segments
         )
-        change = compute_guidance_change(st)
+        change = asdict(spec["change"](st)) if spec["change"] else {}
         entries.append(
-            {
-                "statement": st.model_dump(),
-                "validation": validation.model_dump(),
-                "change": asdict(change),
-            }
+            {"statement": st.model_dump(), "validation": validation.model_dump(), "change": change}
         )
     return entries
 
@@ -107,7 +110,10 @@ def run_benchmark(
     limit: int | None = None,
     dry_run: bool = False,
     gold_path: Path | None = None,
+    kind: str = "guidance",
 ) -> RunSummary:
+    spec = KINDS[kind]
+    extractor_version = config.extractor_version or spec["extractor_version"]
     started = datetime.now(UTC)
     run_id = out_dir.name
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -117,7 +123,9 @@ def run_benchmark(
     for gold in gold_rows[:limit] if limit else gold_rows:
         issuer = issuers[gold.issuer_id]
         doc = load_document(gold, universe, root)
-        request = build_request(doc, issuer.name, gold.document_date.isoformat(), prompt, config)
+        request = build_request(
+            doc, issuer.name, gold.document_date.isoformat(), prompt, config, kind
+        )
         row: dict[str, Any] = {
             "gold_id": gold.gold_id,
             "issuer_id": gold.issuer_id,
@@ -147,14 +155,15 @@ def run_benchmark(
             result = run_extraction(
                 db,
                 request,
-                GuidanceExtraction,
+                spec["model"],
                 provider=provider,
                 cache=cache,
                 budget=budget,
                 document_hash=doc.doc_id,
-                extractor_version=config.extractor_version,
+                extractor_version=extractor_version,
                 prompt_version=prompt.version,
                 doc_id=doc.doc_id,
+                schema_version=spec["schema_version"],
             )
             row.update(
                 run_status=result.status,
@@ -171,10 +180,15 @@ def run_benchmark(
                     resolved_model=result.response.resolved_model,
                 )
             if result.parsed is not None:
-                parsed: GuidanceExtraction = result.parsed
-                row["has_guidance"] = parsed.has_guidance
+                parsed = result.parsed
+                if kind == "guidance":
+                    row["has_guidance"] = parsed.has_guidance
+                elif kind == "liquidity":
+                    row["has_liquidity_statements"] = parsed.has_liquidity_statements
+                else:
+                    row["has_covenant_statements"] = parsed.has_covenant_statements
                 row["statements"] = _statement_entries(
-                    parsed, doc, issuer_names(issuer), gold.document_date, issuer.segments
+                    parsed, doc, issuer_names(issuer), gold.document_date, issuer.segments, kind
                 )
         rows.append(row)
     (out_dir / "outputs.jsonl").write_text(
@@ -182,7 +196,8 @@ def run_benchmark(
         encoding="utf-8",
     )
     write_results(out_dir, rows)
-    metrics = score(gold_rows, rows)
+    scorers = {"guidance": score, "liquidity": score_liquidity, "covenant": score_covenant}
+    metrics = scorers[kind](gold_rows, rows)
     statuses: dict[str, int] = {}
     for r in rows:
         statuses[r["run_status"]] = statuses.get(r["run_status"], 0) + 1
@@ -200,8 +215,9 @@ def run_benchmark(
         "prompt_id": prompt.id,
         "prompt_version": prompt.version,
         "prompt_content_hash": prompt.content_hash,
-        "schema_version": GUIDANCE_SCHEMA_VERSION,
-        "extractor_version": config.extractor_version,
+        "kind": kind,
+        "schema_version": spec["schema_version"],
+        "extractor_version": extractor_version,
         "gold_path": str(gold_path) if gold_path else None,
         "gold_labels_sha256": _sha256(gold_path) if gold_path else None,
         "gold_lock_sha256": _lock_hash(gold_path),

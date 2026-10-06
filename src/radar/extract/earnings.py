@@ -66,6 +66,9 @@ _FLAG_NEGATIONS: dict[str, re.Pattern[str]] = {
         r"|\bnot\s+(?:exposed\s+to|subject\s+to|facing|impacted|affected)\b"
         r"|\bwithout\s+(?:any\s+)?liquidity\b"
     ),
+    "covenant": re.compile(
+        r"(?i)\bno\s+(?:\w+\s+){0,3}(?:breach|violation|non-?compliance)\b|\bnot\s+in\s+(?:breach|default)\b"
+    ),
     "going_concern": re.compile(
         r"(?i)\bno\s+(?:substantial|significant|material)\s+(?:doubt|uncertaint(?:y|ies))\b"
         r"|\bnot\s+(?:impacted|affected|in\s+doubt)\b|\bdoes\s+not\s+cast\b"
@@ -87,7 +90,10 @@ _FLAGS: list[tuple[str, re.Pattern[str]]] = [
     (
         "covenant",
         re.compile(
-            r"(?i)\bcovenant\b[^.;]{0,40}?\b(?:breach|waiver|violation|default)\b|\b(?:breach|waiver)\b[^.;]{0,40}?\bcovenant"
+            # a breach actually stated: a waiver, an amendment or a definition alone is not one
+            r"(?i)\bcovenant\b[^.;]{0,60}?\b(?:breach(?:ed|es|ing)?|violat(?:ed|ion|ions)|non-?compliance)\b"
+            r"|\b(?:breach(?:ed|es|ing)?|violat(?:ed|ion|ions)|non-?compliance|not\s+in\s+compliance)\b"
+            r"[^.;]{0,60}?\bcovenant"
         ),
     ),
     (

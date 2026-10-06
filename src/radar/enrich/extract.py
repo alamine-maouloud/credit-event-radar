@@ -16,14 +16,21 @@ from radar.llm.provider import LLMProvider
 from radar.llm.requests import DEFAULT_MAX_OUTPUT_TOKENS, build_extraction_request
 from radar.llm.runner import run_extraction
 from radar.llm.schemas import (
+    COVENANT_SCHEMA_VERSION,
     GUIDANCE_SCHEMA_VERSION,
     LIQUIDITY_SCHEMA_VERSION,
+    CovenantExtraction,
     GuidanceExtraction,
     LiquidityExtraction,
+    covenant_json_schema,
     guidance_json_schema,
     liquidity_json_schema,
 )
-from radar.llm.validate import validate_liquidity_statement, validate_statement
+from radar.llm.validate import (
+    validate_covenant_statement,
+    validate_liquidity_statement,
+    validate_statement,
+)
 from radar.pipeline import issuer_names
 from radar.snapshot import sha256_hex
 
@@ -47,6 +54,15 @@ KINDS: dict[str, dict] = {
         "schema_version": LIQUIDITY_SCHEMA_VERSION,
         "extractor_version": "llm-liquidity-1.0",
         "validate": validate_liquidity_statement,
+        "change": None,
+    },
+    "covenant": {
+        "model": CovenantExtraction,
+        "schema_name": "CovenantExtraction",
+        "json_schema": covenant_json_schema,
+        "schema_version": COVENANT_SCHEMA_VERSION,
+        "extractor_version": "llm-covenant-1.0",
+        "validate": validate_covenant_statement,
         "change": None,
     },
 }
