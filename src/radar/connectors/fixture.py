@@ -23,6 +23,10 @@ from radar.snapshot import FetchedBytes, sha256_hex
 MANIFEST_NAME = "manifest.json"
 
 
+class FixtureBytesMissing(FileNotFoundError):
+    """The manifest is committed but the raw bytes are not (private fixture, ADR-010)."""
+
+
 @dataclass(frozen=True)
 class Fixture:
     directory: Path
@@ -46,6 +50,7 @@ def write_fixture(
     *,
     role: str,
     anchors: list[dict[str, Any]] | None = None,
+    expected: dict[str, Any] | None = None,
     **provenance: Any,
 ) -> Path:
     """Store the raw bytes gzipped and a manifest with hashes and provenance."""
@@ -68,7 +73,9 @@ def write_fixture(
         "normalized_sha256": doc.doc_id,
         "normalized_chars": len(doc.text),
         "extra": doc.extra,
+        "title": doc.title,
         "anchors": anchors or [],
+        "expected": expected or {},
         **provenance,
     }
     path = directory / MANIFEST_NAME
@@ -76,9 +83,24 @@ def write_fixture(
     return path
 
 
+def load_manifest(directory: Path) -> dict[str, Any]:
+    return json.loads((directory / MANIFEST_NAME).read_text(encoding="utf-8"))
+
+
+def fixture_bytes_available(directory: Path) -> bool:
+    manifest = load_manifest(directory)
+    return (directory / manifest["raw_file"]).exists()
+
+
 def load_fixture(directory: Path) -> Fixture:
-    manifest = json.loads((directory / MANIFEST_NAME).read_text(encoding="utf-8"))
-    with gzip.open(directory / manifest["raw_file"], "rb") as fh:
+    manifest = load_manifest(directory)
+    raw_path = directory / manifest["raw_file"]
+    if not raw_path.exists():
+        raise FixtureBytesMissing(
+            f"{raw_path} is not present: private fixture, fetch it with "
+            f"scripts/fetch_ir_fixture.py from {manifest['source_url']}"
+        )
+    with gzip.open(raw_path, "rb") as fh:
         raw = fh.read()
     if sha256_hex(raw) != manifest["raw_sha256"]:
         raise RuntimeError(f"{directory}: raw bytes do not match manifest raw_sha256")
@@ -104,18 +126,22 @@ class FixtureAdapter:
         self.normalizer = normalizer
 
     def _build(self, fixture: Fixture) -> RawDocument:
+        from radar.normalize import normalizer_for
         from radar.snapshot import build_raw_document
 
         m = fixture.manifest
         extra = dict(m.get("extra") or {})
-        published = extra.get("filing_date")
-        form = extra.get("form") or "fixture"
-        title = f"{form} {extra.get('accession_number') or fixture.directory.name}"
+        published = extra.get("filing_date") or extra.get("published")
+        if m["source_type"] == "edgar":
+            form = extra.get("form") or "fixture"
+            title = f"{form} {extra.get('accession_number') or fixture.directory.name}"
+        else:
+            title = m.get("title") or extra.get("discovered_title") or fixture.directory.name
         return build_raw_document(
             fixture.fetched,
             source_type=m["source_type"],
             raw_dir=self.raw_dir,
-            normalizer=self.normalizer,
+            normalizer=normalizer_for(m.get("content_type"), fixture.raw),
             title=title,
             published_at=datetime.fromisoformat(f"{published}T00:00:00+00:00")
             if published
@@ -127,13 +153,19 @@ class FixtureAdapter:
     def fetch(self, since: date, issuers: Sequence[Issuer]) -> list[RawDocument]:
         wanted = {i.id for i in issuers}
         docs: list[RawDocument] = []
+        self.skipped: list[tuple[str, str]] = []
         for directory in list_fixtures(self.root):
-            fixture = load_fixture(directory)
-            m = fixture.manifest
+            m = load_manifest(directory)
             if wanted and m.get("issuer_id") not in wanted:
                 continue
-            filed = (m.get("extra") or {}).get("filing_date")
+            extra = m.get("extra") or {}
+            filed = extra.get("filing_date") or extra.get("published")
             if filed and date.fromisoformat(filed) < since:
+                continue
+            try:
+                fixture = load_fixture(directory)
+            except FixtureBytesMissing as exc:
+                self.skipped.append((str(directory), str(exc)))
                 continue
             docs.append(self._build(fixture))
         return docs

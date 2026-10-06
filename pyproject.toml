@@ -48,3 +48,4 @@ known-first-party = ["radar", "tests"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E501"]
+"scripts/*" = ["E501"]
