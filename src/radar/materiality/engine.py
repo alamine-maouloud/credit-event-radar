@@ -28,6 +28,7 @@ SCOPED_GUIDANCE_METRICS = {
 }  # fmt: skip
 CRITICAL_FLAGS = {"liquidity", "going_concern", "covenant"}
 SUBORDINATED = {"subordinated", "hybrid", "AT1", "T2"}
+ISSUANCE_TYPES = {"new_issue", "tap"}
 LLM_ROLE_BY_METHOD = {
     "structured": "none",
     "llm_validated": "field extraction (validated against source text)",
@@ -523,8 +524,8 @@ def ern04(ctx: _Context) -> Outcome:
 
 @rule("issuance_at_or_above_threshold")
 def iss01(ctx: _Context) -> Outcome:
-    if ctx.family != "issuance" or ctx.event_type == "non_call":
-        return False, "not a new issuance", {}
+    if ctx.family != "issuance" or ctx.event_type not in ISSUANCE_TYPES:
+        return False, "not a new issuance or tap", {}
     amount = ctx.fields.get("amount_eur_equiv")
     threshold = ctx.rules.thresholds.issuance_p2_eur
     data = {"amount_eur_equiv": amount, "threshold_eur": threshold}
@@ -537,8 +538,8 @@ def iss01(ctx: _Context) -> Outcome:
 
 @rule("subordinated_hybrid_at1_or_t2_issuance")
 def iss02(ctx: _Context) -> Outcome:
-    if ctx.family != "issuance" or ctx.event_type == "non_call":
-        return False, "not a new issuance", {}
+    if ctx.family != "issuance" or ctx.event_type not in ISSUANCE_TYPES:
+        return False, "not a new issuance or tap", {}
     seniority = ctx.fields.get("seniority")
     if seniority in SUBORDINATED:
         return True, f"{seniority} issuance", {"seniority": seniority}
@@ -557,13 +558,23 @@ def iss03(ctx: _Context) -> Outcome:
 
 @rule("issuance_below_threshold_tap_or_routine_refinancing")
 def iss04(ctx: _Context) -> Outcome:
-    if ctx.family != "issuance" or ctx.event_type == "non_call":
-        return False, "not a new issuance", {}
+    if ctx.family != "issuance" or ctx.event_type not in ISSUANCE_TYPES:
+        return False, "not a new issuance or tap", {}
+    if ctx.event_type == "tap":
+        return True, "explicit tap of an existing line", {}
     if ctx.rule_bool("issuance_at_or_above_threshold") or ctx.rule_bool(
         "subordinated_hybrid_at1_or_t2_issuance"
     ):
         return False, "covered by ISS-01 or ISS-02", {}
-    return True, "issuance below the threshold, tap or routine refinancing", {}
+    amount = ctx.fields.get("amount_eur_equiv")
+    threshold = ctx.rules.thresholds.issuance_p2_eur
+    if not isinstance(amount, int | float):
+        return False, "EUR-equivalent amount unknown: nothing can be concluded (ADR-012)", {}
+    return (
+        True,
+        f"EUR equivalent {amount:,.0f} below {threshold:,.0f}, not subordinated",
+        {"amount_eur_equiv": amount},
+    )
 
 
 # ------------------------------------------------------------------ edgar --- #

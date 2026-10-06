@@ -34,14 +34,17 @@ class UnknownRatingError(ValueError):
     """Raised when an agency, rating label or notch is not in the configured scales."""
 
 
+_DASHES = dict.fromkeys(map(ord, "\u2010\u2011\u2012\u2013\u2212"), "-")
+
+
 def _rating_key(raw: str) -> str:
-    """Normalise a rating label for lookup: no whitespace, case-folded."""
-    return re.sub(r"\s+", "", raw).casefold()
+    """Normalise a rating label for lookup: no whitespace, plain hyphen, case-folded."""
+    return re.sub(r"\s+", "", raw).translate(_DASHES).casefold()
 
 
 def _rating_key_exact(raw: str) -> str:
-    """Whitespace-insensitive but case-sensitive key."""
-    return re.sub(r"\s+", "", raw)
+    """Whitespace-insensitive, dash-normalised but case-sensitive key."""
+    return re.sub(r"\s+", "", raw).translate(_DASHES)
 
 
 def _agency_key(raw: str) -> str:

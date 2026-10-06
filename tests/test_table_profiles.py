@@ -25,6 +25,9 @@ Issuer Test A AG | R-2 (high)* | BBB (high)
 *Short-Term Rating of DBRS Morningstar only applicable for a subsidiary.
 Financial Services AG and Bank GmbH have an individual rating."""
 
+EN = chr(0x2013)
+MINUS = chr(0x2212)
+
 OMV_PAGE = """Credit ratings
 Issuer Test B is rated by Moody's "A3" and Fitch "A-"
 Moody's
@@ -33,12 +36,12 @@ June 1, 2026 | A3 | Stable
 July 23, 2025 | A3 | Stable
 Fitch
 Date | Rating | Outlook
-July 9, 2026 | A– | Stable
-July 15, 2025 | A– | Stable
+July 9, 2026 | A@EN@ | Stable
+July 15, 2025 | A@EN@ | Stable
 Issuer Test B Debt Structure
 Senior Bonds
 Date of issue | Publicly traded bonds | Amount (EUR mn) | Coupon (fix) | Maturity
-November 2025 | XS0000000001 | 500 | 3.875% | 11/10/2040"""
+November 2025 | XS0000000001 | 500 | 3.875% | 11/10/2040""".replace("@EN@", EN)
 
 
 def doc(text: str, published: datetime | None = None) -> RawDocument:
@@ -115,7 +118,7 @@ def test_dated_by_agency_reads_history_with_stated_dates(scales):
         assert o.as_of_basis == "stated" and o.as_of == o.rating_date
         assert o.observed_at == date(2026, 10, 6) and o.verification_method == "structured_table"
         assert verify_span(doc(OMV_PAGE), o.evidence)
-    assert result.observations[2].evidence.quote == "July 9, 2026 | A– | Stable"
+    assert result.observations[2].evidence.quote == f"July 9, 2026 | A{EN} | Stable"
 
 
 def test_dated_by_agency_ignores_bond_tables(scales):
@@ -126,8 +129,8 @@ def test_dated_by_agency_ignores_bond_tables(scales):
 
 
 def test_en_dash_labels_are_canonical(scales):
-    assert scales.agency("FITCH").canonical_label("A–") == "A-"
-    assert scales.agency("SP").canonical_label("BBB−") == "BBB-"
+    assert scales.agency("FITCH").canonical_label(f"A{EN}") == "A-"
+    assert scales.agency("SP").canonical_label(f"BBB{MINUS}") == "BBB-"
 
 
 def test_profiles_do_not_cross_match(scales):

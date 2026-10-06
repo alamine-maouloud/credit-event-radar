@@ -20,29 +20,18 @@ from dataclasses import dataclass
 from datetime import date
 
 from radar.audit import stable_hash
+from radar.extract.dates import find_dates, first_date
 from radar.extract.spans import exact_span, iter_sentences
 from radar.models import CreditEvent, EvidenceSpan, RatingFields, RawDocument
 from radar.ratings import RatingScales, category, is_at_boundary, notch_delta, to_notch
 
-EXTRACTOR_VERSION = "structured-rating-1.0"
+EXTRACTOR_VERSION = "structured-rating-1.1"
 EDGAR_EXTRACTOR_VERSION = "structured-edgar-1.0"
 
 DOWNGRADE_VERBS = ("lowered", "downgraded", "cut", "reduced")
 UPGRADE_VERBS = ("raised", "upgraded")
 _VERB_RE = re.compile(r"\b(" + "|".join(DOWNGRADE_VERBS + UPGRADE_VERBS) + r")\b", re.IGNORECASE)
 _SHORT_TERM_RE = re.compile(r"short[\s-]term", re.IGNORECASE)
-_MONTHS = {
-    m: n
-    for n, m in enumerate(
-        ("january", "february", "march", "april", "may", "june", "july", "august", "september",
-         "october", "november", "december"),
-        start=1,
-    )
-}  # fmt: skip
-_DATE_RE = re.compile(
-    r"\b(January|February|March|April|May|June|July|August|September|October|November|December)"
-    r"\s+(\d{1,2}),\s+(\d{4})\b"
-)
 _OUTLOOK_WORDS = r"(stable|negative|positive|developing)"
 _OUTLOOK_RE = re.compile(
     rf"\boutlook\b[^.;]{{0,40}}?\b{_OUTLOOK_WORDS}\b|\b{_OUTLOOK_WORDS}\s+outlook\b", re.IGNORECASE
@@ -100,13 +89,51 @@ class _Patterns:
             re.IGNORECASE,
         )
         self.transition_re: dict[str, re.Pattern[str]] = {}
+        self.label_alt: dict[str, str] = {}
         for agency_id, agency in scales.agencies.items():
             labels = sorted(agency.scale, key=len, reverse=True)
-            alt = "|".join(re.escape(label) for label in labels)
+            alt = "|".join(_label_pattern(label) for label in labels)
+            self.label_alt[agency_id] = alt
             self.transition_re[agency_id] = re.compile(
                 rf"\bfrom\s+(?P<old>{alt})(?![A-Za-z0-9+\-])\s+to\s+(?P<new>{alt})(?![A-Za-z0-9+\-])"
             )
 
+
+_DASH_CLASS = "[-\u2010\u2011\u2012\u2013\u2212]"
+
+
+def _label_pattern(label: str) -> str:
+    """Escaped label whose hyphens also match typographic dashes."""
+    return "".join(_DASH_CLASS if ch == "-" else re.escape(ch) for ch in label)
+
+
+_LABEL_BOUNDARY_BEFORE = r"(?<![A-Za-z0-9+\-])"
+_LABEL_BOUNDARY_AFTER = r"(?![A-Za-z0-9+\-])"
+_OUTLOOK_WORDS = r"(stable|negative|positive|developing|evolving)"
+_OUTLOOK_REVISION_RES = [
+    re.compile(
+        r"(?i:\b(?:revis(?:ed|es|ing)|chang(?:ed|es|ing)|lower(?:ed|s|ing)|rais(?:ed|es|ing)|mov(?:ed|es|ing)|set)"
+        r"\s+(?:the\s+|its\s+|their\s+)?(?:rating\s+|long-term\s+)?outlooks?\b[^.;]{0,120}?\bto\s+)"
+        rf"(?i:{_OUTLOOK_WORDS})\b(?i:(?:\s+from\s+{_OUTLOOK_WORDS}\b)?)"
+    ),
+    re.compile(
+        r"(?i:\boutlooks?\s+(?:(?:was|were|has been|have been|is|are)\s+)?(?:revised|changed|lowered|raised|moved)\s+to\s+)"  # noqa: E501
+        rf"(?i:{_OUTLOOK_WORDS})\b(?i:(?:\s+from\s+{_OUTLOOK_WORDS}\b)?)"
+    ),
+    re.compile(rf"(?i:\boutlooks?\s+to\s+{_OUTLOOK_WORDS}\s+from\s+{_OUTLOOK_WORDS}\b)"),
+]
+_WATCH_RES = [
+    re.compile(
+        r"(?i:\b(?:placed|places|put|puts|remains?|kept|keeps)\b[^.;]{0,120}?\bon\s+"
+        r"(?:creditwatch|credit\s+watch|rating\s+watch|watch)\s+(?:with\s+)?"
+        r"(negative|positive|developing|evolving)\b)"
+    ),
+    re.compile(r"(?i:\b(?:under|on)\s+review\s+for\s+(downgrade|upgrade)\b)"),
+    re.compile(r"(?i:\bcreditwatch\s+(negative|positive|developing)\b)"),
+]
+_WATCH_VALUE = {"downgrade": "negative", "upgrade": "positive", "evolving": "developing"}
+_RATING_NOUN_RE = re.compile(r"(?i:\b(?:ratings?|idr|issuer|long-term|senior|notes|debt)\b)")
+_QUOTES = "'\"\u2018\u2019\u201c\u201d"
 
 _PATTERN_CACHE: dict[int, _Patterns] = {}
 
@@ -119,15 +146,17 @@ def _patterns(scales: RatingScales) -> _Patterns:
 
 
 def parse_us_date(text: str) -> tuple[date, int, int] | None:
-    """First "Month D, YYYY" date in ``text`` with its offsets."""
-    m = _DATE_RE.search(text)
-    if not m:
-        return None
-    try:
-        parsed = date(int(m.group(3)), _MONTHS[m.group(1).lower()], int(m.group(2)))
-    except ValueError:
-        return None
-    return parsed, m.start(), m.end()
+    """First date in ``text`` with its offsets (see radar.extract.dates for the forms)."""
+    return first_date(text)
+
+
+HEADER_CHARS = 600
+
+
+def document_header_date(doc: RawDocument) -> tuple[date, int, int] | None:
+    """First date in the document header, used when a sentence carries no date."""
+    found = find_dates(doc.text[:HEADER_CHARS])
+    return found[0] if found else None
 
 
 def event_id_for(issuer_id: str, family: str, event_type: str, key: dict[str, object]) -> str:
@@ -141,6 +170,7 @@ def extract_rating_actions(doc: RawDocument, issuer_id: str, scales: RatingScale
     pats = _patterns(scales)
     events: list[CreditEvent] = []
     skipped: list[Skipped] = []
+    sentences_with_transition: set[int] = set()
     for sentence in iter_sentences(doc.text):
         mentions = [
             (m.start(), m.end(), pats.by_name[m.group(1).casefold()])
@@ -246,6 +276,19 @@ def extract_rating_actions(doc: RawDocument, issuer_id: str, scales: RatingScale
                             field="effective_date",
                         )
                     )
+                else:
+                    header = document_header_date(doc)
+                    if header:
+                        effective, ds, de = header
+                        evidence.append(
+                            exact_span(
+                                doc,
+                                ds,
+                                de,
+                                extractor_version=EXTRACTOR_VERSION,
+                                field="effective_date",
+                            )
+                        )
 
                 new_outlook = None
                 om = _OUTLOOK_RE.search(sentence.text, m.end())
@@ -318,7 +361,197 @@ def extract_rating_actions(doc: RawDocument, issuer_id: str, scales: RatingScale
                         source_doc_ids=[doc.doc_id],
                     )
                 )
+                sentences_with_transition.add(sentence.start)
+        if sentence.start not in sentences_with_transition:
+            event = _non_transition_event(doc, issuer_id, scales, pats, sentence, mentions)
+            if event is not None:
+                events.append(event)
     return Extraction(events, skipped)
+
+
+def _find_rating_label(text: str, alt: str) -> tuple[str, int, int] | None:
+    """Rating label named in a non-transition sentence (quoted, or next to a rating noun)."""
+    quoted = re.compile(rf"[{_QUOTES}](?P<label>{alt})(?:/[A-Za-z0-9+\-]+)?[{_QUOTES}]")
+    m = quoted.search(text)
+    if m:
+        return m.group("label"), m.start("label"), m.end("label")
+    bare = re.compile(rf"{_LABEL_BOUNDARY_BEFORE}(?P<label>{alt}){_LABEL_BOUNDARY_AFTER}")
+    for m in bare.finditer(text):
+        label = m.group("label")
+        if len(label) == 1 and not text[max(0, m.start() - 3) : m.start()].lower().endswith("at "):
+            continue
+        if _RATING_NOUN_RE.search(text[m.end() : m.end() + 60]):
+            return label, m.start("label"), m.end("label")
+    return None
+
+
+def _non_transition_event(doc, issuer_id, scales, pats, sentence, mentions) -> CreditEvent | None:
+    """Watch placements, outlook revisions and affirmations stated by an agency."""
+    text = sentence.text
+    agency_ids = [a for _, _, a in mentions]
+    watch = None
+    watch_span = None
+    for pattern in _WATCH_RES:
+        m = pattern.search(text)
+        if m:
+            raw = m.group(1).lower()
+            watch = _WATCH_VALUE.get(raw, raw)
+            watch_span = (m.start(), m.end())
+            break
+    new_outlook = old_outlook = None
+    outlook_span = None
+    for pattern in _OUTLOOK_REVISION_RES:
+        m = pattern.search(text)
+        if m:
+            new_outlook = m.group(1).lower()
+            old_outlook = (
+                m.group(2).lower() if m.lastindex and m.lastindex >= 2 and m.group(2) else None
+            )
+            outlook_span = (m.start(), m.end())
+            break
+    if new_outlook == "evolving":
+        new_outlook = "developing"
+    if old_outlook == "evolving":
+        old_outlook = "developing"
+    affirmed = re.search(r"(?i:\baffirm(?:ed|s|ing)?\b)", text) is not None
+    if watch is None and new_outlook is None and not affirmed:
+        return None
+    if watch is not None:
+        event_type = "watch"
+        anchor = watch_span[0]
+    elif new_outlook is not None:
+        event_type = "outlook_change"
+        anchor = outlook_span[0]
+    else:
+        event_type = "affirmation"
+        anchor = text.lower().index("affirm")
+    preceding = [a for s, _, a in mentions if s < anchor]
+    agency_id = preceding[-1] if preceding else agency_ids[0]
+    alt = pats.label_alt[agency_id]
+
+    label = None
+    label_span = None
+    affirm_a = re.compile(
+        rf"(?i:\baffirm(?:ed|s|ing)?\b)[^.;]{{0,120}}?(?:(?i:\bat)\s+)?[{_QUOTES}]?"
+        rf"{_LABEL_BOUNDARY_BEFORE}(?P<label>{alt}){_LABEL_BOUNDARY_AFTER}"
+    )
+    affirm_b = re.compile(
+        rf"[{_QUOTES}]?(?P<label>{alt})(?:/[A-Za-z0-9+\-]+)?[{_QUOTES}]?\s+(?:[A-Za-z-]+\s+){{0,3}}?(?i:ratings?\s+affirmed)"
+    )
+    for pattern in (affirm_a, affirm_b):
+        m = pattern.search(text)
+        if m:
+            label, label_span = m.group("label"), (m.start("label"), m.end("label"))
+            break
+    if label is None:
+        found = _find_rating_label(text, alt)
+        if found:
+            label, label_span = found[0], (found[1], found[2])
+    canonical = scales.agency(agency_id).canonical_label(label) if label else None
+    if event_type == "affirmation" and canonical is None:
+        return None  # an affirmation without an identifiable rating is not an event
+
+    evidence = [exact_span(doc, sentence.start, sentence.end, extractor_version=EXTRACTOR_VERSION)]
+    agency_mention = [(s, e) for s, e, a in mentions if a == agency_id]
+    if agency_mention:
+        s0, e0 = agency_mention[0]
+        evidence.append(
+            exact_span(
+                doc,
+                sentence.start + s0,
+                sentence.start + e0,
+                extractor_version=EXTRACTOR_VERSION,
+                field="agency",
+            )
+        )
+    if canonical and label_span:
+        evidence.append(
+            exact_span(
+                doc,
+                sentence.start + label_span[0],
+                sentence.start + label_span[1],
+                extractor_version=EXTRACTOR_VERSION,
+                field="rating",
+            )
+        )
+    if outlook_span:
+        evidence.append(
+            exact_span(
+                doc,
+                sentence.start + outlook_span[0],
+                sentence.start + outlook_span[1],
+                extractor_version=EXTRACTOR_VERSION,
+                field="new_outlook",
+            )
+        )
+        if old_outlook:
+            evidence.append(
+                exact_span(
+                    doc,
+                    sentence.start + outlook_span[0],
+                    sentence.start + outlook_span[1],
+                    extractor_version=EXTRACTOR_VERSION,
+                    field="old_outlook",
+                )
+            )
+    if watch_span:
+        evidence.append(
+            exact_span(
+                doc,
+                sentence.start + watch_span[0],
+                sentence.start + watch_span[1],
+                extractor_version=EXTRACTOR_VERSION,
+                field="watch",
+            )
+        )
+
+    effective: date | None = None
+    found_date = parse_us_date(text)
+    if found_date:
+        effective, ds, de = found_date
+        evidence.append(
+            exact_span(
+                doc,
+                sentence.start + ds,
+                sentence.start + de,
+                extractor_version=EXTRACTOR_VERSION,
+                field="effective_date",
+            )
+        )
+    else:
+        header = document_header_date(doc)
+        if header:
+            effective, ds, de = header
+            evidence.append(
+                exact_span(doc, ds, de, extractor_version=EXTRACTOR_VERSION, field="effective_date")
+            )
+
+    if event_type == "affirmation" and watch is None and new_outlook is None:
+        m = re.search(rf"(?i:\b{_OUTLOOK_WORDS}\s+outlook\b)", text)
+        if m:
+            new_outlook = m.group(1).lower()
+    fields = RatingFields(
+        agency=agency_id,  # type: ignore[arg-type]
+        new_outlook=new_outlook,  # type: ignore[arg-type]
+        old_outlook=old_outlook,  # type: ignore[arg-type]
+        watch=watch,  # type: ignore[arg-type]
+    ).model_dump()
+    fields.update({"rating": canonical, "extractor_version": EXTRACTOR_VERSION})
+    key = {
+        "agency": agency_id, "rating": canonical, "new_outlook": new_outlook, "watch": watch,
+        "date": effective.isoformat() if effective else f"{doc.doc_id}:{sentence.start}",
+    }  # fmt: skip
+    return CreditEvent(
+        event_id=event_id_for(issuer_id, "rating", event_type, key),
+        issuer_id=issuer_id,
+        family="rating",
+        event_type=event_type,
+        effective_date=effective,
+        fields=fields,
+        evidence=evidence,
+        extraction_method="structured",
+        source_doc_ids=[doc.doc_id],
+    )
 
 
 def extract_edgar_items(doc: RawDocument, issuer_id: str) -> Extraction:

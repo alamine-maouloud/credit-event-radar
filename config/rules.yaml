@@ -18,12 +18,13 @@
 # events or fundamentals only uses data whose as_of / effective_date is on or before the
 # event's effective date D. Ingestion timestamps are never used for decisions.
 
-version: "1.3"
+version: "1.4"
 changelog:
   - "1.0: initial matrix from docs/SPEC.md 9.3 and 9.4"
   - "1.1 (2026-10-06): RAT-01, RAT-02, RAT-08 and MOD-01 rewritten on agency-level ratings; the composite no longer drives any rule (ADR-001)"
   - "1.2 (2026-10-06): formal definition and direction per rule, rating_state parameters with look-ahead guard, RAT-01 and RAT-03 orthogonal, RAT-05 excludes the IG/HY crossing, no priority when no rule applies"
   - "1.3 (2026-10-06): ERN-04 requires an explicit deterministic guidance statement (reaffirmed or in line); an earnings release alone has no applicable rule (ADR-012)"
+  - "1.4 (2026-10-06): ISS-01 and ISS-02 apply to new_issue and tap only; ISS-04 requires a known EUR-equivalent amount below the threshold or an explicit tap, never an unknown amount (ADR-012)"
 
 thresholds:
   guidance_cut_p1_pct: 10          # ERN-02: guidance cut >= 10 % on revenue, EBITDA or FCF
@@ -202,7 +203,7 @@ rules:
     condition: issuance_at_or_above_threshold
     description: New issue at or above issuance_p2_eur (EUR equivalent)
     definition: >-
-      family = issuance and event_type != non_call and amount_eur_equiv >=
+      family = issuance and event_type in {new_issue, tap} and amount_eur_equiv >=
       issuance_p2_eur.
 
   - id: ISS-02
@@ -212,7 +213,7 @@ rules:
     condition: subordinated_hybrid_at1_or_t2_issuance
     description: Subordinated, hybrid, AT1 or T2 issuance
     definition: >-
-      family = issuance and event_type != non_call and seniority in {subordinated,
+      family = issuance and event_type in {new_issue, tap} and seniority in {subordinated,
       hybrid, AT1, T2}.
 
   - id: ISS-03
@@ -230,9 +231,12 @@ rules:
     priority: P3
     direction: neutral
     condition: issuance_below_threshold_tap_or_routine_refinancing
-    description: Issue below the threshold, tap, or routine refinancing
+    description: Issue with a known EUR-equivalent amount below the threshold, or an explicit tap
     definition: >-
-      family = issuance and event_type != non_call and not ISS-01 and not ISS-02.
+      family = issuance and (event_type = tap, or (event_type = new_issue and
+      amount_eur_equiv is known and < issuance_p2_eur and seniority not in {subordinated,
+      hybrid, AT1, T2})). An unknown or non-EUR amount without equivalent never means
+      "routine": no applicable rule (ADR-012). Redemptions have no rule.
 
   - id: EDG-01
     family: edgar
