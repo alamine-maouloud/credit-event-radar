@@ -53,7 +53,7 @@ def test_explanation_for_split_rating_p1(rules, scales):
     assert "Agency ratings used: YES" in text
     assert "Composite rating used: NO" in text
     assert "LLM used: NO" in text
-    assert "Rules version: 1.3" in text
+    assert "Rules version: 1.4" in text
     assert (
         "https://www.sec.gov/Archives/edgar/data/1/x.htm" in text
         and HEX in text

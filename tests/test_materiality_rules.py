@@ -53,7 +53,7 @@ def test_decision_lists_every_rule_and_modifier(rules, scales):
     d = decide(rules, scales, rating_event("SP", "BBB-", "BB+"))
     assert [r.id for r in d.rules] == [r.id for r in rules.rules]
     assert [m.id for m in d.modifiers] == [m.id for m in rules.modifiers]
-    assert d.rules_version == "1.3"
+    assert d.rules_version == "1.4"
 
 
 # ------------------------------------------------- RAT-01 / 03 / 05 / 08 --- #
@@ -393,17 +393,32 @@ def test_ern04_not_with_flags_or_cut(rules, scales):
         (dict(amount_eur_equiv=1_500_000_000.0, seniority="hybrid"), {"ISS-01", "ISS-02"}, "P2"),
         (dict(seniority="T2"), {"ISS-02"}, "P2"),
         (dict(seniority="subordinated"), {"ISS-02"}, "P2"),
-        (dict(), {"ISS-04"}, "P3"),  # amount and seniority unknown: routine by default
-        (
-            dict(amount=2_000_000_000.0, currency="USD"),
-            {"ISS-04"},
-            "P3",
-        ),  # no EUR equivalent: cannot assert ISS-01
+        (dict(), set(), None),  # amount and seniority unknown: nothing can be concluded (ADR-012)
+        (dict(amount=2_000_000_000.0, currency="USD"), set(), None),  # no EUR equivalent: no rule
+        (dict(seniority="senior"), set(), None),
     ],
 )
 def test_issuance_rules(rules, scales, fields, expected, priority):
     d = decide(rules, scales, ev("issuance", "new_issue", **fields))
     assert triggered(d) == expected and d.final_priority == priority
+
+
+def test_iss04_explicit_tap_is_routine(rules, scales):
+    d = decide(
+        rules, scales, ev("issuance", "tap", amount_eur_equiv=200_000_000.0, seniority="senior")
+    )
+    assert triggered(d) == {"ISS-04"} and d.final_priority == "P3"
+    d2 = decide(rules, scales, ev("issuance", "tap"))
+    assert triggered(d2) == {"ISS-04"}
+
+
+def test_redemption_has_no_applicable_rule(rules, scales):
+    d = decide(
+        rules,
+        scales,
+        ev("issuance", "redemption", amount_eur_equiv=750_000_000.0, seniority="subordinated"),
+    )
+    assert d.final_priority is None
 
 
 @pytest.mark.parametrize(
@@ -455,7 +470,7 @@ def test_provenance_fields(rules, scales):
     assert d.provenance.composite_used is False
     assert d.provenance.llm_used == "none"
     pd = d.to_priority_decision()
-    assert pd.llm_role == "none" and pd.rules_version == "1.3"
+    assert pd.llm_role == "none" and pd.rules_version == "1.4"
     assert pd.triggered_rules == ["RAT-01", "RAT-02"]
     assert any("S&P" in line or "SP" in line for line in pd.rule_details)
 

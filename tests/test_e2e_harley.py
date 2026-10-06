@@ -153,7 +153,7 @@ def test_audit_trail_covers_every_step(pipeline):
     ]  # fmt: skip
     entries = db.audit_entries(event_id=ev.event_id)
     assert [e["step"] for e in entries] == ["extract", "materiality"]
-    assert entries[1]["rules_version"] == "1.3" and entries[1]["model_id"] is None
+    assert entries[1]["rules_version"] == "1.4" and entries[1]["model_id"] is None
     assert "P1 (DECIDED) via RAT-01, RAT-02" in entries[1]["message"]
     db.close()
 

@@ -111,8 +111,8 @@ def test_universe_rejects_duplicate_alias(tmp_path: Path, universe):
 
 
 def test_rules_match_spec_matrix(rules):
-    assert rules.version == "1.3"
-    assert any("1.3" in entry for entry in rules.changelog)
+    assert rules.version == "1.4"
+    assert any("1.4" in entry for entry in rules.changelog)
     assert all(r.definition and r.direction for r in rules.rules)
     assert all(m.definition for m in rules.modifiers)
 

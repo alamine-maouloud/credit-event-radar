@@ -259,3 +259,116 @@ def test_edgar_items_ignore_other_sources_and_forms():
         ).events
         == []
     )
+
+
+# ------------------------------------------------ rating sentences v1.1 --- #
+
+
+def test_outlook_revision_to_negative_from_stable(scales):
+    text = "Fitch Ratings has revised the Outlook on Issuer Test A AG's Long-Term Issuer Default Rating (IDR) to Negative from Stable and affirmed the IDR at 'A-'."
+    ev = only_event(text, scales)
+    assert ev.event_type == "outlook_change"
+    f = ev.fields
+    assert (f["agency"], f["new_outlook"], f["old_outlook"], f["rating"]) == (
+        "FITCH",
+        "negative",
+        "stable",
+        "A-",
+    )
+    assert {s.field for s in ev.evidence} >= {
+        None,
+        "new_outlook",
+        "old_outlook",
+        "rating",
+        "agency",
+    }
+    assert ev.fields["extractor_version"] == "structured-rating-1.1"
+
+
+def test_outlook_revised_title_case_without_previous(scales):
+    text = "Research Update: Issuer Test A AG Outlook Revised To Negative On Slower Recovery In Credit Metrics; 'BBB/A-2' Ratings Affirmed by S&P Global Ratings."
+    ev = only_event(text, scales)
+    assert ev.event_type == "outlook_change" and ev.fields["new_outlook"] == "negative"
+    assert ev.fields.get("old_outlook") is None
+    assert ev.fields["rating"] == "BBB"
+
+
+def test_affirmation_alone(scales):
+    text = "On March 3, 2026, Moody's Ratings affirmed the Baa1 long-term issuer rating of Issuer Test A AG."
+    ev = only_event(text, scales)
+    assert ev.event_type == "affirmation" and ev.fields["rating"] == "Baa1"
+    assert ev.effective_date == date(2026, 3, 3)
+
+
+def test_affirmation_with_at_quotes(scales):
+    ev = only_event(
+        "S&P Global Ratings affirmed its 'BBB+' long-term issuer credit rating on Issuer Test A.",
+        scales,
+    )
+    assert ev.event_type == "affirmation" and ev.fields["rating"] == "BBB+"
+
+
+def test_watch_placement(scales):
+    ev = only_event(
+        "S&P Global Ratings placed its 'BBB-' long-term rating on Issuer Test A on CreditWatch with negative implications.",
+        scales,
+    )
+    assert (
+        ev.event_type == "watch"
+        and ev.fields["watch"] == "negative"
+        and ev.fields["rating"] == "BBB-"
+    )
+
+
+def test_review_for_downgrade(scales):
+    ev = only_event(
+        "Moody's placed the Baa3 ratings of Issuer Test A under review for downgrade.", scales
+    )
+    assert (
+        ev.event_type == "watch"
+        and ev.fields["watch"] == "negative"
+        and ev.fields["rating"] == "Baa3"
+    )
+
+
+def test_transition_sentence_does_not_also_emit_outlook_event(scales):
+    text = "S&P Global Ratings lowered the rating from BBB to BBB- and revised the outlook to negative from stable."
+    result = extract_rating_actions(doc(text), "ISSUER_TEST_A", scales)
+    assert [e.event_type for e in result.events] == ["downgrade"]
+    assert result.events[0].fields["new_outlook"] == "negative"
+
+
+def test_outlook_without_agency_is_not_an_event(scales):
+    assert (
+        extract_rating_actions(
+            doc("The company revised its outlook to negative."), "ISSUER_TEST_A", scales
+        ).events
+        == []
+    )
+
+
+def test_esg_or_business_outlook_is_not_a_rating_outlook(scales):
+    text = "S&P Global Ratings expects a stable outlook for the sector in 2026."
+    assert extract_rating_actions(doc(text), "ISSUER_TEST_A", scales).events == []
+
+
+def test_header_date_used_when_sentence_has_none(scales):
+    text = "Fitch Ratings - Frankfurt - 07 Apr 2025: Fitch Ratings has revised the Outlook on Issuer Test A AG to Negative from Stable."
+    ev = only_event(text, scales)
+    assert ev.effective_date == date(2025, 4, 7)
+    assert any(s.field == "effective_date" and s.quote == "07 Apr 2025" for s in ev.evidence)
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("07 Apr 2025", date(2025, 4, 7)),
+        ("7 April 2025", date(2025, 4, 7)),
+        ("Dec. 17, 2025", date(2025, 12, 17)),
+        ("17-Dec-2025", date(2025, 12, 17)),
+    ],
+)
+def test_parse_more_date_formats(text, expected):
+    from radar.extract.dates import find_dates
+
+    assert [d for d, _, _ in find_dates(text)] == [expected]
