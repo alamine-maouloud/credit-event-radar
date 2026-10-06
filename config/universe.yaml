@@ -1,0 +1,190 @@
+# Demo watchlist (docs/SPEC.md, section 5).
+#
+# Issuer ids are stable identifiers used everywhere (seed, events, alerts). Names and
+# aliases feed the deterministic issuer resolution (Phase 2). Nothing here is a rating:
+# ratings live in data/seeds/ratings_seed.csv with their sources.
+#
+# sec_cik is only filled when a source in the seed cites that CIK. ir_feeds are
+# completed by hand in Phase 2 after checking each site's terms of use and robots.txt.
+
+name: Demo watchlist
+disclosure: >-
+  Demo universe constructed exclusively from publicly disclosed holdings and publicly
+  available R&Co Asset Management research. Portfolio disclosures retrieved as of 06/10/2026.
+retrieved_as_of: 2026-10-06
+
+issuers:
+  - id: VOLKSWAGEN
+    name: Volkswagen
+    legal_entity: Volkswagen AG
+    aliases: ["Volkswagen AG", "Volkswagen Group", "VW", "VW Group", "VW AG"]
+    sector: automotive
+    country: "DE"
+    sec_cik: null
+    ratings_page: https://www.volkswagen-group.com/en/ratings-15756
+    ir_feeds: []
+    tags: [demo_watchlist]
+
+  - id: TRATON
+    name: TRATON
+    legal_entity: TRATON SE
+    aliases: ["TRATON SE", "Traton Group"]
+    sector: automotive
+    country: "DE"
+    sec_cik: null
+    ratings_page: https://ir.traton.com/en/rating
+    ir_feeds: []
+    tags: [demo_watchlist]
+
+  - id: MAGNA
+    name: Magna International
+    legal_entity: Magna International Inc.
+    aliases: ["Magna", "Magna International Inc."]
+    sector: automotive
+    country: "CA"
+    sec_cik: "0000749098"
+    ratings_page: null
+    ir_feeds: []
+    tags: [demo_watchlist, sec_filer]
+
+  - id: BNP_PARIBAS_CARDIF
+    name: BNP Paribas Cardif
+    legal_entity: BNP Paribas Cardif
+    aliases: ["Cardif"]
+    sector: insurance
+    country: "FR"
+    sec_cik: null
+    ratings_page: null
+    ir_feeds: []
+    tags: [demo_watchlist]
+
+  - id: DEUTSCHE_BANK
+    name: Deutsche Bank
+    legal_entity: Deutsche Bank AG
+    aliases: ["Deutsche Bank AG"]
+    sector: banks
+    country: "DE"
+    sec_cik: null
+    ratings_page: https://investorrelations.db.com/creditors/ratings?language_id=1
+    ir_feeds: []
+    tags: [demo_watchlist, financials]
+
+  - id: COMMERZBANK
+    name: Commerzbank
+    legal_entity: Commerzbank AG
+    aliases: ["Commerzbank AG"]
+    sector: banks
+    country: "DE"
+    sec_cik: null
+    ratings_page: https://investor-relations.commerzbank.com/debt-holders-information/sp-global
+    ir_feeds: []
+    tags: [demo_watchlist, financials]
+
+  - id: INTESA_SANPAOLO
+    name: Intesa Sanpaolo
+    legal_entity: Intesa Sanpaolo S.p.A.
+    aliases: ["Intesa Sanpaolo S.p.A.", "Intesa"]
+    sector: banks
+    country: "IT"
+    sec_cik: null
+    ratings_page: https://group.intesasanpaolo.com/en/investor-relations/ratings
+    ir_feeds: []
+    tags: [demo_watchlist, financials]
+
+  - id: EFG_INTERNATIONAL
+    name: EFG International
+    legal_entity: EFG International AG
+    aliases: ["EFG International AG", "EFG"]
+    sector: banks
+    country: "CH"
+    sec_cik: null
+    ratings_page: https://www.efginternational.com/investors/rating-and-instruments
+    ir_feeds: []
+    tags: [demo_watchlist, financials]
+
+  - id: DASSAULT_SYSTEMES
+    name: Dassault Systemes
+    legal_entity: Dassault Systèmes SE
+    aliases: ["Dassault Systèmes", "Dassault Systèmes SE", "3DS"]
+    sector: software
+    country: "FR"
+    sec_cik: null
+    ratings_page: https://investor.3ds.com/financing-information/
+    ir_feeds: []
+    tags: [demo_watchlist]
+
+  - id: ROQUETTE
+    name: Roquette Freres
+    legal_entity: Roquette Frères
+    aliases: ["Roquette", "Roquette Frères"]
+    sector: food_ingredients
+    country: "FR"
+    sec_cik: null
+    ratings_page: null
+    ir_feeds: []
+    tags: [demo_watchlist]
+
+  - id: OMV
+    name: OMV
+    legal_entity: OMV Aktiengesellschaft
+    aliases: ["OMV AG", "OMV Aktiengesellschaft"]
+    sector: oil_and_gas
+    country: "AT"
+    sec_cik: null
+    ratings_page: https://www.omv.com/en/investors/omv-on-the-capital-markets/debt-and-ratings
+    ir_feeds: []
+    tags: [demo_watchlist]
+
+  - id: VAR_ENERGI
+    name: Var Energi
+    legal_entity: Vår Energi ASA
+    aliases: ["Vår Energi", "Vår Energi ASA", "Var Energi ASA"]
+    sector: oil_and_gas
+    country: "NO"
+    sec_cik: null
+    ratings_page: https://varenergi.no/en/investor/credit-information/
+    ir_feeds: []
+    tags: [demo_watchlist, ig_hy_boundary]
+
+  - id: MOEVE
+    name: Moeve
+    legal_entity: Moeve S.A.
+    aliases: ["Moeve S.A.", "Moeve Global", "Cepsa"]
+    sector: oil_and_gas
+    country: "ES"
+    sec_cik: null
+    ratings_page: https://www.moeveglobal.com/en/investors/ratings-debt-issuances
+    ir_feeds: []
+    tags: [demo_watchlist, ig_hy_boundary]
+
+  # Issuers kept in the watchlist without any seed rating: the ratings easily found
+  # online belong to a parent or sister entity (General Motors Company, Harley-Davidson
+  # Inc.), not to the finance subsidiary. They are never mapped automatically.
+  # Expected display: "Rating status: UNVERIFIED, reason: exact legal-entity rating not
+  # validated, LLM fallback: disabled".
+
+  - id: GM_FINANCIAL
+    name: General Motors Financial
+    legal_entity: General Motors Financial Company, Inc.
+    aliases: ["GM Financial", "General Motors Financial Company"]
+    sector: auto_finance
+    country: "US"
+    sec_cik: null
+    ratings_page: null
+    ir_feeds: []
+    tags: [demo_watchlist, financials]
+    rating_status: unverified
+    notes: Exact legal-entity rating not validated. Do not reuse General Motors Company ratings.
+
+  - id: HARLEY_DAVIDSON_FS
+    name: Harley-Davidson Financial Services
+    legal_entity: Harley-Davidson Financial Services, Inc.
+    aliases: ["HDFS", "Harley-Davidson Financial Services, Inc."]
+    sector: auto_finance
+    country: "US"
+    sec_cik: null
+    ratings_page: null
+    ir_feeds: []
+    tags: [demo_watchlist, financials]
+    rating_status: unverified
+    notes: Exact legal-entity rating not validated. Do not reuse Harley-Davidson Inc. ratings.

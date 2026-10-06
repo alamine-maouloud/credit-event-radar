@@ -1,0 +1,78 @@
+# Runtime settings (models, thresholds, intervals, paths). Secrets never live here:
+# they are read from .env through the *_env keys below.
+
+version: "1.0"
+
+llm:
+  default_provider: anthropic
+  cache_dir: data/llm_cache
+  budget_usd_env: LLM_BUDGET_USD
+  # Temperature 0 everywhere for reproducibility. Responses are cached by
+  # (model, prompt version, input hash).
+  roles:
+    extraction:
+      provider: anthropic
+      model: claude-haiku-4-5-20251001
+      temperature: 0
+    notes:
+      provider: anthropic
+      model: claude-sonnet-5-5
+      temperature: 0
+    verification:
+      provider: anthropic
+      model: claude-haiku-4-5-20251001
+      temperature: 0
+  # Second backend for the LLM comparison (SPEC 15.4). Model ids to confirm in Phase 3.
+  benchmark_alternatives:
+    openai:
+      extraction:
+        provider: openai
+        model: TO_CONFIRM
+        temperature: 0
+      notes:
+        provider: openai
+        model: TO_CONFIRM
+        temperature: 0
+      verification:
+        provider: openai
+        model: TO_CONFIRM
+        temperature: 0
+
+ratings:
+  # middle: median notch (lowest of two, the single one if alone)
+  # average: mean notch rounded with composite_rounding
+  composite_method: middle
+  # nearest_weaker: nearest notch, ties to the weaker side (default)
+  # ceil: any fraction goes to the weaker notch (strict reading of SPEC 9.2)
+  # floor: toward the stronger notch
+  composite_rounding: nearest_weaker
+  # DBRS is mapped in rating_scales.yaml but excluded from the composite by default.
+  composite_agencies: [SP, MOODYS, FITCH]
+
+paths:
+  db: data/radar.db
+  raw: data/raw
+  outputs: outputs
+  seeds: data/seeds
+
+ingestion:
+  poll_interval_minutes: 15
+  sec:
+    user_agent_env: SEC_USER_AGENT
+    max_requests_per_second: 8
+
+alerts:
+  # SPEC 11.1. Local rendering is mandatory for every priority.
+  routing:
+    P1:
+      channels: [teams, email, local]
+      mode: immediate
+    P2:
+      channels: [teams, email, local]
+      mode: digest
+      digest_every_hours: 4
+    P3:
+      channels: [email, local]
+      mode: digest
+      digest_every_hours: 24
+  teams_webhook_env: TEAMS_WEBHOOK_URL

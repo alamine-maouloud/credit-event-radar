@@ -1,0 +1,151 @@
+# Materiality matrix (docs/SPEC.md, sections 9.3 and 9.4).
+#
+# The LLM never decides a priority. This file is the single source of truth, applied by
+# src/radar/materiality/ (Phase 4). `condition` is a symbolic name implemented by the
+# engine; the description is what the "Why this priority?" panel shows.
+#
+# Application policy: final priority = max(base rule, modifier effects), capped at P1.
+# No modifier ever lowers a priority. Every triggered rule and modifier is listed in
+# PriorityDecision.triggered_rules.
+
+version: "1.0"
+
+thresholds:
+  guidance_cut_p1_pct: 10          # ERN-02: guidance cut >= 10 % on revenue, EBITDA or FCF
+  issuance_p2_eur: 1000000000      # ISS-01: new issue >= 1 bn EUR equivalent
+  leverage_threshold: null         # MOD-03: only applied if set and data is sourced
+  mod02_window_days: 30
+  mod02_min_events: 2
+
+rules:
+  - id: RAT-01
+    family: rating
+    priority: P1
+    condition: composite_crosses_ig_to_hy
+    description: Composite rating moves from IG to HY (fallen angel)
+
+  - id: RAT-02
+    family: rating
+    priority: P1
+    condition: agency_downgrade_from_boundary_to_hy_while_composite_ig
+    description: Agency downgrade from BBB-/Baa3 to HY while the composite stays IG (fallen-angel risk)
+
+  - id: RAT-03
+    family: rating
+    priority: P1
+    condition: downgrade_two_or_more_notches
+    description: Downgrade of two notches or more in a single action
+
+  - id: RAT-04
+    family: rating
+    priority: P1
+    condition: negative_watch_at_boundary
+    description: Negative watch placed on an agency rating at BBB-/Baa3
+
+  - id: RAT-05
+    family: rating
+    priority: P2
+    condition: downgrade_one_notch
+    description: One-notch downgrade (outside RAT-02)
+
+  - id: RAT-06
+    family: rating
+    priority: P2
+    condition: outlook_to_negative
+    description: Outlook moves from stable or positive to negative
+
+  - id: RAT-07
+    family: rating
+    priority: P2
+    condition: negative_watch
+    description: Negative watch (outside RAT-04)
+
+  - id: RAT-08
+    family: rating
+    priority: P2
+    condition: composite_crosses_hy_to_ig
+    description: Composite rating moves from HY to IG (rising star)
+
+  - id: RAT-09
+    family: rating
+    priority: P3
+    condition: upgrade_or_positive_outlook
+    description: Upgrade or positive outlook
+
+  - id: RAT-10
+    family: rating
+    priority: P3
+    condition: affirmation
+    description: Affirmation without change
+
+  - id: ERN-01
+    family: earnings
+    priority: P1
+    condition: liquidity_going_concern_or_covenant_flag
+    description: Liquidity, going-concern, covenant breach or waiver language (verified span)
+
+  - id: ERN-02
+    family: earnings
+    priority: P1
+    condition: guidance_cut_at_or_above_threshold
+    description: Guidance cut at or above guidance_cut_p1_pct on revenue, EBITDA or FCF, or qualified as significant by the issuer
+
+  - id: ERN-03
+    family: earnings
+    priority: P2
+    condition: guidance_cut_below_threshold_or_significant_impairment
+    description: Guidance cut below the threshold, or significant impairment
+
+  - id: ERN-04
+    family: earnings
+    priority: P3
+    condition: results_in_line_with_guidance
+    description: Results in line with guidance
+
+  - id: ISS-01
+    family: issuance
+    priority: P2
+    condition: issuance_at_or_above_threshold
+    description: New issue at or above issuance_p2_eur (EUR equivalent)
+
+  - id: ISS-02
+    family: issuance
+    priority: P2
+    condition: subordinated_hybrid_at1_or_t2_issuance
+    description: Subordinated, hybrid, AT1 or T2 issuance
+
+  - id: ISS-03
+    family: issuance
+    priority: P1
+    condition: at1_or_hybrid_non_call
+    description: Non-call of an AT1 or hybrid instrument (financials)
+    scope: should
+
+  - id: ISS-04
+    family: issuance
+    priority: P3
+    condition: issuance_below_threshold_tap_or_routine_refinancing
+    description: Issue below the threshold, tap, or routine refinancing
+
+  - id: EDG-01
+    family: edgar
+    priority: P1
+    condition: edgar_8k_item_2_04
+    description: 8-K Item 2.04 (triggering event accelerating a financial obligation)
+
+modifiers:
+  - id: MOD-01
+    effect: "+1"
+    condition: negative_event_on_issuer_at_boundary
+    description: Negative event on an issuer whose composite is at BBB-/Baa3 (P3 to P2, P2 to P1)
+
+  - id: MOD-02
+    effect: set_P1
+    condition: two_or_more_negative_p2_events_in_window
+    description: At least mod02_min_events negative P2 events on the same issuer within mod02_window_days days; the latest becomes P1
+
+  - id: MOD-03
+    effect: "+1"
+    condition: verified_leverage_above_threshold
+    description: Verified leverage above leverage_threshold (only if the data is available and sourced)
+    requires_sourced_data: true
