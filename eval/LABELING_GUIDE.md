@@ -43,14 +43,19 @@ One occurrence per metric and per period stated. A document may hold several occ
 | `period` | the fiscal period as written, normalised to the year (`2026`) or the year and half (`H2 2026`). |
 | `current_lower`, `current_upper` | the range now stated, both equal for a point estimate (`around`, `approximately`). Both `null` only for an explicit comparator without a written number (`in line with the previous year`), see the Numbers paragraph; a statement with neither number nor comparator is not an occurrence (section 3). |
 | `previous_lower`, `previous_upper` | the earlier range only when the same document states it; otherwise `null`. Never filled from memory or from another document. |
-| `status` | `raised`, `cut`, `reaffirmed`, `new`, `withdrawn`, `mentioned`. `new` when the text gives a range without saying it changed or was maintained. `reaffirmed` requires words such as confirms, maintains, reaffirms, unchanged, still expected, continues to expect, in line with the previous forecast; the wording may sit in an adjacent sentence of the same outlook paragraph. `raised`/`cut` require either explicit words or a stated earlier range that differs; a range narrowed "to the upper end of the previous ranges" is `raised`, narrowed to the lower end is `cut`, narrowed or adjusted without a side and without the earlier range is `new`. The wording may sit in an adjacent sentence of the same outlook paragraph; when it does, include that sentence in the evidence. |
+| `status` | `raised`, `cut`, `reaffirmed`, `new`, `withdrawn`, `mentioned`. `mentioned`: an explicit outlook statement for a metric in scope that carries no usable number and whose change cannot be shown from the span (`in line with the previous year` alone); all bounds `null`, never a reason for `guidance_changed`. `new` when the text gives a range without saying it changed or was maintained. `reaffirmed` requires words such as confirms, maintains, reaffirms, unchanged, still expected, continues to expect, in line with the previous forecast; the wording may sit in an adjacent sentence of the same outlook paragraph. `raised`/`cut` require either explicit words or a stated earlier range that differs; a range narrowed "to the upper end of the previous ranges" is `raised`, narrowed to the lower end is `cut`, narrowed or adjusted without a side and without the earlier range is `new`. The wording may sit in an adjacent sentence of the same outlook paragraph; when it does, include that sentence in the evidence. |
+| `change_basis` | `quantitative` when the status is `raised`, `cut` or `withdrawn` and both the earlier and the current range are in the span (Python computes the delta); `qualitative` when the status is `raised`, `cut` or `withdrawn` but one of the ranges is missing from the span (a change without magnitude: TRATON narrowed "to the upper end of the previous ranges", VW "in line with the previous year (previously: increase of up to 5 percent)"); `none` for `new`, `reaffirmed` and `mentioned`. Derived from status and bounds, checked by the build script, never from knowledge outside the span. |
+| `scope` | `group` by default; `automotive_division` when the issuer guides the metric for that division (Volkswagen investment ratio, net cash flow, net liquidity). Metadata in V1, not scored. |
 | `evidence_quote` | verbatim sentence or sentences from the normalised text that contain the metric label, every number of the occurrence and the unit. Prefer the shortest span that holds them all. Copy characters exactly, including typographic quotes and signs such as `+3`. |
 | `start_offset`, `end_offset` | character offsets of `evidence_quote` in the normalised text of the document (the text stored by the pipeline, `normalizer_version` recorded). Computed by `scripts/gold_guidance.py`, never by hand. |
 
 Numbers: `0 and +3 percent` gives `current_lower 0`, `current_upper 3`, `basis yoy_change_pct`,
 `unit PCT`. Signs come from the text (a dash before 10% gives `-10`, `+ 0%` gives `0`); the build script compares
 absolute values against the quote. `in line with the previous year` for revenue is an occurrence
-with both current bounds `null`: the statement is explicit but carries no written number. `between EUR 3 billion and EUR 6 billion` gives `3` and `6`, `EUR_BN`. `around
+with both current bounds `null`: the statement is explicit but carries no written number. Its
+status is `mentioned` unless the same span states the earlier range and thereby demonstrates
+the change (`(previously: increase of up to 5 percent)` gives `cut`, `previous_upper 5`,
+`change_basis qualitative`). `between EUR 3 billion and EUR 6 billion` gives `3` and `6`, `EUR_BN`. `around
 EUR 1 bn` gives `1` and `1`. `at least 5 percent` gives lower `5` and upper `null`.
 `approximately`, `around`, `about` do not change the numbers. Percent signs and the words
 percent, per cent are equivalent.
@@ -70,6 +75,10 @@ percent, per cent are equivalent.
   `guidance_mentioned_not_actionable` when nothing else applies.
 
 ## 4. Annotation procedure
+
+Principle: every label must be demonstrable from its own evidence span. Knowledge of the rest
+of the document, of earlier releases or of the issuer never enters a label. This is what makes
+the unsupported claim rate of the extraction measurable.
 
 1. Read the whole normalised text, not the title.
 2. List every sentence with a forward-looking statement about the issuer's own results.

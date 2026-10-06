@@ -14,6 +14,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -22,9 +23,11 @@ documents:
         current_upper: 5
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "The Volkswagen Group expects the sales revenue to exceed the previous year’s figure by up to 5 percent."
       - metric: margin
         metric_label: "operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -33,9 +36,11 @@ documents:
         current_upper: 6.5
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "The operating return on sales for the Group is expected to be between 5.5 and 6.5 percent."
       - metric: capex
         metric_label: "investment ratio"
+        scope: automotive_division
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -44,9 +49,11 @@ documents:
         current_upper: 13
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "In the Automotive Division, the Group expects an investment ratio between 12 and 13 percent in 2025."
       - metric: fcf
         metric_label: "automotive net cash flow"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -55,9 +62,11 @@ documents:
         current_upper: 5
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "The automotive net cash flow for 2025 is expected to be between EUR 2 and EUR 5 billion."
       - metric: other
         metric_label: "Net liquidity"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -66,6 +75,7 @@ documents:
         current_upper: 37
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "Net liquidity in the Automotive Division in 2025 is expected to be between EUR 34 and EUR 37 billion."
 
   - gold_id: G-VW-02
@@ -76,6 +86,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -84,9 +95,11 @@ documents:
         current_upper: 5
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "The Volkswagen Group expects the sales revenue to exceed the previous year’s figure by up to 5 percent."
       - metric: margin
         metric_label: "operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -95,9 +108,11 @@ documents:
         current_upper: 6.5
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "The operating return on sales for the Group is expected to be between 5.5 and 6.5 percent."
       - metric: capex
         metric_label: "investment ratio"
+        scope: automotive_division
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -106,9 +121,11 @@ documents:
         current_upper: 13.0
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "In the Automotive Division, the Group expects an investment ratio between 12.0 and 13.0 percent in 2025."
       - metric: fcf
         metric_label: "automotive net cash flow"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -117,9 +134,11 @@ documents:
         current_upper: 5.0
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "The automotive net cash flow for 2025 is expected to be between EUR 2.0 and EUR 5.0 billion."
       - metric: other
         metric_label: "Net liquidity"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -128,16 +147,18 @@ documents:
         current_upper: 37
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "Net liquidity in the Automotive Division in 2025 is expected to be between EUR 34 and EUR 37 billion."
 
   - gold_id: G-VW-03
     fixture: tests/fixtures/gold/guidance/vw_h1_2025_results
     document_date: "2025-07-25"
     behaviour: guidance_changed
-    notes: Outlook lowered on July 25, 2025 with the earlier ranges stated in brackets.
+    notes: Outlook lowered on July 25, 2025 with the earlier ranges stated in brackets. Sales revenue is cut on a qualitative basis, the span itself states the earlier increase of up to 5 percent and the new in line wording.
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -146,9 +167,11 @@ documents:
         current_upper: null
         period: "2025"
         status: cut
+        change_basis: qualitative
         evidence_quote: "The Volkswagen Group expects sales revenue to be in line with the previous year’s figure (previously: increase of up to 5 percent)."
       - metric: margin
         metric_label: "operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: 5.5
@@ -157,9 +180,11 @@ documents:
         current_upper: 5.0
         period: "2025"
         status: cut
+        change_basis: quantitative
         evidence_quote: "The Group’s operating return on sales is expected to range between 4.0 and 5.0 percent (previously: 5.5 to 6.5 percent)."
       - metric: capex
         metric_label: "investment ratio"
+        scope: automotive_division
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -168,9 +193,11 @@ documents:
         current_upper: 13
         period: "2025"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "In the Automotive Division, the Volkswagen Group continues to expect an investment ratio between 12 and 13 percent in 2025."
       - metric: fcf
         metric_label: "Automotive net cash flow"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: 2
@@ -179,9 +206,11 @@ documents:
         current_upper: 3
         period: "2025"
         status: cut
+        change_basis: quantitative
         evidence_quote: "Automotive net cash flow for 2025 is expected to be between EUR 1 and EUR 3 billion (previously: EUR 2 to EUR 5 billion)."
       - metric: other
         metric_label: "Net liquidity"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: 34
@@ -190,16 +219,18 @@ documents:
         current_upper: 33
         period: "2025"
         status: cut
+        change_basis: quantitative
         evidence_quote: "Net liquidity in the Automotive Division in 2025 is expected to be between EUR 31 and EUR 33 billion (previously: EUR 34 to EUR 37 billion)."
 
   - gold_id: G-VW-04
     fixture: tests/fixtures/gold/guidance/vw_q3_2025_results
     document_date: "2025-10-30"
     behaviour: guidance_maintained
-    notes: Heading says outlook as of September 19, 2025. The ranges differ from July 2025 but the document states no earlier range, so statuses are new by rule 2 and the behaviour is maintained, not changed.
+    notes: Heading says outlook as of September 19, 2025. The ranges differ from July 2025 but the document states no earlier range, so statuses are new by rule 2 and the behaviour is maintained, not changed. Sales revenue in line with the previous year without the earlier range in the span is mentioned, bounds null.
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -207,10 +238,12 @@ documents:
         current_lower: null
         current_upper: null
         period: "2025"
-        status: new
+        status: mentioned
+        change_basis: none
         evidence_quote: "The Volkswagen Group expects its sales revenue for 2025 to be in line with the previous year."
       - metric: margin
         metric_label: "operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -219,9 +252,11 @@ documents:
         current_upper: 3.0
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "The Group’s operating return on sales is projected to range between 2.0 and 3.0 percent."
       - metric: capex
         metric_label: "investment ratio"
+        scope: automotive_division
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -230,9 +265,11 @@ documents:
         current_upper: 13
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "In the Automotive Division, the company expects an investment ratio between 12 and 13 percent in 2025."
       - metric: fcf
         metric_label: "Net cash flow"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -241,9 +278,11 @@ documents:
         current_upper: 0
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "Net cash flow for the year 2025 is expected to be around EUR 0 billion."
       - metric: other
         metric_label: "Net liquidity"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -252,6 +291,7 @@ documents:
         current_upper: 30
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "Net liquidity in the Automotive Division is expected to amount to around EUR 30 billion in 2025."
 
   - gold_id: G-VW-05
@@ -262,6 +302,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -270,9 +311,11 @@ documents:
         current_upper: 3
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "The Volkswagen Group expects sales revenue in 2026 to develop within a range of 0 and +3 percent compared with the previous year."
       - metric: margin
         metric_label: "operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -281,9 +324,11 @@ documents:
         current_upper: 5.5
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "The Group’s operating return on sales is expected to range between 4.0 and 5.5 percent."
       - metric: capex
         metric_label: "investment ratio"
+        scope: automotive_division
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -292,9 +337,11 @@ documents:
         current_upper: 12
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "In the Automotive Division, the company expects an investment ratio of between 11 and 12 percent in 2026."
       - metric: fcf
         metric_label: "Net cash flow"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -303,9 +350,11 @@ documents:
         current_upper: 6
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Net cash flow for the year 2026 is expected to range between EUR 3 billion and EUR 6 billion."
       - metric: other
         metric_label: "Net liquidity"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -314,6 +363,7 @@ documents:
         current_upper: 34
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Net liquidity in the Automotive Division is expected to range between EUR 32 billion and EUR 34 billion in 2026."
 
   - gold_id: G-VW-06
@@ -324,6 +374,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -332,9 +383,11 @@ documents:
         current_upper: 3
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "The Volkswagen Group expects sales revenue in 2026 to develop within a range of 0 and +3 percent compared with the previous year."
       - metric: margin
         metric_label: "operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -343,9 +396,11 @@ documents:
         current_upper: 5.5
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "The Group’s operating return on sales is expected to range between 4.0 and 5.5 percent."
       - metric: capex
         metric_label: "investment ratio"
+        scope: automotive_division
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -354,9 +409,11 @@ documents:
         current_upper: 12
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "In the Automotive Division, the company expects an investment ratio of between 11 and 12 percent in 2026."
       - metric: fcf
         metric_label: "Net cash flow"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -365,9 +422,11 @@ documents:
         current_upper: 6
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Net cash flow for the year 2026 is expected to range between EUR 3 billion and EUR 6 billion."
       - metric: other
         metric_label: "Net liquidity"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -376,6 +435,7 @@ documents:
         current_upper: 34
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Net liquidity in the Automotive Division is expected to range between EUR 32 billion and EUR 34 billion in 2026."
 
   - gold_id: G-VW-07
@@ -386,6 +446,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: 0
@@ -394,9 +455,11 @@ documents:
         current_upper: 0
         period: "2026"
         status: cut
+        change_basis: quantitative
         evidence_quote: "The Volkswagen Group expects sales revenue in 2026 to develop within a range of –3 to 0 percent compared with the previous year (previously: range of 0 to +3 percent)."
       - metric: margin
         metric_label: "operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -405,9 +468,11 @@ documents:
         current_upper: 5.5
         period: "2026"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "The Group’s operating return on sales is still expected to be between 4.0 and 5.5 percent."
       - metric: capex
         metric_label: "investment ratio"
+        scope: automotive_division
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -416,9 +481,11 @@ documents:
         current_upper: 12
         period: "2026"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "In the Automotive Division, the company continues to expect an investment ratio of between 11 and 12 percent in 2026."
       - metric: fcf
         metric_label: "Net cash flow"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -427,9 +494,11 @@ documents:
         current_upper: 6
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Net cash flow for the year 2026 is expected to range between EUR 3 billion and EUR 6 billion."
       - metric: other
         metric_label: "Net liquidity"
+        scope: automotive_division
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -438,6 +507,7 @@ documents:
         current_upper: 34
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Net liquidity in the Automotive Division is expected to range between EUR 32 billion and EUR 34 billion in 2026."
 
   - gold_id: G-VW-08
@@ -470,6 +540,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -478,9 +549,11 @@ documents:
         current_upper: 5
         period: "2025"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "We continue to expect a range of ‒5% to +5% for unit sales and sales revenue of the TRATON GROUP."
       - metric: margin
         metric_label: "adjusted operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -489,6 +562,7 @@ documents:
         current_upper: 8.5
         period: "2025"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "The TRATON Group's adjusted operating return on sales is forecast between 7.5% and 8.5%."
 
   - gold_id: G-TR-02
@@ -499,6 +573,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: -5
@@ -507,9 +582,11 @@ documents:
         current_upper: 0
         period: "2025"
         status: cut
+        change_basis: quantitative
         evidence_quote: "For 2025, the TRATON GROUP now expects a range of ‒ 10% to + 0% (previously ‒ 5% to + 5%) for unit sales and sales revenue."
       - metric: margin
         metric_label: "adjusted operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: 7.5
@@ -518,9 +595,11 @@ documents:
         current_upper: 7
         period: "2025"
         status: cut
+        change_basis: quantitative
         evidence_quote: "The adjusted operating return on sales is now forecast between 6% and 7% (previously 7.5% and 8.5%)."
       - metric: fcf
         metric_label: "Net cash flow of TRATON Operations"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: 2.2
@@ -529,6 +608,7 @@ documents:
         current_upper: 1.5
         period: "2025"
         status: cut
+        change_basis: quantitative
         evidence_quote: "The Net cash flow of TRATON Operations is now expected to come in between €1 billion and €1.5 billion (previously €2.2 billion and €2.7 billion)."
 
   - gold_id: G-TR-03
@@ -539,6 +619,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -547,9 +628,11 @@ documents:
         current_upper: 0
         period: "2025"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "For 2025, the TRATON GROUP continues to expect a range of ‒ 10% to + 0% for unit sales and sales revenue."
       - metric: margin
         metric_label: "Adjusted operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -558,9 +641,11 @@ documents:
         current_upper: 7
         period: "2025"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "Adjusted operating return on sales is forecast at the lower end of the guidance range of 6% to 7%."
       - metric: fcf
         metric_label: "Net cash flow of TRATON Operations"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -569,6 +654,7 @@ documents:
         current_upper: 1.5
         period: "2025"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "Net cash flow of TRATON Operations is also expected to come in at the lower end of the range of €1.0 billion to €1.5 billion."
 
   - gold_id: G-TR-04
@@ -579,6 +665,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -587,9 +674,11 @@ documents:
         current_upper: 7
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Forecast for unit sales and sales revenue in 2026 between –5 and +7%"
       - metric: margin
         metric_label: "adjusted operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -598,9 +687,11 @@ documents:
         current_upper: 7.3
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Forecast for adjusted operating return on sales between 5.3 and 7.3%"
       - metric: fcf
         metric_label: "net cash flow in TRATON Operations"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -609,6 +700,7 @@ documents:
         current_upper: 1.7
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Forecast for net cash flow in TRATON Operations between €0.9 billion and €1.7 billion"
 
   - gold_id: G-TR-05
@@ -619,6 +711,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -627,9 +720,11 @@ documents:
         current_upper: 7
         period: "2026"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "We continue to expect a range of ‒5% to +7% for unit sales and sales revenue of the TRATON GROUP."
       - metric: margin
         metric_label: "operating return on sales (adjusted)"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -638,6 +733,7 @@ documents:
         current_upper: 7.3
         period: "2026"
         status: reaffirmed
+        change_basis: none
         evidence_quote: "We still forecast an operating return on sales (adjusted) of between 5.3 and 7.3%."
 
   - gold_id: G-TR-06
@@ -648,6 +744,7 @@ documents:
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
+        scope: group
         basis: yoy_change_pct
         unit: PCT
         previous_lower: null
@@ -656,9 +753,11 @@ documents:
         current_upper: 7
         period: "2026"
         status: raised
+        change_basis: qualitative
         evidence_quote: "The business performance so far in our core markets allows us to narrow our full-year outlook for some key performance indicators to the upper end of the previous ranges. For unit sales and sales revenue in 2026, we now expect a range of 0 to +7%."
       - metric: margin
         metric_label: "adjusted operating return on sales"
+        scope: group
         basis: margin_pct
         unit: PCT
         previous_lower: null
@@ -667,6 +766,7 @@ documents:
         current_upper: 7.3
         period: "2026"
         status: raised
+        change_basis: qualitative
         evidence_quote: "We expect the Group’s adjusted operating return on sales to come in between 6.3 and 7.3%, and for TRATON Operations between 7.1 and 8.1%."
 
   - gold_id: G-TR-07
@@ -697,6 +797,7 @@ documents:
     occurrences:
       - metric: capex
         metric_label: "Organic CAPEX"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -705,6 +806,7 @@ documents:
         current_upper: 3.6
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "Organic CAPEX is projected to come in at around EUR 3.6 bn1 (2024: EUR 3.7 bn), including non-cash leases of around EUR 0.1 bn."
 
   - gold_id: G-OMV-02
@@ -715,6 +817,7 @@ documents:
     occurrences:
       - metric: capex
         metric_label: "Organic CAPEX"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -723,6 +826,7 @@ documents:
         current_upper: 3.6
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "Organic CAPEX is projected to come in at around EUR 3.6 bn1 (2024: EUR 3.7 bn), including non-cash leases of around EUR 0.1 bn."
 
   - gold_id: G-OMV-03
@@ -733,6 +837,7 @@ documents:
     occurrences:
       - metric: capex
         metric_label: "Organic CAPEX"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -741,6 +846,7 @@ documents:
         current_upper: 3.6
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "Organic CAPEX is projected to come in at around EUR 3.6 bn1 (2024: EUR 3.7 bn), including non-cash leases of around EUR 0.1 bn."
 
   - gold_id: G-OMV-04
@@ -751,6 +857,7 @@ documents:
     occurrences:
       - metric: capex
         metric_label: "Organic CAPEX"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -759,6 +866,7 @@ documents:
         current_upper: 3.6
         period: "2025"
         status: new
+        change_basis: none
         evidence_quote: "Organic CAPEX is projected to come in at around EUR 3.6 bn1 (2024: EUR 3.7 bn), including non-cash leases of around EUR 0.1 bn."
 
   - gold_id: G-OMV-05
@@ -769,6 +877,7 @@ documents:
     occurrences:
       - metric: capex
         metric_label: "Organic CAPEX"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -777,6 +886,7 @@ documents:
         current_upper: 3.2
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Organic CAPEX is projected to come in at around EUR 3.2 bn (2025: EUR 3.7 bn)."
 
   - gold_id: G-OMV-06
@@ -787,6 +897,7 @@ documents:
     occurrences:
       - metric: capex
         metric_label: "Organic CAPEX"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: 3.2
@@ -795,6 +906,7 @@ documents:
         current_upper: 3.4
         period: "2026"
         status: raised
+        change_basis: quantitative
         evidence_quote: "Organic CAPEX is projected to come in at around EUR 3.4 bn (2025: EUR 3.7 bn). The increase compared to the previous guidance of EUR 3.2 bn is entirely attributable to the recognition of Borealis’ organic CAPEX of EUR 0.2 bn in Q1/26, which was excluded in the previous guidance as timing of closing of the transaction was uncertain."
 
   - gold_id: G-OMV-07
@@ -805,6 +917,7 @@ documents:
     occurrences:
       - metric: capex
         metric_label: "Organic CAPEX"
+        scope: group
         basis: absolute
         unit: EUR_BN
         previous_lower: null
@@ -813,6 +926,7 @@ documents:
         current_upper: 3.4
         period: "2026"
         status: new
+        change_basis: none
         evidence_quote: "Organic CAPEX is projected to come in at around EUR 3.4 bn (2025: EUR 3.7 bn)."
 
   - gold_id: G-OMV-08

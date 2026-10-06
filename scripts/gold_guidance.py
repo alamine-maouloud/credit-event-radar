@@ -43,6 +43,31 @@ _NUMBER_RE = re.compile(r"\d")
 _SIGNED_NUMBER_RE = re.compile("([-+\u2012\u2013\u2212])?\\s*(\\d+(?:[.,]\\d+)?)")
 
 
+CHANGING = {"raised", "cut", "withdrawn"}
+SCOPES = {"group", "automotive_division"}
+
+
+def coherence_problems(occ: dict) -> list[str]:
+    """status, bounds, change_basis and scope must agree (eval/LABELING_GUIDE.md section 2)."""
+    out = []
+    status = occ.get("status")
+    has_prev = any(occ.get(k) is not None for k in ("previous_lower", "previous_upper"))
+    has_cur = any(occ.get(k) is not None for k in ("current_lower", "current_upper"))
+    if status in CHANGING:
+        expected = "quantitative" if has_prev and has_cur else "qualitative"
+    else:
+        expected = "none"
+    if occ.get("change_basis") != expected:
+        out.append(f"{status} with change_basis={occ.get('change_basis')}, expected {expected}")
+    if status == "mentioned" and (has_prev or has_cur):
+        out.append("mentioned occurrence carries bounds")
+    if status in {"new", "reaffirmed"} and not has_cur:
+        out.append(f"{status} occurrence without current bounds")
+    if occ.get("scope", "group") not in SCOPES:
+        out.append(f"unknown scope {occ.get('scope')!r}")
+    return out
+
+
 def signed_numbers(quote: str) -> list[float]:
     out = []
     for sign, digits in _SIGNED_NUMBER_RE.findall(quote):
@@ -117,6 +142,7 @@ def build(args) -> None:
                 value = occ.get(key)
                 if value is not None and not any(abs(n - float(value)) < 1e-9 for n in numbers):
                     problems.append(f"{item['fixture']}: {key}={value} not in quote {quote[:60]!r}")
+            problems.extend(f"{item['fixture']}: {msg}" for msg in coherence_problems(occ))
             occurrences.append({**occ, "start_offset": start, "end_offset": start + len(quote)})
         rows.append(
             {

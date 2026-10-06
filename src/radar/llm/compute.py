@@ -17,6 +17,18 @@ class GuidanceChange:
     delta_percent: float | None
     direction: str | None
     direction_claim_matches: bool | None
+    change_basis: str = "none"  # quantitative | qualitative | none
+
+
+CHANGING_STATUSES = frozenset({"raised", "cut", "withdrawn"})
+
+
+def change_basis(status: str, previous: float | None, current: float | None) -> str:
+    """quantitative when the text states a change and both ranges are present (a delta can be
+    computed), qualitative when it states a change without them, none otherwise."""
+    if status not in CHANGING_STATUSES:
+        return "none"
+    return "quantitative" if previous is not None and current is not None else "qualitative"
 
 
 def _midpoint(lower: float | None, upper: float | None) -> float | None:
@@ -34,8 +46,9 @@ def _midpoint(lower: float | None, upper: float | None) -> float | None:
 def compute_guidance_change(statement: GuidanceStatement) -> GuidanceChange:
     previous = _midpoint(statement.previous_lower, statement.previous_upper)
     current = _midpoint(statement.current_lower, statement.current_upper)
+    basis = change_basis(statement.status, previous, current)
     if previous is None or current is None:
-        return GuidanceChange(previous, current, None, None, None, None)
+        return GuidanceChange(previous, current, None, None, None, None, basis)
     delta = current - previous
     if statement.basis == "yoy_change_pct":
         delta_percent = None  # a change of growth rate is a difference in points
@@ -57,4 +70,5 @@ def compute_guidance_change(statement: GuidanceStatement) -> GuidanceChange:
         delta_percent=delta_percent,
         direction=direction,
         direction_claim_matches=None if claim is None else (claim == direction),
+        change_basis=basis,
     )
