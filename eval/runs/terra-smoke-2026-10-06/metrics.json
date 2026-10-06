@@ -4,6 +4,7 @@
     "ok": 1,
     "cached": 0,
     "json_failures": 0,
+    "truncated": 0,
     "budget_refused": 0,
     "provider_errors": 0,
     "dry_run": 0
