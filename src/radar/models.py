@@ -8,13 +8,14 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, HttpUrl, model_validator
+from pydantic import BaseModel, Field, HttpUrl, JsonValue, model_validator
 
 # --------------------------------------------------------------------------- #
 # Shared literals
 # --------------------------------------------------------------------------- #
 
 SourceType = Literal["edgar", "ir_feed", "news_rss", "manual"]
+EvidenceType = Literal["sentence", "table_row", "footnote"]
 EventFamily = Literal["rating", "earnings", "issuance", "other"]
 ExtractionMethod = Literal["structured", "llm_validated"]
 Priority = Literal["P1", "P2", "P3"]
@@ -64,27 +65,52 @@ PRIORITY_ORDER: dict[str, int] = {"P3": 0, "P2": 1, "P1": 2}
 
 
 class RawDocument(BaseModel):
-    """A source document exactly as retrieved, with full provenance."""
+    """A source document exactly as retrieved, with full provenance.
 
-    doc_id: str = Field(description="sha256 of the normalised content")
+    Two hashes answer two different questions: ``content_hash`` is the SHA-256 of the raw
+    bytes as delivered by the source (did the source change the document?), ``doc_id`` is
+    the SHA-256 of the normalised text produced by ``normalizer_version`` (did our
+    normaliser change?). Evidence offsets always refer to ``text``.
+    """
+
+    doc_id: str = Field(description="sha256 of the normalised text", min_length=64, max_length=64)
     source_type: SourceType
     url: HttpUrl
     title: str | None = None
     published_at: datetime | None = None
     retrieved_at: datetime
-    content_hash: str
+    content_hash: str = Field(
+        description="sha256 of the raw bytes, before any parsing", min_length=64, max_length=64
+    )
+    raw_size_bytes: int = Field(ge=0)
+    normalizer_version: str
     text: str
     raw_path: str = Field(description="Path of the raw snapshot on disk")
     issuer_hint: str | None = None
+    extra: dict[str, JsonValue] = Field(
+        default_factory=dict,
+        description=(
+            "Connector metadata only (e.g. accession_number, form, items, filing_date, "
+            "primary_document). Never business data."
+        ),
+    )
 
 
 class EvidenceSpan(BaseModel):
-    """A passage of a source document that supports an extracted field or a claim."""
+    """A passage of a source document that supports an extracted field or a claim.
+
+    Offsets are character positions in ``RawDocument.text``. ``evidence_type`` says how the
+    passage was delimited; Phase 2 automatic extraction only produces ``sentence``, the
+    other types exist so that table rows and footnotes can be added without changing the
+    model.
+    """
 
     doc_id: str
     char_start: int = Field(ge=0)
     char_end: int = Field(ge=0)
     quote: str = Field(min_length=1)
+    evidence_type: EvidenceType = "sentence"
+    extractor_version: str
     match_score: float = Field(
         ge=0.0, le=100.0, description="rapidfuzz score after normalisation (0 to 100)"
     )
