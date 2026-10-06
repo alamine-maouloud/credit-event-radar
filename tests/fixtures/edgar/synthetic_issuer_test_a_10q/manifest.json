@@ -1,0 +1,25 @@
+{
+  "role": "synthetic",
+  "source_type": "manual",
+  "source_url": "https://example.invalid/edgar/ISSUER_TEST_A/test-a-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T12:00:00+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "5191caa5fd1e8a96c02dd5e9117e9a23710b2a9d391710856b1313dbf18df700",
+  "raw_size_bytes": 1244,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "2783497f53d62dafc53be1f58f5604ef9b919f2e20bbe7010faf28928634c1ca",
+  "normalized_chars": 506,
+  "extra": {
+    "form": "10-Q",
+    "accession_number": "0000000000-26-000001"
+  },
+  "anchors": [
+    {
+      "quote": "lowered the Company’s long-term credit rating from BBB- to BB+",
+      "char_start": 335,
+      "char_end": 397
+    }
+  ],
+  "issuer_id": "ISSUER_TEST_A"
+}
