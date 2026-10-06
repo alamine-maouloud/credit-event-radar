@@ -1,0 +1,122 @@
+{
+  "dev": {
+    "documents": 0,
+    "statements": {
+      "gold": 0,
+      "predicted": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null,
+      "status_accuracy": null,
+      "resolution_accuracy": null
+    },
+    "negative_statements": {
+      "gold": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null
+    },
+    "document_flag": {
+      "gold_true": 0,
+      "predicted_true": 0,
+      "true_positives": 0,
+      "precision": null,
+      "recall": null,
+      "false_positive_rate_on_negative_docs": null,
+      "negative_docs": 0
+    },
+    "ineligible_proposed": 0,
+    "rejections": {}
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 91,
+      "predicted": 34,
+      "predicted_valid": 13,
+      "matched": 11,
+      "precision": 0.8461538461538461,
+      "recall": 0.12087912087912088,
+      "status_accuracy": 0.9090909090909091,
+      "resolution_accuracy": 0.5454545454545454
+    },
+    "negative_statements": {
+      "gold": 38,
+      "predicted_valid": 7,
+      "matched": 6,
+      "precision": 0.8571428571428571,
+      "recall": 0.15789473684210525
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 3,
+      "true_positives": 3,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 2
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "the passage does not speak of covenants or contractual compliance": 3,
+      "STATUS_MISMATCH": 11,
+      "HISTORICAL_REFERENCE": 7,
+      "RESOLUTION_MISMATCH": 4,
+      "period 'periods ended December 31, 2024 and March 31, 2025' is not a plausible period for 2026-08-14": 1,
+      "period 'months ended December 31, 2024, January 31, 2025 and February 28, 2025' is not a plausible period for 2026-08-14": 1,
+      "period 'months ended April 30, 2024, May 31, 2025, June 30, 2025, and July 31, 2025' is not a plausible period for 2026-08-14": 1,
+      "quote dated 2027-06-30, after the document date": 3,
+      "quote dated 2027-03-31, after the document date": 1,
+      "agreement 'Credit Agreement' not in the quote": 1
+    }
+  },
+  "all": {
+    "documents": 5,
+    "statements": {
+      "gold": 91,
+      "predicted": 34,
+      "predicted_valid": 13,
+      "matched": 11,
+      "precision": 0.8461538461538461,
+      "recall": 0.12087912087912088,
+      "status_accuracy": 0.9090909090909091,
+      "resolution_accuracy": 0.5454545454545454
+    },
+    "negative_statements": {
+      "gold": 38,
+      "predicted_valid": 7,
+      "matched": 6,
+      "precision": 0.8571428571428571,
+      "recall": 0.15789473684210525
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 3,
+      "true_positives": 3,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 2
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "the passage does not speak of covenants or contractual compliance": 3,
+      "STATUS_MISMATCH": 11,
+      "HISTORICAL_REFERENCE": 7,
+      "RESOLUTION_MISMATCH": 4,
+      "period 'periods ended December 31, 2024 and March 31, 2025' is not a plausible period for 2026-08-14": 1,
+      "period 'months ended December 31, 2024, January 31, 2025 and February 28, 2025' is not a plausible period for 2026-08-14": 1,
+      "period 'months ended April 30, 2024, May 31, 2025, June 30, 2025, and July 31, 2025' is not a plausible period for 2026-08-14": 1,
+      "quote dated 2027-06-30, after the document date": 3,
+      "quote dated 2027-03-31, after the document date": 1,
+      "agreement 'Credit Agreement' not in the quote": 1
+    }
+  },
+  "cost": {
+    "total_usd": 1.042348,
+    "input_tokens": 216942,
+    "output_tokens": 8729
+  }
+}

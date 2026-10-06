@@ -1,0 +1,118 @@
+{
+  "dev": {
+    "documents": 0,
+    "statements": {
+      "gold": 0,
+      "predicted": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null,
+      "status_accuracy": null,
+      "resolution_accuracy": null
+    },
+    "negative_statements": {
+      "gold": 0,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": null
+    },
+    "document_flag": {
+      "gold_true": 0,
+      "predicted_true": 0,
+      "true_positives": 0,
+      "precision": null,
+      "recall": null,
+      "false_positive_rate_on_negative_docs": null,
+      "negative_docs": 0
+    },
+    "ineligible_proposed": 0,
+    "rejections": {}
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 91,
+      "predicted": 16,
+      "predicted_valid": 8,
+      "matched": 6,
+      "precision": 0.75,
+      "recall": 0.06593406593406594,
+      "status_accuracy": 0.8333333333333334,
+      "resolution_accuracy": 0.3333333333333333
+    },
+    "negative_statements": {
+      "gold": 38,
+      "predicted_valid": 5,
+      "matched": 3,
+      "precision": 0.6,
+      "recall": 0.07894736842105263
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 2
+    },
+    "ineligible_proposed": 2,
+    "rejections": {
+      "the passage does not speak of covenants or contractual compliance": 2,
+      "STATUS_MISMATCH": 4,
+      "HISTORICAL_REFERENCE": 3,
+      "RESOLUTION_MISMATCH": 2,
+      "period 'periods ended December 31, 2024 and March 31, 2025' is not a plausible period for 2026-08-14": 1,
+      "agreement 'Credit Agreement' not in the quote": 3,
+      "quote dated 2027-06-30, after the document date": 1,
+      "quote dated 2027-03-31, after the document date": 1
+    }
+  },
+  "all": {
+    "documents": 5,
+    "statements": {
+      "gold": 91,
+      "predicted": 16,
+      "predicted_valid": 8,
+      "matched": 6,
+      "precision": 0.75,
+      "recall": 0.06593406593406594,
+      "status_accuracy": 0.8333333333333334,
+      "resolution_accuracy": 0.3333333333333333
+    },
+    "negative_statements": {
+      "gold": 38,
+      "predicted_valid": 5,
+      "matched": 3,
+      "precision": 0.6,
+      "recall": 0.07894736842105263
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 2
+    },
+    "ineligible_proposed": 2,
+    "rejections": {
+      "the passage does not speak of covenants or contractual compliance": 2,
+      "STATUS_MISMATCH": 4,
+      "HISTORICAL_REFERENCE": 3,
+      "RESOLUTION_MISMATCH": 2,
+      "period 'periods ended December 31, 2024 and March 31, 2025' is not a plausible period for 2026-08-14": 1,
+      "agreement 'Credit Agreement' not in the quote": 3,
+      "quote dated 2027-06-30, after the document date": 1,
+      "quote dated 2027-03-31, after the document date": 1
+    }
+  },
+  "cost": {
+    "total_usd": 0.504552,
+    "input_tokens": 216942,
+    "output_tokens": 5889
+  }
+}
