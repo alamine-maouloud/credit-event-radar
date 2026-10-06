@@ -261,7 +261,6 @@ def extract_periodic_report(doc: RawDocument, issuer_id: str) -> Extraction:
     form = str(extra.get("form") or "")
     if form not in PERIODIC_FORMS:
         return Extraction([], [])
-    title, title_span = _title_and_span(doc)
     m = _PERIOD_ENDED_RE.search(doc.text[:20000])
     if m:
         qualifier = f"{m.group(1).lower()} " if m.group(1) else ""
@@ -285,7 +284,19 @@ def extract_periodic_report(doc: RawDocument, issuer_id: str) -> Extraction:
                     f"report_flag_needs_validated_statement:{flag}", f0, f1, doc.text[f0:f1][:160]
                 )
             )
-    evidence: list[EvidenceSpan] = [title_span] if title_span else []
+    # the cover line that dates the report is the event's own passage; a 10-Q's first
+    # line ("Table of Contents") says nothing
+    evidence: list[EvidenceSpan] = []
+    if m:
+        evidence.append(
+            exact_span(
+                doc,
+                m.start(),
+                m.end(),
+                extractor_version=EARNINGS_EXTRACTOR_VERSION,
+                field="report_period",
+            )  # fmt: skip
+        )
     for flag, f0, f1 in flags:
         evidence.append(
             exact_span(

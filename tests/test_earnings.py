@@ -286,7 +286,9 @@ def test_a_quarterly_report_is_a_results_publication_with_its_flags():
     # is recorded and left to the validated statements of the LLM path (ADR-024)
     assert ev.fields["flags"] == ["going_concern"]
     fields = {s.field for s in ev.evidence}
-    assert fields == {"title", "flag:going_concern"}
+    assert fields == {"report_period", "flag:going_concern"}
+    cover = next(s for s in ev.evidence if s.field == "report_period")
+    assert cover.quote == "For the quarterly period ended June 30, 2026"
     assert any(s.reason == "report_flag_needs_validated_statement:covenant" for s in result.skipped)
     assert all(TEN_Q[s.char_start : s.char_end] == s.quote for s in ev.evidence)
 
