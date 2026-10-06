@@ -1,0 +1,39 @@
+{
+  "role": "historical_control",
+  "source_type": "edgar",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/793952/000079395226000061/hog-20260630.htm",
+  "content_type": "text/html",
+  "retrieved_at": "2026-10-06T11:54:40.338864+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "5d2c1dcefb63aacf9ff1923ea93b873f3b3e0a85a5671a0982ecefa49a555865",
+  "raw_size_bytes": 4179595,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "6698503881b9265d42e4d352badfae3686d4d5f750c06c24a3ddf29afe2dafb0",
+  "normalized_chars": 282832,
+  "extra": {
+    "cik": "0000793952",
+    "accession_number": "0000793952-26-000061",
+    "primary_document": "hog-20260630.htm",
+    "form": "10-Q",
+    "filing_date": "2026-08-05"
+  },
+  "anchors": [
+    {
+      "quote": "lowered the Company's long-term credit rating from BBB- to BB+",
+      "char_start": 228582,
+      "char_end": 228644
+    },
+    {
+      "quote": "On July 8, 2026, subsequent to June 30, 2026, S&P Global Ratings lowered",
+      "char_start": 228455,
+      "char_end": 228527
+    },
+    {
+      "quote": "BBB- | | CreditWatch Negative",
+      "char_start": 228390,
+      "char_end": 228419
+    }
+  ],
+  "issuer_id": "HARLEY_DAVIDSON_INC",
+  "note": "S&P lowered the long-term rating from BBB- to BB+ on 2026-07-08 while Moody's (Baa3) and Fitch (BBB) stayed IG: agency-level fallen angel, composite would stay IG."
+}
