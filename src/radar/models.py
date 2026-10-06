@@ -114,6 +114,9 @@ class EvidenceSpan(BaseModel):
     match_score: float = Field(
         ge=0.0, le=100.0, description="rapidfuzz score after normalisation (0 to 100)"
     )
+    field: str | None = Field(
+        default=None, description="Name of the extracted field this span supports, if any"
+    )
 
     @model_validator(mode="after")
     def _check_offsets(self) -> EvidenceSpan:
