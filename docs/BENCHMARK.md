@@ -335,3 +335,52 @@ translate into a better decision on this benchmark and it introduces one false p
 the holdout. Terra stays the default backend for liquidity, Sol the challenger. The
 conclusion holds for this V1 set and its three stress cases only; the final blind test is
 the holdout V2 below.
+
+### Holdout V2, the blind test (2026-10-06)
+
+Five filings chosen from EDGAR metadata only, never read before their labels were written,
+frozen with lock 7333d639; after the freeze nothing changed (prompt 1.0.0, schema
+liquidity-1.0, validator, polarity rules, labels). Terra 0.71 USD, Sol 1.40 USD.
+
+| Document | Expected | Terra | Sol | Validated negative statements Terra / Sol |
+|---|---|---|---|---|
+| New Fortress Energy, 10-Q 2026-08-06 (restructuring after defaults) | FLAG | FLAG | FLAG | 3 / 4 |
+| Sleep Number, 10-Q 2026-05-12 (going concern considerations) | FLAG | FLAG | FLAG | 3 / 4 |
+| Caterpillar, 10-Q 2026-08-05 | NO FLAG | NO FLAG | NO FLAG | 0 / 0 |
+| Deere, 10-Q 2026-08-27 | NO FLAG | FLAG | FLAG | 1 / 1 |
+| Ford Motor, 10-Q 2026-07-29 (strong liquidity, many risk factors) | NO FLAG | NO FLAG | FLAG | 0 / 1 |
+
+Statement level: Terra precision 0.44, recall 0.50, status accuracy 0.75; Sol precision
+0.54, recall 0.62, status accuracy 0.73. Negative statements: Terra 3 of 6 found, Sol 4 of
+6. Sol proposed four Ford Credit sentences that the scope guard rejected as a segment;
+Terra proposed none.
+
+Reading, document by document:
+
+- Both models find the two real stress cases. New Fortress Energy is found on the right
+  sentences ("not probable to be sufficient", "substantial doubt ... satisfy our liquidity
+  needs"). Sleep Number is found on the right sentences but validated for the wrong reason:
+  the filing's HTML wraps sentences across lines, the sentence splitter cuts at the line
+  break, and the negation "are not" and its object "expected to be sufficient" fall in
+  different fragments; the quotes passed because they also contain the heading "Going
+  Concern Considerations", whose word "Concern" is a negative marker. The labelled quote of
+  the same sentence, without the heading, had failed the same check at build time, which
+  was recorded before the run.
+- The false flags come from one failure mode shared by both models: a generic,
+  forward-looking risk factor read as a present worry. Deere: "Lower credit ratings
+  generally result in higher borrowing costs ... and may adversely impact our liquidity"
+  (both models). Ford: "Pension and other postretirement liabilities could adversely affect
+  Ford's liquidity" (Sol). The validator accepts them because "adversely impact" and
+  "adversely affect" are negative markers; nothing in the code distinguishes a conditional
+  risk factor from a stated deterioration. The same mode produced Sol's false flag on
+  Harley-Davidson in the V1 holdout.
+
+Verdict against the Phase 3.4a exit criterion (no false P1, every real stress case
+found): the real stress cases are found by both models, but the "no false P1" half is not
+met: Terra sets one false flag on three documents without a problem, Sol two. Phase 3.4a
+is not closed on this test. The next step is a deterministic rule, not a prompt change:
+a passage whose only negative wording is a conditional "may / could / might ... adversely
+affect or impact" with no present-tense deterioration is not a worry, and the sentence
+splitter must not cut at a line break inside a wrapped sentence. Both go in with tests, both
+runs of V1 and V2 are re-scored from the cache, and a fresh blind holdout V3 gives the final
+test. V1 and V2 results stay as they are.
