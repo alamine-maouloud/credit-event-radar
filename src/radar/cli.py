@@ -300,5 +300,156 @@ def show_event(
         typer.echo("Priority: not decided yet (run `radar decide`).")
 
 
+# ---------------------------------------------------------------- llm --- #
+
+
+def _llm_role(alternative: str | None):
+    settings = _settings()
+    if alternative is None:
+        return settings, settings.llm.roles["extraction"]
+    try:
+        return settings, settings.llm.benchmark_alternatives[alternative]["extraction"]
+    except KeyError as exc:
+        raise typer.BadParameter(
+            f"unknown alternative {alternative!r}, see settings.llm.benchmark_alternatives"
+        ) from exc
+
+
+def _provider_for(name: str):
+    from radar.llm.provider import refuse_placeholder_model
+
+    if name == "openai":
+        from radar.llm.openai_client import OpenAIProvider
+
+        return OpenAIProvider()
+    if name == "anthropic":
+        from radar.llm.anthropic_client import AnthropicProvider
+
+        return AnthropicProvider()
+    refuse_placeholder_model("TO_CONFIRM")
+    raise typer.BadParameter(f"no provider implemented for {name!r}")
+
+
+@app.command("llm-extract")
+def llm_extract(
+    out: Path = typer.Option(..., "--out", help="Run directory, e.g. eval/runs/terra-2026-10-06"),
+    gold: Path = typer.Option(
+        ROOT / "eval" / "gold" / "guidance_v1.jsonl", "--gold", help="Frozen gold JSONL"
+    ),
+    alternative: str | None = typer.Option(
+        None, "--alternative", help="Benchmark alternative from settings (openai_sol, anthropic)"
+    ),
+    limit: int | None = typer.Option(None, "--limit", help="Only the first N gold documents"),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Render the prompts and estimate the cost, call nothing"
+    ),
+    db: DbOption = None,
+) -> None:
+    """Run the guidance extraction on the frozen gold set: cache, budget hard stop, two level
+    validation, derived figures and metrics. Separate from `process`, never touches events."""
+    from radar.eval.benchmark import BenchmarkConfig, run_benchmark
+    from radar.eval.gold import load_gold
+    from radar.llm.budget import BudgetExceeded, RunBudget
+    from radar.llm.cache import LLMCache
+    from radar.llm.pricing import load_pricing
+    from radar.llm.prompts import load_prompt
+    from radar.llm.provider import FakeProvider
+
+    load_dotenv()
+    settings, role = _llm_role(alternative)
+    pricing = load_pricing(ROOT / settings.llm.pricing_file)
+    if dry_run:
+        budget = RunBudget(limit_usd=1.0, pricing=pricing)
+        provider = FakeProvider(name=role.provider, raw_json="{}")
+    else:
+        try:
+            budget = RunBudget.from_env(pricing)
+        except BudgetExceeded as exc:
+            typer.echo(f"refused: {exc}", err=True)
+            raise typer.Exit(code=2) from exc
+        provider = _provider_for(role.provider)
+    database = _db(db)
+    database.init_schema()
+    config = BenchmarkConfig(
+        model_id=role.model, reasoning_effort=role.reasoning_effort, temperature=role.temperature
+    )
+    summary = run_benchmark(
+        load_gold(gold),
+        db=database,
+        universe=load_universe(),
+        provider=provider,
+        cache=LLMCache(database),
+        budget=budget,
+        prompt=load_prompt(ROOT / "prompts" / "extraction" / "guidance.v1.yaml"),
+        config=config,
+        out_dir=out,
+        limit=limit,
+        dry_run=dry_run,
+        gold_path=gold,
+    )
+    typer.echo(
+        f"run {summary.run_id}: {summary.n_documents} documents, statuses {summary.statuses}, "
+        f"model {config.model_id} (effort {config.reasoning_effort}), provider {provider.name}"
+    )
+    typer.echo(
+        f"cost {summary.total_cost_usd:.4f} USD (estimated before the calls "
+        f"{summary.estimated_cost_usd:.4f}), budget {summary.budget_limit_usd:.2f}, "
+        f"remaining {summary.budget_remaining_usd:.4f}"
+    )
+    _echo_metrics(summary.metrics)
+    typer.echo(f"written: {out / 'outputs.jsonl'}, {out / 'run.json'}, {out / 'metrics.json'}")
+
+
+@app.command("llm-eval")
+def llm_eval(
+    run: Path = typer.Option(..., "--run", help="Run directory written by llm-extract"),
+    gold: Path = typer.Option(ROOT / "eval" / "gold" / "guidance_v1.jsonl", "--gold"),
+) -> None:
+    """Re-score a run directory against the gold set (metrics.json is rewritten)."""
+    from radar.eval.gold import load_gold
+    from radar.eval.metrics import score
+
+    rows = [
+        json.loads(line)
+        for line in (run / "outputs.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    metrics = score(load_gold(gold), rows)
+    (run / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    _echo_metrics(metrics)
+
+
+def _fmt(value: float | None) -> str:
+    return "n/a" if value is None else f"{value:.3f}"
+
+
+def _echo_metrics(m: dict) -> None:
+    d, b, o, c = m["documents"], m["behaviour"], m["occurrences"], m["claims"]
+    typer.echo(
+        f"documents: {d['n']} (ok {d['ok']}, cached {d['cached']}, json failures "
+        f"{d['json_failures']}, budget refused {d['budget_refused']}, provider errors "
+        f"{d['provider_errors']}, dry run {d['dry_run']})"
+    )
+    typer.echo(f"behaviour accuracy: {_fmt(b['accuracy'])} on {b['n_scored']} documents")
+    typer.echo(
+        f"occurrences: gold {o['gold']}, predicted {o['predicted']} (valid {o['predicted_valid']}), "
+        f"matched {o['matched']}; precision {_fmt(o['precision_valid'])} (all statements "
+        f"{_fmt(o['precision_all'])}), recall {_fmt(o['recall'])}, F1 {_fmt(o['f1'])}"
+    )
+    typer.echo(
+        "field agreement: " + ", ".join(f"{k} {_fmt(v)}" for k, v in o["field_agreement"].items())
+    )
+    typer.echo(
+        f"spans: exact {_fmt(o['span_exact_rate'])}, overlap {_fmt(o['span_overlap_rate'])}; "
+        f"invalid span rate {_fmt(c['invalid_span_rate'])}, unsupported claim rate "
+        f"{_fmt(c['unsupported_claim_rate'])}, statements on no_guidance documents "
+        f"{c['on_no_guidance_documents']}"
+    )
+    typer.echo(
+        f"cost {m['cost']['total_usd']:.4f} USD, per document {_fmt(m['cost']['per_document_usd'])}, "
+        f"latency ms mean {_fmt(m['latency_ms']['mean'])} median {_fmt(m['latency_ms']['median'])}"
+    )
+
+
 if __name__ == "__main__":
     app()
