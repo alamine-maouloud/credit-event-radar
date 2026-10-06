@@ -324,10 +324,14 @@ status. No rule was derived from it, but that document is not strictly never see
 holdout V2 of five documents never read, selected without any later change to prompt,
 schema or validator, is the final blind test to run before Phase 3.4a is closed.
 
-### Decision proposal
+### Decision (validated 2026-10-06)
 
-For the flag that reaches the rules, Terra plus the deterministic guardrails gives the same
-three true positives and no false positive on 17 documents, at half the price; Sol reads
-more of the individual negative sentences and sets one false flag on a generic risk factor.
-Terra stays the default extraction backend for liquidity as for guidance, Sol the
-challenger; the conclusion holds for this V1 set and its three stress cases only.
+For the decisional task, setting liquidity_flag for ERN-01, Terra plus the deterministic
+guardrails offers the best precision and cost compromise on Liquidity Gold V1: the same
+three true positives as Sol, no false flag on the 17 documents without one, at about half
+the price. Sol is better at exhaustive extraction of the individual signals (negative
+statement recall 0.72 against 0.44, higher status accuracy), but that advantage does not
+translate into a better decision on this benchmark and it introduces one false positive on
+the holdout. Terra stays the default backend for liquidity, Sol the challenger. The
+conclusion holds for this V1 set and its three stress cases only; the final blind test is
+the holdout V2 below.
