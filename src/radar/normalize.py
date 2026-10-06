@@ -112,8 +112,9 @@ def html_to_text(html: str, dropped: Callable[[Tag], bool] = _sec_dropped) -> st
 
 # ------------------------------------------------------- issuer web pages --- #
 
-IR_NORMALIZER_VERSION = "ir-html-1.0"
+IR_NORMALIZER_VERSION = "ir-html-1.1"
 _IR_DROP_TAGS = DROP_TAGS | {"nav", "aside", "footer", "form", "button", "iframe", "svg"}
+_IR_CONTENT_TAGS = frozenset({"html", "body", "main", "article"})
 _IR_DROP_ATTR_RE = re.compile(
     r"related|teaser|slider|carousel|recommend|cookie|breadcrumb|sidebar|share-bar|social-share|newsletter",
     re.IGNORECASE,
@@ -128,6 +129,10 @@ def _ir_dropped(tag: Tag) -> bool:
         return True
     if name == "header" and tag.find("nav") is not None:
         return True
+    if name in _IR_CONTENT_TAGS:
+        # Semantic content wrappers are never dropped by their attributes: OMV wraps the whole
+        # article in <article class="... has-sidebar ..."> (ir-html-1.1, the 1.0 rule dropped it).
+        return False
     attrs = " ".join(
         str(v) if not isinstance(v, list) else " ".join(v)
         for k, v in tag.attrs.items()

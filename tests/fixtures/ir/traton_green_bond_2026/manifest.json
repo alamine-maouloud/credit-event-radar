@@ -7,7 +7,7 @@
   "raw_file": "document.htm.gz",
   "raw_sha256": "0fbb48d583c0032f95ed52a9d07a10ad6e9df4357a5e97481478f511d6751d6e",
   "raw_size_bytes": 77130,
-  "normalizer_version": "ir-html-1.0",
+  "normalizer_version": "ir-html-1.1",
   "normalized_sha256": "a82d7b3bc746520ba65733f8c4ac29226f98c1a91d936561ad4b4b02eba1cb0b",
   "normalized_chars": 3697,
   "extra": {

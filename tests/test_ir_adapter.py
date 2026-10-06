@@ -211,7 +211,7 @@ def test_fetch_rss_documents_carry_provenance(tmp_path: Path):
     assert d.extra["published"] == "2026-04-30" and d.published_at == datetime(
         2026, 4, 30, tzinfo=UTC
     )
-    assert d.title.startswith("Issuer Test A reports") and d.normalizer_version == "ir-html-1.0"
+    assert d.title.startswith("Issuer Test A reports") and d.normalizer_version == "ir-html-1.1"
     assert "EUR 500 million bond" in d.text
     assert Path(d.raw_path).read_bytes() == HTML_DOC
     assert all(r.headers["User-Agent"] == UA for r in seen)

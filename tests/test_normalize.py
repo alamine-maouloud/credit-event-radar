@@ -104,7 +104,7 @@ def test_ir_normaliser_drops_chrome_and_related_teasers():
     assert "Notice of early redemption" in text and "announces the early redemption" in text
     assert "hybrid notes" not in text and "Imprint" not in text and "Share this page" not in text
     assert "Investors" not in text
-    assert IrHtmlNormalizer().version == IR_NORMALIZER_VERSION == "ir-html-1.0"
+    assert IrHtmlNormalizer().version == IR_NORMALIZER_VERSION == "ir-html-1.1"
 
 
 def test_sec_normaliser_keeps_everything_and_is_unchanged():
@@ -116,7 +116,7 @@ def test_sec_normaliser_keeps_everything_and_is_unchanged():
 def test_normalizer_for_kind():
     from radar.normalize import normalizer_for
 
-    assert normalizer_for("text/html", b"<p>x</p>", kind="ir").version == "ir-html-1.0"
+    assert normalizer_for("text/html", b"<p>x</p>", kind="ir").version == "ir-html-1.1"
     assert normalizer_for("text/html", b"<p>x</p>", kind="edgar").version == "sec-html-1.0"
     assert normalizer_for("application/pdf", b"%PDF-1.4", kind="ir").version == "pdf-text-1.1"
 
@@ -139,3 +139,21 @@ def test_pdf_blocks_split_mid_sentence_are_joined():
     text = PdfNormalizer().normalize(data)
     assert "Issuer Test A (VW or the Company) to BBB (high) from A (low)" in text
     assert PdfNormalizer().version == "pdf-text-1.1"
+
+
+def test_ir_content_wrappers_are_never_dropped_by_class():
+    """OMV investor pages wrap the article in <article class="... has-sidebar ..."> while the
+    actual sidebar is a <div class="sidebar ...">: only the latter is dropped (ir-html-1.1)."""
+    from radar.normalize import normalize_ir_html
+
+    html = b"""<html><head><title>t</title></head><body>
+    <main id="main" class="content-main">
+      <article class="mt-30 has-sidebar m-auto">
+        <div class="rich-text"><h2>Key Performance Indicators</h2>
+        <p>Clean CCS Operating Result increased to EUR 1,706 mn.</p></div>
+        <div class="sidebar lg:sticky"><p>Download the report</p></div>
+      </article>
+    </main></body></html>"""
+    text = normalize_ir_html(html)
+    assert "Clean CCS Operating Result increased to EUR 1,706 mn." in text
+    assert "Download the report" not in text
