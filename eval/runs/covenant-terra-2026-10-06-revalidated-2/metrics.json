@@ -1,0 +1,118 @@
+{
+  "dev": {
+    "documents": 13,
+    "statements": {
+      "gold": 36,
+      "predicted": 23,
+      "predicted_valid": 18,
+      "matched": 12,
+      "precision": 0.6666666666666666,
+      "recall": 0.3333333333333333,
+      "status_accuracy": 0.8333333333333334,
+      "resolution_accuracy": 0.75
+    },
+    "negative_statements": {
+      "gold": 10,
+      "predicted_valid": 7,
+      "matched": 5,
+      "precision": 0.7142857142857143,
+      "recall": 0.5
+    },
+    "document_flag": {
+      "gold_true": 2,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 11
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "the passage does not speak of covenants or contractual compliance": 2,
+      "agreement '2022 Credit Facility' not in the quote": 1,
+      "OUT_OF_SCOPE_SEGMENT": 2,
+      "RESOLUTION_MISMATCH": 1
+    }
+  },
+  "holdout": {
+    "documents": 5,
+    "statements": {
+      "gold": 7,
+      "predicted": 11,
+      "predicted_valid": 7,
+      "matched": 3,
+      "precision": 0.42857142857142855,
+      "recall": 0.42857142857142855,
+      "status_accuracy": 0.6666666666666666,
+      "resolution_accuracy": 0.6666666666666666
+    },
+    "negative_statements": {
+      "gold": 1,
+      "predicted_valid": 0,
+      "matched": 0,
+      "precision": null,
+      "recall": 0.0
+    },
+    "document_flag": {
+      "gold_true": 1,
+      "predicted_true": 0,
+      "true_positives": 0,
+      "precision": null,
+      "recall": 0.0,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 4
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "quote dated 2027-03-31, after the document date": 2,
+      "STATUS_MISMATCH": 2,
+      "the passage does not speak of covenants or contractual compliance": 1,
+      "quote is about another entity": 1
+    }
+  },
+  "all": {
+    "documents": 18,
+    "statements": {
+      "gold": 43,
+      "predicted": 34,
+      "predicted_valid": 25,
+      "matched": 15,
+      "precision": 0.6,
+      "recall": 0.3488372093023256,
+      "status_accuracy": 0.8,
+      "resolution_accuracy": 0.7333333333333333
+    },
+    "negative_statements": {
+      "gold": 11,
+      "predicted_valid": 7,
+      "matched": 5,
+      "precision": 0.7142857142857143,
+      "recall": 0.45454545454545453
+    },
+    "document_flag": {
+      "gold_true": 3,
+      "predicted_true": 2,
+      "true_positives": 2,
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "false_positive_rate_on_negative_docs": 0.0,
+      "negative_docs": 15
+    },
+    "ineligible_proposed": 0,
+    "rejections": {
+      "the passage does not speak of covenants or contractual compliance": 3,
+      "agreement '2022 Credit Facility' not in the quote": 1,
+      "OUT_OF_SCOPE_SEGMENT": 2,
+      "RESOLUTION_MISMATCH": 1,
+      "quote dated 2027-03-31, after the document date": 2,
+      "STATUS_MISMATCH": 2,
+      "quote is about another entity": 1
+    }
+  },
+  "cost": {
+    "total_usd": 0.0,
+    "input_tokens": 800031,
+    "output_tokens": 19037
+  }
+}
