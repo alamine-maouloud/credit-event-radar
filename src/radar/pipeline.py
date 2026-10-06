@@ -16,9 +16,11 @@ from radar.config import Issuer, Rules, Universe
 from radar.connectors.base import SourceAdapter
 from radar.db import Database
 from radar.dedup import find_duplicate
+from radar.extract.earnings import extract_earnings_events
+from radar.extract.issuance import extract_issuance_events
 from radar.extract.ratings_table import extract_rating_observations
 from radar.extract.spans import verify_span
-from radar.extract.structured import extract_edgar_items, extract_rating_actions
+from radar.extract.structured import Extraction, extract_edgar_items, extract_rating_actions
 from radar.materiality.engine import Decision, MaterialityEngine, PriorContext, PriorEvent
 from radar.materiality.state import RatingCandidate, RatingState, build_rating_state
 from radar.models import CreditEvent, RawDocument
@@ -43,8 +45,60 @@ class ProcessSummary:
     events_merged: int = 0
     candidates_skipped: int = 0
     observations_new: int = 0
+    no_event: int = 0
     decisions: dict[str, int] = field(default_factory=dict)
     event_ids: list[str] = field(default_factory=list)
+
+
+OUTCOME_EVENTS = "EVENTS"
+OUTCOME_OBSERVATIONS_ONLY = "OBSERVATIONS_ONLY"
+OUTCOME_NO_EVENT = "NO_EVENT"
+OUTCOME_UNRESOLVED = "UNRESOLVED"
+
+
+def document_kind(doc: RawDocument) -> str:
+    """edgar | press_release | ratings_page | rating_report | other, from provenance."""
+    if doc.source_type == "edgar":
+        return "edgar"
+    return str(doc.extra.get("document_type") or "other")
+
+
+def run_extractors(
+    doc: RawDocument, issuer: Issuer, scales: RatingScales
+) -> tuple[Extraction, Extraction, object, str | None]:
+    """Deterministic extractors for a document kind.
+
+    Returns (rating events, other events, observations or None, table profile or None).
+    """
+    kind = document_kind(doc)
+    empty = Extraction([], [])
+    if kind == "edgar":
+        return (
+            extract_rating_actions(doc, issuer.id, scales),
+            extract_edgar_items(doc, issuer.id),
+            extract_rating_observations(doc, issuer.id, scales, profile="sec_as_of"),
+            "sec_as_of",
+        )
+    if kind == "ratings_page":
+        profile = str(doc.extra.get("table_profile") or "current_by_agency")
+        aliases = [issuer.name, *issuer.aliases]
+        if issuer.legal_entity:
+            aliases.append(issuer.legal_entity)
+        observations = extract_rating_observations(
+            doc, issuer.id, scales, profile=profile, entity_aliases=aliases
+        )
+        return empty, empty, observations, profile
+    if kind == "rating_report":
+        return extract_rating_actions(doc, issuer.id, scales), empty, None, None
+    ratings = extract_rating_actions(doc, issuer.id, scales)
+    others = Extraction([], [])
+    for result in (
+        extract_issuance_events(doc, issuer.id),
+        extract_earnings_events(doc, issuer.id),
+    ):
+        others.events.extend(result.events)
+        others.skipped.extend(result.skipped)
+    return ratings, others, None, None
 
 
 def _store(db: Database, doc: RawDocument, summary: IngestSummary) -> None:
@@ -259,11 +313,9 @@ def decide_all(
     return counts
 
 
-def _store_observations(
-    db: Database, doc: RawDocument, issuer_id: str, scales: RatingScales, summary: ProcessSummary
-) -> None:
-    result = extract_rating_observations(doc, issuer_id, scales)
-    for skipped in result.skipped:
+def _store_observations(db: Database, doc: RawDocument, extraction, summary: ProcessSummary) -> int:
+    stored = 0
+    for skipped in extraction.skipped:
         db.audit(
             AuditEntry(
                 step="observe",
@@ -272,8 +324,9 @@ def _store_observations(
                 message=f"table row rejected ({skipped.reason}): {skipped.detail}",
             )
         )
-    for obs in result.observations:
+    for obs in extraction.observations:
         if db.insert_observation(obs):
+            stored += 1
             summary.observations_new += 1
             db.audit(
                 AuditEntry(
@@ -283,10 +336,11 @@ def _store_observations(
                     outputs_hash=obs.observation_id,
                     message=(
                         f"{obs.agency} {obs.rating} as_of {obs.as_of.isoformat()} "
-                        f"({obs.verification_method}, {obs.extractor_version})"
+                        f"({obs.as_of_basis}, {obs.verification_method}, {obs.extractor_version})"
                     ),
                 )
             )
+    return stored
 
 
 def process(
@@ -307,13 +361,13 @@ def process(
                     message=f"unresolved: {resolution.detail}",
                 )
             )
-            db.mark_processed(doc.doc_id)
+            db.mark_processed(doc.doc_id, OUTCOME_UNRESOLVED)
             db.audit(
                 AuditEntry(
                     step="process",
                     doc_id=doc.doc_id,
                     status="skipped",
-                    message="no extraction on unresolved document",
+                    message="UNRESOLVED: no extraction on unresolved document",
                 )
             )
             continue
@@ -328,10 +382,13 @@ def process(
             )
         )
 
-        _store_observations(db, doc, issuer_id, scales, summary)
-        ratings = extract_rating_actions(doc, issuer_id, scales)
-        items = extract_edgar_items(doc, issuer_id)
-        for skipped in ratings.skipped:
+        issuer = universe.by_id(issuer_id)
+        ratings, items, observations, profile = run_extractors(doc, issuer, scales)
+        stored_observations = (
+            _store_observations(db, doc, observations, summary) if observations else 0
+        )
+        all_skipped = [*ratings.skipped, *items.skipped]
+        for skipped in all_skipped:
             summary.candidates_skipped += 1
             db.audit(
                 AuditEntry(
@@ -354,14 +411,34 @@ def process(
                 decision = decide_event(db, stored, rules, scales)
                 key = decision.final_priority or "NONE"
                 summary.decisions[key] = summary.decisions.get(key, 0) + 1
-        db.mark_processed(doc.doc_id)
+        n_events = len(ratings.events) + len(items.events)
+        if n_events:
+            outcome = OUTCOME_EVENTS
+        elif stored_observations or (observations and observations.observations):
+            outcome = OUTCOME_OBSERVATIONS_ONLY
+        else:
+            outcome = OUTCOME_NO_EVENT
+            summary.no_event += 1
+            db.audit(
+                AuditEntry(
+                    step="no_event",
+                    doc_id=doc.doc_id,
+                    message=(
+                        f"{document_kind(doc)} document: no deterministic extractor matched "
+                        f"({len(all_skipped)} rejected candidate(s)); "
+                        "stored for audit, nothing inferred"
+                    ),
+                )
+            )
+        db.mark_processed(doc.doc_id, outcome)
         db.audit(
             AuditEntry(
                 step="process",
                 doc_id=doc.doc_id,
                 message=(
-                    f"{len(ratings.events) + len(items.events)} event(s), "
-                    f"{len(ratings.skipped)} rejected candidate(s)"
+                    f"{outcome}: {n_events} event(s), {stored_observations} new observation(s), "
+                    f"{len(all_skipped)} rejected candidate(s), kind {document_kind(doc)}"
+                    + (f", table profile {profile}" if profile else "")
                 ),
             )
         )

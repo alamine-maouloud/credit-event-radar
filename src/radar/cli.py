@@ -110,12 +110,23 @@ def ingest(
     universe = load_universe(CONFIG_DIR / "universe.yaml")
     issuers = [i for i in universe.issuers if not issuer or i.id in set(issuer)]
     raw = _raw_dir(raw_dir)
+    skipped_sources: list = []
     if source == "fixtures":
         from radar.connectors.fixture import FixtureAdapter
 
         adapter = FixtureAdapter(
             fixtures_dir or ROOT / "tests" / "fixtures" / "edgar", raw, SecHtmlNormalizer()
         )
+    elif source == "ir":
+        from radar.connectors.ir import IRSourceAdapter
+
+        settings = _settings()
+        adapter = IRSourceAdapter(
+            raw,
+            min_interval_seconds=settings.ingestion.ir.min_interval_seconds,
+            respect_robots=settings.ingestion.ir.respect_robots,
+        )
+        skipped_sources = adapter.skipped
     elif source == "edgar":
         from radar.connectors.edgar import EdgarAdapter
 
@@ -124,7 +135,7 @@ def ingest(
             raw, max_requests_per_second=settings.ingestion.sec.max_requests_per_second
         )
     else:
-        raise typer.BadParameter("source must be edgar or fixtures")
+        raise typer.BadParameter("source must be edgar, ir or fixtures")
     if url:
         summary = ingest_url(database, adapter, url)
     else:
@@ -134,6 +145,13 @@ def ingest(
     )
     for doc_id in summary.doc_ids:
         typer.echo(f"  {doc_id}")
+    from radar.audit import AuditEntry
+
+    for item in skipped_sources:
+        database.audit(
+            AuditEntry(step="discover", status="skipped", message=f"{item.url}: {item.reason}")
+        )
+        typer.echo(f"  skipped {item.url}: {item.reason}")
 
 
 @app.command()
@@ -149,12 +167,33 @@ def process(db: DbOption = None) -> None:
     typer.echo(
         f"documents {s.documents}, resolved {s.resolved}, unresolved {s.unresolved}, "
         f"events new {s.events_new}, merged {s.events_merged}, "
-        f"candidates rejected {s.candidates_skipped}, observations {s.observations_new}"
+        f"candidates rejected {s.candidates_skipped}, observations {s.observations_new}, "
+        f"no_event {s.no_event}"
     )
     decided = ", ".join(f"{k} {v}" for k, v in sorted(s.decisions.items())) or "none"
     typer.echo(f"decisions: {decided}")
     for event_id in s.event_ids:
         typer.echo(f"  {event_id}")
+
+
+@app.command()
+def documents(
+    issuer: Annotated[str | None, typer.Option(help="Issuer id")] = None, db: DbOption = None
+) -> None:
+    """List stored documents with resolution and outcome.
+
+    Outcomes: EVENTS, OBSERVATIONS_ONLY, NO_EVENT, UNRESOLVED.
+    """
+    database = _db(db)
+    for d in database.list_document_status(issuer):
+        kind = d["extra"].get("document_type") or d["source_type"]
+        outcome = d["outcome"] or "pending"
+        issuer_id = d["issuer_id"] or "-"
+        published = (d["published_at"] or "")[:10]
+        typer.echo(
+            f"{d['doc_id'][:16]}  {outcome:<18}  {issuer_id:<20}  {kind:<14}  {published:<10}  "
+            f"{d['title'] or d['url']}"
+        )
 
 
 @app.command()

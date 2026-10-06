@@ -76,7 +76,7 @@ def pipeline(tmp_path_factory) -> dict:
 
 
 def test_cli_outputs(pipeline):
-    assert "schema 4 ready" in pipeline["init"]
+    assert "schema 5 ready" in pipeline["init"]
     assert "issuers" in pipeline["seed"]
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest"]
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest_url"]
@@ -151,6 +151,7 @@ def test_audit_trail_covers_every_step(pipeline):
         ("ingest", "ok"), ("resolve", "ok"), ("observe", "ok"), ("observe", "ok"), ("observe", "ok"),
         ("extract", "ok"), ("process", "ok"),
     ]  # fmt: skip
+    assert db.document_status(doc_id)["outcome"] == "EVENTS"
     entries = db.audit_entries(event_id=ev.event_id)
     assert [e["step"] for e in entries] == ["extract", "materiality"]
     assert entries[1]["rules_version"] == "1.4" and entries[1]["model_id"] is None
@@ -254,6 +255,7 @@ def test_unknown_issuer_fixture_produces_no_event(pipeline):
         e for e in db.audit_entries() if e["step"] == "resolve" and e["status"] == "skipped"
     ]
     assert len(unresolved) == 1 and "ISSUER_TEST_A" in unresolved[0]["message"]
+    assert {d["outcome"] for d in db.list_document_status()} == {"EVENTS", "UNRESOLVED"}
     db.close()
 
 

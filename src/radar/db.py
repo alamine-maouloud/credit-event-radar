@@ -20,7 +20,7 @@ from radar.config import Universe
 from radar.materiality.engine import Decision
 from radar.models import AgencyRating, CreditEvent, EvidenceSpan, RatingObservation, RawDocument
 
-SCHEMA_VERSION = "4"
+SCHEMA_VERSION = "5"
 TABLES = frozenset(
     {
         "issuers", "issuer_aliases", "ratings", "documents", "events", "event_evidence",
@@ -81,7 +81,8 @@ CREATE TABLE IF NOT EXISTS documents (
     extra TEXT NOT NULL,
     issuer_id TEXT,
     resolution TEXT,
-    processed_at TEXT
+    processed_at TEXT,
+    outcome TEXT
 );
 CREATE TABLE IF NOT EXISTS events (
     event_id TEXT PRIMARY KEY,
@@ -327,7 +328,8 @@ class Database:
 
     def document_status(self, doc_id: str) -> dict[str, Any] | None:
         row = self.conn.execute(
-            "SELECT doc_id, issuer_id, resolution, processed_at FROM documents WHERE doc_id = ?",
+            "SELECT doc_id, issuer_id, resolution, processed_at, outcome "
+            "FROM documents WHERE doc_id = ?",
             (doc_id,),
         ).fetchone()
         return dict(row) if row else None
@@ -345,12 +347,28 @@ class Database:
                 (issuer_id, resolution, doc_id),
             )
 
-    def mark_processed(self, doc_id: str) -> None:
+    def mark_processed(self, doc_id: str, outcome: str | None = None) -> None:
         with self.transaction() as c:
             c.execute(
-                "UPDATE documents SET processed_at = ? WHERE doc_id = ?",
-                (datetime.now(UTC).isoformat(), doc_id),
+                "UPDATE documents SET processed_at = ?, outcome = ? WHERE doc_id = ?",
+                (datetime.now(UTC).isoformat(), outcome, doc_id),
             )
+
+    def list_document_status(self, issuer_id: str | None = None) -> list[dict[str, Any]]:
+        where, params = "", []
+        if issuer_id:
+            where, params = "WHERE issuer_id = ?", [issuer_id]
+        rows = self.conn.execute(
+            "SELECT doc_id, source_type, title, url, published_at, retrieved_at, issuer_id, "
+            f"resolution, outcome, extra FROM documents {where} ORDER BY retrieved_at, doc_id",
+            params,
+        )
+        out = []
+        for r in rows:
+            d = dict(r)
+            d["extra"] = json.loads(d["extra"])
+            out.append(d)
+        return out
 
     def count(self, table: str) -> int:
         if table not in TABLES:
