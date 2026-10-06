@@ -34,7 +34,7 @@ from radar.snapshot import FetchedBytes
 
 def expected_extraction(doc, issuer, scales, universe, seed, rules) -> dict:
     """Expected outcome, observations, stored events and decisions after a full process run."""
-    _, _, _, profile = run_extractors(doc, issuer, scales)
+    _, _, _, profile = run_extractors(doc, issuer, scales, universe)
     out: dict = {"table_profile": profile, "observations": [], "events": [], "decisions": []}
     keys = ("agency", "old_rating", "new_rating", "rating", "new_outlook", "old_outlook", "watch",
             "amount", "currency", "amount_eur_equiv", "coupon", "maturity", "seniority",

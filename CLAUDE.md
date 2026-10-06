@@ -139,7 +139,7 @@ uv run pytest -q && uv run ruff check .
 - [x] Phase 1 · Fondations : repo, schémas, échelles de notation, notation composite, config, seeds (2026-10-06)
 - [x] Phase 2 · Ingestion : EDGAR, snapshots, hash, déduplication, extraction structurée déterministe, audit, P1 Harley de bout en bout sans LLM (2026-10-06). Flux IR et news RSS reportés en Phase 2b, après le moteur de matérialité (ADR-004)
 - [x] Phase 4 · Moteur de matérialité : rules.yaml v1.2, 19 règles et 3 modificateurs testés avant implémentation, état des notations à D anti look-ahead, observations de tableaux, `show-event --explain`, Harley P1 par RAT-01 et RAT-02 (2026-10-06)
-- [x] Phase 2b · Sources IR réelles (Volkswagen, TRATON, OMV) : adaptateur générique configuré par émetteur (rss, sitemap, liens, page), robots.txt et cadence, PDF, profils de tableaux, extracteurs émissions et résultats, NO_EVENT et UNREADABLE_TEXT, fixtures privées à manifeste public (2026-10-06)
+- [x] Phase 2b · Sources IR réelles (Volkswagen, TRATON, OMV) : adaptateur générique configuré par émetteur (rss, sitemap, liens, page), robots.txt et cadence, PDF, profils de tableaux, extracteurs émissions et résultats, NO_EVENT et UNREADABLE_TEXT, fixtures privées à manifeste public (2026-10-06) ; 2b.1 : garde d'entité et références historiques (ADR-013), phase gelée
 - [ ] Phase 3 · Extraction LLM : schémas stricts + validation des spans
 - [ ] Phase 5 · Contexte, vérification des claims, notes de comité FR/EN
 - [ ] Phase 6 · Alertes (Teams, email, local) et viewer Streamlit

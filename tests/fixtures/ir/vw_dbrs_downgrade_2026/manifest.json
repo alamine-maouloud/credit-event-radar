@@ -38,31 +38,11 @@
           "watch": null
         },
         "n_spans": 6
-      },
-      {
-        "family": "rating",
-        "event_type": "outlook_change",
-        "effective_date": "2026-07-30",
-        "fields": {
-          "agency": "DBRS",
-          "old_rating": null,
-          "new_rating": null,
-          "rating": "BBB (high)",
-          "new_outlook": "stable",
-          "old_outlook": "negative",
-          "watch": null
-        },
-        "n_spans": 6
       }
     ],
     "decisions": [
       {
         "event_type": "downgrade",
-        "final_priority": null,
-        "triggered": []
-      },
-      {
-        "event_type": "outlook_change",
         "final_priority": null,
         "triggered": []
       }

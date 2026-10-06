@@ -16,6 +16,7 @@ caller can log it. Nothing is inferred.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date
 
@@ -194,7 +195,143 @@ def document_agency(doc: RawDocument, scales: RatingScales) -> str | None:
     return None
 
 
-REPORT_DATE_TOLERANCE_DAYS = 3
+REPORT_DATE_TOLERANCE_DAYS = 3  # a report may carry dates a few days after its own date
+HISTORICAL_REFERENCE_DAYS = 90  # a report never announces an action older than a quarter
+
+_CORPORATE_SUFFIX = (
+    r"(?:Inc\.?|GmbH|AG|N\.V\.|NV|S\.A\.|SA|SE|S\.p\.A\.|SpA|Ltd\.?|Limited|plc|PLC|LLC|L\.P\.|Corp\.?|"
+    r"Corporation|ASA|AB|Oyj|B\.V\.|BV|KGaA|S\.A\.S\.|Aktiengesellschaft|Co\.|Company)"
+)
+_ENTITY_RE = re.compile(
+    r"(?<![A-Za-z0-9])(?P<name>(?:[A-Z][A-Za-z0-9&'\u2019.-]*\s+){0,6}?[A-Z][A-Za-z0-9&'\u2019.-]*,?\s+"
+    + _CORPORATE_SUFFIX
+    + r")(?=\s|[,;:)]|'s\b|\u2019s\b|$)"
+)
+_AGENCY_TOKENS = {
+    "dbrs",
+    "moody's",
+    "moody\u2019s",
+    "moodys",
+    "fitch",
+    "s&p",
+    "standard",
+    "poor's",
+    "poor\u2019s",
+    "morningstar",
+}
+_SELF_REFERENCE_RE = re.compile(r"(?i)\bthe\s+(?:company|issuer|group|bank)(?:'s|\u2019s)?\b")
+_REFERENCE_HEADING_RE = re.compile(
+    r"(?i)^\s*(?:rating history|related research|related criteria|related publications|"
+    r"references?|last rating date|initial rating date|rating actions? history)\b"
+)
+_QUOTED_TITLE_DATE_RE = re.compile(
+    r"[\u201d\u2019\"']\s*,?\s*\d{1,2}\s+[A-Za-z]+\.?\s+\d{4}\.?\s*$"
+)
+REFERENCE_ZONE_LINES = 12
+_URL_ISO_DATE_RE = re.compile(r"(20\d\d)-(\d\d)-(\d\d)")
+
+
+def _entity_key(name: str) -> str:
+    key = re.sub(r"(?:'s|\u2019s)$", "", name.strip())
+    key = re.sub(r"\s+", " ", key).rstrip(".").casefold()
+    return key
+
+
+def find_named_entities(text: str, scales: RatingScales) -> list[tuple[str, int, int]]:
+    """Legal entities named in a sentence ("VW Credit Canada, Inc."), agencies excluded."""
+    out: list[tuple[str, int, int]] = []
+    for m in _ENTITY_RE.finditer(text):
+        name = m.group("name").strip()
+        tokens = {t.casefold().strip(",.") for t in name.split()}
+        if tokens & _AGENCY_TOKENS or scales.resolve_agency(name):
+            continue
+        out.append((name, m.start("name"), m.end("name")))
+    return out
+
+
+def _matches_issuer(name: str, issuer_names: Sequence[str]) -> bool:
+    key = _entity_key(name)
+    return any(_entity_key(n) == key for n in issuer_names)
+
+
+def _issuer_named(
+    text: str, issuer_names: Sequence[str], exclude: Sequence[tuple[int, int]] = ()
+) -> bool:
+    """True when the sentence names the issuer itself (an alias outside the spans of other
+    named entities, or a self-reference such as "the Company")."""
+    if _SELF_REFERENCE_RE.search(text):
+        return True
+    for n in issuer_names:
+        pattern = rf"(?<![A-Za-z0-9]){re.escape(n)}(?![A-Za-z0-9])"
+        for m in re.finditer(pattern, text, re.IGNORECASE):
+            if not any(a <= m.start() < b for a, b in exclude):
+                return True
+    return False
+
+
+def document_date(doc: RawDocument) -> date | None:
+    """Date of the document itself: publication date, else header date, else a date in the URL."""
+    if doc.published_at is not None:
+        return doc.published_at.date()
+    header = document_header_date(doc)
+    if header is not None:
+        return header[0]
+    path = str(doc.url).split("?")[0]
+    m = _URL_ISO_DATE_RE.search(path)
+    if m:
+        try:
+            return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        except ValueError:
+            pass
+    found = find_dates(re.sub(r"[-_/]", " ", path))
+    return found[-1][0] if found else None
+
+
+def _reference_zones(text: str) -> list[tuple[int, int]]:
+    """Character ranges that follow a bibliography or rating-history heading."""
+    zones: list[tuple[int, int]] = []
+    lines = text.split("\n")
+    start = 0
+    offsets = []
+    for line in lines:
+        offsets.append((start, start + len(line)))
+        start += len(line) + 1
+    for i, line in enumerate(lines):
+        if _REFERENCE_HEADING_RE.search(line):
+            end_index = min(len(lines) - 1, i + REFERENCE_ZONE_LINES)
+            zones.append((offsets[i][0], offsets[end_index][1]))
+    return zones
+
+
+EntityResolver = Callable[[str], str | None]
+
+
+def _entity_target(
+    text: str,
+    issuer_id: str,
+    issuer_names: Sequence[str] | None,
+    resolve_entity: EntityResolver | None,
+    scales: RatingScales,
+) -> tuple[str, str | None, str | None]:
+    """(issuer id the sentence is about, named entity, rejection reason).
+
+    A sentence that names only another legal entity (a finance subsidiary, for instance)
+    is never folded into the document's issuer: it is attached to that entity when the
+    universe resolves it, rejected otherwise."""
+    if not issuer_names:
+        return issuer_id, None, None
+    others = [
+        e for e in find_named_entities(text, scales) if not _matches_issuer(e[0], issuer_names)
+    ]
+    if not others or _issuer_named(text, issuer_names, [(e[1], e[2]) for e in others]):
+        return issuer_id, None, None
+    name = others[0][0]
+    target = resolve_entity(name) if resolve_entity else None
+    if target and target != issuer_id:
+        return target, name, None
+    if target == issuer_id:
+        return issuer_id, None, None
+    return issuer_id, name, "unresolved_entity"
 
 
 def extract_rating_actions(
@@ -204,30 +341,58 @@ def extract_rating_actions(
     *,
     default_agency: str | None = None,
     report_mode: bool = False,
+    issuer_names: Sequence[str] | None = None,
+    resolve_entity: EntityResolver | None = None,
 ) -> Extraction:
-    """Rating actions stated in sentences. ``default_agency`` applies to sentences that
-    name no agency in an agency-authored document ("we revised our outlook").
-    ``report_mode`` (agency reports) skips sentences dated differently from the report
-    header: those are references to past actions, not the action of the document."""
+    """Rating actions stated in sentences.
+
+    ``default_agency`` applies to sentences that name no agency in an agency-authored
+    document ("we revised our outlook"). ``report_mode`` (agency reports) classifies
+    sentences sitting in a rating-history or bibliography section, written as a quoted
+    title followed by a date, or dated more than HISTORICAL_REFERENCE_DAYS before the
+    document date, as ``historical_reference`` instead of events. ``issuer_names``
+    and ``resolve_entity`` enforce the entity guard (ADR-013)."""
     pats = _patterns(scales)
     events: list[CreditEvent] = []
     skipped: list[Skipped] = []
     sentences_with_transition: set[int] = set()
-    header = document_header_date(doc) if report_mode else None
+    doc_date = document_date(doc) if report_mode else None
+    zones = _reference_zones(doc.text) if report_mode else []
     for sentence in iter_sentences(doc.text):
-        if report_mode and header is not None:
+        if report_mode:
+            relevant = bool(pats.agency_re.search(sentence.text)) or default_agency is not None
+            in_zone = any(z0 <= sentence.start < z1 for z0, z1 in zones)
+            cue = _QUOTED_TITLE_DATE_RE.search(sentence.text) is not None
             own = parse_us_date(sentence.text)
-            if own is not None and abs((own[0] - header[0]).days) > REPORT_DATE_TOLERANCE_DAYS:
-                if pats.agency_re.search(sentence.text) or default_agency:
+            reason = None
+            if in_zone or cue:
+                reason = "historical_reference"
+            elif own is not None and doc_date is not None:
+                delta = (own[0] - doc_date).days
+                if delta < -HISTORICAL_REFERENCE_DAYS:
+                    reason = "historical_reference"
+                elif delta > REPORT_DATE_TOLERANCE_DAYS:
+                    reason = "dated_reference"
+            if reason:
+                if relevant and (own is not None or cue) and _has_action_cue(sentence.text):
                     skipped.append(
-                        Skipped(
-                            "dated_reference_in_report",
-                            sentence.start,
-                            sentence.end,
-                            sentence.text[:120],
-                        )
+                        Skipped(reason, sentence.start, sentence.end, sentence.text[:120])
                     )
                 continue
+        target_issuer, entity, entity_reason = _entity_target(
+            sentence.text, issuer_id, issuer_names, resolve_entity, scales
+        )
+        if entity_reason:
+            if pats.agency_re.search(sentence.text) or default_agency:
+                if (
+                    pats.transition_re
+                    and any(r.search(sentence.text) for r in pats.transition_re.values())
+                    or _has_action_cue(sentence.text)
+                ):
+                    skipped.append(
+                        Skipped(entity_reason, sentence.start, sentence.end, entity or "")
+                    )
+            continue
         mentions = [
             (m.start(), m.end(), pats.by_name[m.group(1).casefold()])
             for m in pats.agency_re.finditer(sentence.text)
@@ -402,6 +567,8 @@ def extract_rating_actions(
                         "extractor_version": EXTRACTOR_VERSION,
                     }
                 )
+                if entity:
+                    fields.update({"entity": entity, "entity_attribution": "sentence"})
                 key = {
                     "agency": agency_id,
                     "old": old_label,
@@ -410,8 +577,8 @@ def extract_rating_actions(
                 }
                 events.append(
                     CreditEvent(
-                        event_id=event_id_for(issuer_id, "rating", event_type, key),
-                        issuer_id=issuer_id,
+                        event_id=event_id_for(target_issuer, "rating", event_type, key),
+                        issuer_id=target_issuer,
                         family="rating",
                         event_type=event_type,
                         effective_date=effective,
@@ -423,8 +590,10 @@ def extract_rating_actions(
                 )
                 sentences_with_transition.add(sentence.start)
         if sentence.start not in sentences_with_transition:
-            event = _non_transition_event(doc, issuer_id, scales, pats, sentence, mentions)
+            event = _non_transition_event(doc, target_issuer, scales, pats, sentence, mentions)
             if event is not None:
+                if entity:
+                    event.fields.update({"entity": entity, "entity_attribution": "sentence"})
                 events.append(event)
     return Extraction(_merge_same_id(events), skipped)
 
@@ -451,6 +620,15 @@ def _merge_same_id(events: list[CreditEvent]) -> list[CreditEvent]:
         ]
         merged[ev.event_id] = richer.model_copy(update={"fields": fields, "evidence": evidence})
     return list(merged.values())
+
+
+_ACTION_CUE_RE = re.compile(
+    r"(?i)\b(?:affirm|confirm|revis|chang|lower|rais|downgrad|upgrad|placed|watch|review)\w*\b"
+)
+
+
+def _has_action_cue(text: str) -> bool:
+    return _ACTION_CUE_RE.search(text) is not None
 
 
 def _find_rating_label(text: str, alt: str) -> tuple[str, int, int] | None:

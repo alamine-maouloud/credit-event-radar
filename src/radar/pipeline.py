@@ -92,8 +92,30 @@ def document_kind(doc: RawDocument) -> str:
     return str(doc.extra.get("document_type") or "other")
 
 
+def issuer_names(issuer: Issuer) -> list[str]:
+    names = [issuer.name, *issuer.aliases]
+    if issuer.legal_entity:
+        names.append(issuer.legal_entity)
+    return names
+
+
+def universe_entity_resolver(universe: Universe):
+    """Exact, case-insensitive match of a named legal entity against the universe."""
+    from radar.extract.structured import _entity_key
+
+    table: dict[str, str] = {}
+    for item in universe.issuers:
+        for n in issuer_names(item):
+            table.setdefault(_entity_key(n), item.id)
+
+    def resolve(name: str) -> str | None:
+        return table.get(_entity_key(name))
+
+    return resolve
+
+
 def run_extractors(
-    doc: RawDocument, issuer: Issuer, scales: RatingScales
+    doc: RawDocument, issuer: Issuer, scales: RatingScales, universe: Universe | None = None
 ) -> tuple[Extraction, Extraction, object, str | None]:
     """Deterministic extractors for a document kind.
 
@@ -101,9 +123,13 @@ def run_extractors(
     """
     kind = document_kind(doc)
     empty = Extraction([], [])
+    names = issuer_names(issuer)
+    resolver = universe_entity_resolver(universe) if universe else None
     if kind == "edgar":
         return (
-            extract_rating_actions(doc, issuer.id, scales),
+            extract_rating_actions(
+                doc, issuer.id, scales, issuer_names=names, resolve_entity=resolver
+            ),
             extract_edgar_items(doc, issuer.id),
             extract_rating_observations(doc, issuer.id, scales, profile="sec_as_of"),
             "sec_as_of",
@@ -120,10 +146,18 @@ def run_extractors(
     if kind == "rating_report":
         agency = document_agency(doc, scales)
         ratings = extract_rating_actions(
-            doc, issuer.id, scales, default_agency=agency, report_mode=True
+            doc,
+            issuer.id,
+            scales,
+            default_agency=agency,
+            report_mode=True,
+            issuer_names=names,
+            resolve_entity=resolver,
         )
         return ratings, empty, None, None
-    ratings = extract_rating_actions(doc, issuer.id, scales)
+    ratings = extract_rating_actions(
+        doc, issuer.id, scales, issuer_names=names, resolve_entity=resolver
+    )
     others = Extraction([], [])
     issuance = extract_issuance_events(doc, issuer.id)
     earnings = extract_earnings_events(doc, issuer.id)
@@ -443,7 +477,7 @@ def process(
                 )
             )
             continue
-        ratings, items, observations, profile = run_extractors(doc, issuer, scales)
+        ratings, items, observations, profile = run_extractors(doc, issuer, scales, universe)
         stored_observations = (
             _store_observations(db, doc, observations, summary) if observations else 0
         )

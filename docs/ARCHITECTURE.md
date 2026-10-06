@@ -197,3 +197,24 @@ sentence dated differently from the report header (a "Related Research" bibliogr
 entry, a criteria reference) is a reference to a past action, not the action of the
 document. DBRS actions are extracted and shown but trigger no rating rule, as DBRS is not
 an admissible agency in rules.yaml 1.x.
+
+## ADR-013 · Entity guard and historical references in sentence extraction
+
+Date: 2026-10-06. Status: accepted.
+
+**Context.** On the first live run two DBRS documents produced false positives: a rating
+change of VW Credit Canada, Inc. was attributed to Volkswagen AG because the document
+belonged to Volkswagen, and a rating-history line ("Confirms Issuer Rating at A (low)",
+31 July 2025) became a 2025 affirmation.
+
+**Decision.** A rating action is never attributed to the document's issuer merely because
+the document is theirs. When a sentence names only another legal entity (corporate suffix
+detection, agencies excluded), the event is attached to that entity if the universe
+resolves it exactly, otherwise the candidate is rejected as ``unresolved_entity``. A
+sentence that names the issuer or refers to "the Company" keeps the issuer, even when
+co-rated entities are listed. In agency reports, a sentence sitting in a rating-history or
+bibliography section, written as a quoted title followed by a date, or dated more than
+ninety days before the document date, is classified ``historical_reference`` and never
+becomes an event; a report may legitimately describe an action taken a few weeks earlier.
+The document date comes from the publication date, else the header, else the URL.
+Normalisers and hashes are unchanged.
