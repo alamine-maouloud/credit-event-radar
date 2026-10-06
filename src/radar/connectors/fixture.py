@@ -10,11 +10,13 @@ from __future__ import annotations
 
 import gzip
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
+from radar.config import Issuer
 from radar.models import RawDocument
 from radar.snapshot import FetchedBytes, sha256_hex
 
@@ -85,3 +87,60 @@ def load_fixture(directory: Path) -> Fixture:
 
 def list_fixtures(root: Path) -> list[Path]:
     return sorted(p.parent for p in root.rglob(MANIFEST_NAME))
+
+
+class FixtureAdapter:
+    """SourceAdapter over golden fixture directories: fully offline ingestion.
+
+    Documents are rebuilt from the gzipped raw bytes with the current normaliser, so the
+    pipeline runs exactly as it would on a live fetch, minus the network.
+    """
+
+    source_type = "edgar"
+
+    def __init__(self, root: Path, raw_dir: Path, normalizer: Any) -> None:
+        self.root = root
+        self.raw_dir = raw_dir
+        self.normalizer = normalizer
+
+    def _build(self, fixture: Fixture) -> RawDocument:
+        from radar.snapshot import build_raw_document
+
+        m = fixture.manifest
+        extra = dict(m.get("extra") or {})
+        published = extra.get("filing_date")
+        form = extra.get("form") or "fixture"
+        title = f"{form} {extra.get('accession_number') or fixture.directory.name}"
+        return build_raw_document(
+            fixture.fetched,
+            source_type=m["source_type"],
+            raw_dir=self.raw_dir,
+            normalizer=self.normalizer,
+            title=title,
+            published_at=datetime.fromisoformat(f"{published}T00:00:00+00:00")
+            if published
+            else None,
+            issuer_hint=m.get("issuer_id"),
+            extra=extra,
+        )
+
+    def fetch(self, since: date, issuers: Sequence[Issuer]) -> list[RawDocument]:
+        wanted = {i.id for i in issuers}
+        docs: list[RawDocument] = []
+        for directory in list_fixtures(self.root):
+            fixture = load_fixture(directory)
+            m = fixture.manifest
+            if wanted and m.get("issuer_id") not in wanted:
+                continue
+            filed = (m.get("extra") or {}).get("filing_date")
+            if filed and date.fromisoformat(filed) < since:
+                continue
+            docs.append(self._build(fixture))
+        return docs
+
+    def fetch_document(self, url: str) -> RawDocument:
+        for directory in list_fixtures(self.root):
+            fixture = load_fixture(directory)
+            if fixture.manifest["source_url"] == url:
+                return self._build(fixture)
+        raise KeyError(f"no fixture for {url}")
