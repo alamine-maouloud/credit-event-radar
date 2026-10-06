@@ -112,3 +112,14 @@ def timed(fn):
     t0 = time.perf_counter()
     result = fn()
     return result, int((time.perf_counter() - t0) * 1000)
+
+
+class RefusingProvider(LLMProvider):
+    """A provider that never calls anything: cache-only replays (zero cost). Reaching it is
+    an error recorded on the document, never a silent call."""
+
+    def __init__(self, *, name: str = "openai") -> None:
+        self.name = name
+
+    def complete(self, request: ExtractionRequest) -> ExtractionResponse:
+        raise RuntimeError("cache-only run: no provider call is allowed")

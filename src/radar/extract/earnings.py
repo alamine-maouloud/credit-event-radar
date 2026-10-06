@@ -1,4 +1,4 @@
-"""Deterministic classification of results releases (``structured-earnings-1.2``).
+"""Deterministic classification of results releases (``structured-earnings-1.3``).
 
 A document is a results release when its title (or first line) names a reporting period.
 The event carries only what the text states explicitly: a guidance statement
@@ -18,7 +18,7 @@ from radar.extract.spans import exact_span, find_quote, iter_sentences
 from radar.extract.structured import Extraction, Skipped, event_id_for
 from radar.models import CreditEvent, EvidenceSpan, RawDocument
 
-EARNINGS_EXTRACTOR_VERSION = "structured-earnings-1.2"
+EARNINGS_EXTRACTOR_VERSION = "structured-earnings-1.3"
 
 _RESULTS_TITLE_RE = re.compile(
     r"(?i)\b(?:(?:first|second|third|fourth)\s+quarter|Q[1-4]|half[- ]year|(?:first|second)\s+half|H[12]\b|nine[- ]months|9M\b|"  # noqa: E501
@@ -107,8 +107,10 @@ _FLAGS: list[tuple[str, re.Pattern[str]]] = [
     (
         "liquidity",
         re.compile(
-            # a worry or a deterioration, never the bare "liquidity risk" of a risk section
-            r"(?i)\bliquidity\b[^.;]{0,30}?\b(?:concerns?|constraints?|constrained|shortfalls?|"
+            # a worry or a deterioration, never the bare "liquidity risk" of a risk section,
+            # nor the "Liquidity and Going Concern" heading (structured-earnings-1.3)
+            r"(?i)\bliquidity\b[^.;]{0,30}?\b(?:(?<!going )concerns?|constraints?|constrained|"
+            r"shortfalls?|"
             r"pressures?|tighten(?:ed|ing)|strained|insufficient)\b"
             r"|\b(?:constrained|tight|strained|insufficient)\s+liquidity\b"
         ),
@@ -131,15 +133,10 @@ def _title_and_span(doc: RawDocument) -> tuple[str, EvidenceSpan | None]:
     return title, span
 
 
-def extract_earnings_events(doc: RawDocument, issuer_id: str) -> Extraction:
-    title, title_span = _title_and_span(doc)
-    period_match = _RESULTS_TITLE_RE.search(title)
-    if not period_match:
-        return Extraction([], [])
-    if _WEAK_PERIOD_RE.fullmatch(period_match.group(0)) and not _RESULTS_NOUN_RE.search(title):
-        return Extraction([], [])  # "expected in the first half of 2027" is not a results release
+def _scan(doc: RawDocument) -> tuple[list, list, list[Skipped]]:
+    """Guidance statements and flags over every sentence of a document, with the reasons
+    of the candidates set aside (historical, negated, hypothetical, alleviated)."""
     skipped: list[Skipped] = []
-    evidence: list[EvidenceSpan] = [title_span] if title_span else []
     statuses: list[tuple[str, int, int]] = []
     flags: list[tuple[str, int, int]] = []
     for sentence in iter_sentences(doc.text):
@@ -188,6 +185,18 @@ def extract_earnings_events(doc: RawDocument, issuer_id: str) -> Extraction:
                     continue
             if m and flag not in {f for f, _, _ in flags}:
                 flags.append((flag, sentence.start + m.start(), sentence.start + m.end()))
+    return statuses, flags, skipped
+
+
+def extract_earnings_events(doc: RawDocument, issuer_id: str) -> Extraction:
+    title, title_span = _title_and_span(doc)
+    period_match = _RESULTS_TITLE_RE.search(title)
+    if not period_match:
+        return Extraction([], [])
+    if _WEAK_PERIOD_RE.fullmatch(period_match.group(0)) and not _RESULTS_NOUN_RE.search(title):
+        return Extraction([], [])  # "expected in the first half of 2027" is not a results release
+    evidence: list[EvidenceSpan] = [title_span] if title_span else []
+    statuses, flags, skipped = _scan(doc)
     guidance_status: str | None = None
     distinct = {s for s, _, _ in statuses}
     if len(distinct) == 1:
@@ -221,6 +230,75 @@ def extract_earnings_events(doc: RawDocument, issuer_id: str) -> Extraction:
         "extractor_version": EARNINGS_EXTRACTOR_VERSION,
     }
     key = {"period": fields["period"], "date": effective.isoformat() if effective else doc.doc_id}
+    event = CreditEvent(
+        event_id=event_id_for(issuer_id, "earnings", "earnings_release", key),
+        issuer_id=issuer_id,
+        family="earnings",
+        event_type="earnings_release",
+        effective_date=effective,
+        fields=fields,
+        evidence=evidence,
+        extraction_method="structured",
+        source_doc_ids=[doc.doc_id],
+    )
+    return Extraction([event], skipped)
+
+
+PERIODIC_FORMS = {"10-Q", "10-Q/A", "10-K", "10-K/A", "20-F", "40-F"}
+_PERIOD_ENDED_RE = re.compile(
+    r"(?i)\bfor the (?:quarterly|fiscal|transition|annual) period ended\s+"
+    r"([A-Z][a-z]+ \d{1,2}, \d{4})"
+)
+
+
+def extract_periodic_report(doc: RawDocument, issuer_id: str) -> Extraction:
+    """A periodic report (10-Q, 10-K) is a results publication (SPEC 6.1): one
+    earnings_release event per filing, dated at filing, with the deterministic flags read
+    by the same rules as a results release; guidance statements are not read from a report."""
+    if doc.source_type != "edgar":
+        return Extraction([], [])
+    extra = doc.extra if isinstance(doc.extra, dict) else {}
+    form = str(extra.get("form") or "")
+    if form not in PERIODIC_FORMS:
+        return Extraction([], [])
+    title, title_span = _title_and_span(doc)
+    m = _PERIOD_ENDED_RE.search(doc.text[:20000])
+    if m:
+        period = (
+            f"{m.group(0).split(' period ended')[0].split()[-1].lower()} period ended {m.group(1)}"
+        )
+    elif extra.get("report_date"):
+        period = f"{form} period ended {extra['report_date']}"
+    else:
+        period = f"{form} filed {extra.get('filing_date') or 'unknown'}"
+    _, flags, skipped = _scan(doc)
+    evidence: list[EvidenceSpan] = [title_span] if title_span else []
+    for flag, f0, f1 in flags:
+        evidence.append(
+            exact_span(
+                doc, f0, f1, extractor_version=EARNINGS_EXTRACTOR_VERSION, field=f"flag:{flag}"
+            )
+        )
+    effective: date | None = doc.published_at.date() if doc.published_at else None
+    if effective is None and extra.get("filing_date"):
+        effective = date.fromisoformat(str(extra["filing_date"]))
+    fields = {
+        "period": period,
+        "report_form": form,
+        "guidance_metric": None,
+        "guidance_old": None,
+        "guidance_new": None,
+        "guidance_change_pct": None,
+        "guidance_qualified_significant": None,
+        "guidance_status": None,
+        "flags": [f for f, _, _ in flags],
+        "extractor_version": EARNINGS_EXTRACTOR_VERSION,
+    }
+    key = {
+        "period": period,
+        "form": form,
+        "date": effective.isoformat() if effective else doc.doc_id,
+    }
     event = CreditEvent(
         event_id=event_id_for(issuer_id, "earnings", "earnings_release", key),
         issuer_id=issuer_id,

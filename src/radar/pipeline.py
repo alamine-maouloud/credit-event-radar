@@ -17,7 +17,7 @@ from radar.config import Issuer, Rules, Universe
 from radar.connectors.base import SourceAdapter
 from radar.db import Database
 from radar.dedup import find_duplicate
-from radar.extract.earnings import extract_earnings_events
+from radar.extract.earnings import extract_earnings_events, extract_periodic_report
 from radar.extract.issuance import extract_issuance_events
 from radar.extract.ratings_table import extract_rating_observations
 from radar.extract.spans import verify_span
@@ -126,11 +126,15 @@ def run_extractors(
     names = issuer_names(issuer)
     resolver = universe_entity_resolver(universe) if universe else None
     if kind == "edgar":
+        others = extract_edgar_items(doc, issuer.id)
+        periodic = extract_periodic_report(doc, issuer.id)  # 10-Q, 10-K: a results publication
+        others.events.extend(periodic.events)
+        others.skipped.extend(periodic.skipped)
         return (
             extract_rating_actions(
                 doc, issuer.id, scales, issuer_names=names, resolve_entity=resolver
             ),
-            extract_edgar_items(doc, issuer.id),
+            others,
             extract_rating_observations(doc, issuer.id, scales, profile="sec_as_of"),
             "sec_as_of",
         )

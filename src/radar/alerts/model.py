@@ -209,7 +209,13 @@ def _title(event: CreditEvent) -> str:
             extras.append(f"watch {f['watch']}")
         return head + (f" ({', '.join(extras)})" if extras else "")
     if event.family == "earnings":
-        base = "Results release" + (f" {f['period']}" if f.get("period") else "")
+        form = str(f.get("report_form") or "")
+        head = (
+            "Annual report"
+            if form.startswith("10-K")
+            else ("Quarterly report" if form else "Results release")
+        )
+        base = head + (f" {f['period']}" if f.get("period") else "")
         flags = [x for x in (f.get("flags") or []) if isinstance(x, str)]
         if flags:
             return f"{base}: " + ", ".join(FLAG_LABELS.get(x, x) for x in flags)

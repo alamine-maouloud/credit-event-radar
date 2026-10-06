@@ -511,6 +511,12 @@ def llm_extract(
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Render the prompts and estimate the cost, call nothing"
     ),
+    cache_only: bool = typer.Option(
+        False,
+        "--cache-only",
+        help="Replay cached answers only: a document without a cached answer is skipped, "
+        "no provider call is made, zero cost (demo and re-validation runs)",
+    ),
     db: DbOption = None,
 ) -> None:
     """Guidance extraction with cache, budget hard stop and two level validation. With --out:
@@ -536,6 +542,13 @@ def llm_extract(
     if dry_run:
         budget = RunBudget(limit_usd=1.0, pricing=pricing)
         provider = FakeProvider(name=role.provider, raw_json="{}")
+    elif cache_only:
+        from radar.llm.provider import RefusingProvider
+
+        # a budget below any call's estimate: every document without a cached answer is
+        # refused before the provider is reached; the provider refuses as well
+        budget = RunBudget(limit_usd=1e-9, pricing=pricing)
+        provider = RefusingProvider(name=role.provider)
     else:
         try:
             budget = RunBudget.from_env(pricing)

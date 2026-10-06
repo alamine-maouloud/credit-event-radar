@@ -119,3 +119,23 @@ def test_the_cli_refuses_an_unbenchmarked_family_before_any_call(tmp_path, setti
     )
     assert result.exit_code != 0
     assert "new_family" in result.output and "--alternative" in result.output
+
+
+def test_cache_only_runs_never_reach_a_provider():
+    from radar.llm.provider import ExtractionRequest, RefusingProvider
+
+    provider = RefusingProvider(name="openai")
+    assert provider.name == "openai"
+    with pytest.raises(RuntimeError, match="cache-only"):
+        provider.complete(
+            ExtractionRequest(
+                system="s",
+                user="u",
+                schema_name="X",
+                json_schema={},
+                model_id="m",
+                temperature=0.0,
+                reasoning_effort=None,
+                max_output_tokens=10,
+            )  # fmt: skip
+        )

@@ -1,4 +1,4 @@
-"""Deterministic earnings release classification (structured-earnings-1.2): explicit statements only."""
+"""Deterministic earnings release classification (structured-earnings-1.3): explicit statements only."""
 
 from __future__ import annotations
 
@@ -209,7 +209,7 @@ def test_flags_ignore_sentences_dated_more_than_a_year_before_the_release():
 @pytest.mark.parametrize(
     "sentence,reason",
     [
-        # the liquidity lesson applied to the deterministic flag (structured-earnings-1.2):
+        # the liquidity lesson applied to the deterministic flag (structured-earnings-1.3):
         # a hypothetical risk factor is not a doubt stated
         (
             "If we are unable to raise additional capital, there could be substantial doubt about our ability to continue as a going concern.",
@@ -242,3 +242,82 @@ def test_going_concern_flag_skips_hypotheticals_and_alleviated_doubts(sentence, 
 )
 def test_going_concern_flag_stays_when_the_doubt_is_not_alleviated(sentence):
     assert only(f"Results. {sentence}").fields["flags"] == ["going_concern"]
+
+
+# ---------------------------------------------- periodic reports (10-Q, 10-K) --- #
+
+
+from radar.extract.earnings import extract_periodic_report  # noqa: E402
+
+TEN_Q = (
+    "10-Q 0000000001-26-000003\n"
+    "UNITED STATES SECURITIES AND EXCHANGE COMMISSION\n"
+    "For the quarterly period ended June 30, 2026\n"
+    "Liquidity and Going Concern\n"
+    "These conditions and events, considered in the aggregate, raise substantial doubt about "
+    "the Company's ability to continue as a going concern.\n"
+    "The Company was not in compliance with the minimum liquidity covenant as of June 30, 2026.\n"
+)
+
+
+def edgar_doc(text: str, form: str = "10-Q") -> RawDocument:
+    return RawDocument(
+        doc_id=sha256_hex(text), source_type="edgar", url="https://www.sec.gov/Archives/x.htm",
+        title=text.split("\n", 1)[0], published_at=datetime(2026, 8, 14, tzinfo=UTC),
+        retrieved_at=datetime(2026, 10, 7, tzinfo=UTC), content_hash=sha256_hex(text.encode()),
+        raw_size_bytes=len(text), normalizer_version="t", text=text, raw_path="p",
+        extra={"form": form, "filing_date": "2026-08-14", "report_date": "2026-06-30"},
+    )  # fmt: skip
+
+
+def test_a_quarterly_report_is_a_results_publication_with_its_flags():
+    result = extract_periodic_report(edgar_doc(TEN_Q), "ISSUER_TEST_A")
+    assert len(result.events) == 1
+    ev = result.events[0]
+    assert (ev.family, ev.event_type, ev.extraction_method) == (
+        "earnings",
+        "earnings_release",
+        "structured",
+    )
+    assert ev.effective_date == date(2026, 8, 14)
+    assert ev.fields["period"] == "quarterly period ended June 30, 2026"
+    assert ev.fields["report_form"] == "10-Q" and ev.fields["guidance_status"] is None
+    assert ev.fields["flags"] == ["going_concern", "covenant"]
+    fields = {s.field for s in ev.evidence}
+    assert fields == {"title", "flag:going_concern", "flag:covenant"}
+    assert all(TEN_Q[s.char_start : s.char_end] == s.quote for s in ev.evidence)
+
+
+def test_a_quarterly_report_without_a_flag_is_still_an_event_with_no_priority_signal():
+    text = TEN_Q.split("Liquidity and Going Concern\n")[0] + "Net sales increased in the quarter.\n"
+    result = extract_periodic_report(edgar_doc(text), "ISSUER_TEST_A")
+    assert len(result.events) == 1 and result.events[0].fields["flags"] == []
+
+
+def test_a_denied_doubt_in_a_quarterly_report_sets_no_flag():
+    text = TEN_Q.replace(
+        "These conditions and events, considered in the aggregate, raise substantial doubt about "
+        "the Company's ability to continue as a going concern.",
+        "Management concluded that there is no substantial doubt about the Company's ability to continue as a going concern.",
+    ).replace(
+        "The Company was not in compliance with the minimum liquidity covenant as of June 30, 2026.\n",
+        "",
+    )
+    result = extract_periodic_report(edgar_doc(text), "ISSUER_TEST_A")
+    assert result.events[0].fields["flags"] == []
+    assert any(s.reason == "negated_flag:going_concern" for s in result.skipped)
+
+
+def test_only_periodic_report_forms_qualify():
+    assert extract_periodic_report(edgar_doc(TEN_Q, form="8-K"), "ISSUER_TEST_A").events == []
+    press = edgar_doc(TEN_Q).model_copy(update={"source_type": "ir_feed"})
+    assert extract_periodic_report(press, "ISSUER_TEST_A").events == []
+
+
+def test_the_going_concern_heading_is_not_a_liquidity_worry():
+    """structured-earnings-1.3: "Liquidity and Going Concern" names a section, not a
+    constraint; the liquidity flag needs a worry word of its own."""
+    assert only("Results. Liquidity and Going Concern. Net sales increased.").fields["flags"] == []
+    assert only("Results. Liquidity concerns persisted in the quarter.").fields["flags"] == [
+        "liquidity"
+    ]

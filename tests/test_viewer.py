@@ -62,8 +62,8 @@ def test_watchlist_separates_the_live_universe_from_the_historical_cases(world, 
     vw = next(r for r in live if r["issuer_id"] == "VOLKSWAGEN")
     assert vw["composite"] not in (None, "", "n/a") and vw["name"] == "Volkswagen"
     hog = next(r for r in hist if r["issuer_id"] == "HARLEY_DAVIDSON_INC")
-    assert hog["events"] == 1 and hog["highest_priority"] == "P1" and hog["composite"] == "n/a"
-    assert hog["last_event"] == "2026-07-08"
+    assert hog["events"] == 2 and hog["highest_priority"] == "P1" and hog["composite"] == "n/a"
+    assert hog["last_event"] == "2026-08-05"  # the quarterly report itself
 
 
 def test_alert_rows_put_the_p1_first_with_its_title_and_rules(world):

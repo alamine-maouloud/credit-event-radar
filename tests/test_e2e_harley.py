@@ -25,6 +25,11 @@ SYNTHETIC = FIXTURES / "synthetic_issuer_test_a_10q"
 runner = CliRunner()
 
 
+def rating_event(db: Database):
+    """The fallen-angel rating action; the 10-Q also yields a results publication event."""
+    return next(e for e in db.list_events("HARLEY_DAVIDSON_INC") if e.family == "rating")
+
+
 def run(*args: str) -> str:
     result = runner.invoke(app, list(args))
     assert result.exit_code == 0, result.output
@@ -85,9 +90,9 @@ def test_cli_outputs(pipeline):
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest"]
     assert "fetched 1, stored 1, duplicates 0" in pipeline["ingest_url"]
     assert "resolved 1, unresolved 1" in pipeline["process"]
-    assert "events new 1" in pipeline["process"]
+    assert "events new 2" in pipeline["process"]  # the rating action and the quarterly report
     assert "observations 3" in pipeline["process"]
-    assert "decisions: P1 1" in pipeline["process"]
+    assert "decisions: NONE 1, P1 1" in pipeline["process"]
     assert (
         "P1         HARLEY_DAVIDSON_INC  rating/downgrade  2026-07-08  SP BBB- to BB+"
         in pipeline["events"]
@@ -117,8 +122,8 @@ def test_document_provenance_matches_the_manifest(pipeline):
 def test_event_is_the_fallen_angel_without_llm(pipeline):
     db = Database(pipeline["db"])
     events = db.list_events("HARLEY_DAVIDSON_INC")
-    assert len(events) == 1
-    ev = events[0]
+    assert len(events) == 2 and {e.family for e in events} == {"rating", "earnings"}
+    ev = rating_event(db)
     assert (ev.family, ev.event_type, ev.effective_date) == (
         "rating",
         "downgrade",
@@ -148,12 +153,12 @@ def test_event_is_the_fallen_angel_without_llm(pipeline):
 
 def test_audit_trail_covers_every_step(pipeline):
     db = Database(pipeline["db"])
-    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    ev = rating_event(db)
     doc_id = ev.source_doc_ids[0]
     steps = [(e["step"], e["status"]) for e in db.audit_entries(doc_id=doc_id)]
     assert steps == [
         ("ingest", "ok"), ("resolve", "ok"), ("observe", "ok"), ("observe", "ok"), ("observe", "ok"),
-        ("extract", "ok"), ("process", "ok"),
+        ("extract", "ok"), ("extract", "ok"), ("process", "ok"),
     ]  # fmt: skip
     assert db.document_status(doc_id)["outcome"] == "EVENTS"
     entries = db.audit_entries(event_id=ev.event_id)
@@ -186,7 +191,7 @@ def test_observations_from_the_ratings_table(pipeline):
 
 def test_decision_is_p1_by_rat01_and_rat02(pipeline):
     db = Database(pipeline["db"])
-    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    ev = rating_event(db)
     d = db.get_decision(ev.event_id)
     assert d is not None
     assert (d.final_priority, d.base_priority, d.decision_status) == ("P1", "P1", "DECIDED")
@@ -218,7 +223,7 @@ def test_decision_is_p1_by_rat01_and_rat02(pipeline):
 
 def test_explain_output(pipeline):
     db = Database(pipeline["db"])
-    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    ev = rating_event(db)
     db.close()
     out = run("show-event", ev.event_id, "--explain", *pipeline["common"])
     assert out.startswith("FINAL PRIORITY: P1\n")
@@ -241,11 +246,11 @@ def test_explain_output(pipeline):
 
 def test_decide_recomputes_identically(pipeline):
     db = Database(pipeline["db"])
-    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    ev = rating_event(db)
     before = db.get_decision(ev.event_id).model_dump(mode="json")
     db.close()
     out = run("decide", *pipeline["common"])
-    assert "decisions: P1 1" in out
+    assert "decisions: NONE 1, P1 1" in out
     db = Database(pipeline["db"])
     after = db.get_decision(ev.event_id).model_dump(mode="json")
     db.close()
@@ -254,7 +259,7 @@ def test_decide_recomputes_identically(pipeline):
 
 def test_unknown_issuer_fixture_produces_no_event(pipeline):
     db = Database(pipeline["db"])
-    assert db.count("events") == 1
+    assert db.count("events") == 2
     unresolved = [
         e for e in db.audit_entries() if e["step"] == "resolve" and e["status"] == "skipped"
     ]
@@ -265,7 +270,7 @@ def test_unknown_issuer_fixture_produces_no_event(pipeline):
 
 def test_show_event_traces_back_to_source(pipeline):
     db = Database(pipeline["db"])
-    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    ev = rating_event(db)
     db.close()
     out = run("show-event", ev.event_id, *pipeline["common"])
     assert "Issuer: HARLEY_DAVIDSON_INC" in out
@@ -297,7 +302,7 @@ def test_second_run_is_idempotent(pipeline):
     out = run("process", *pipeline["common"])
     assert "documents 0" in out
     db = Database(pipeline["db"])
-    assert db.count("events") == 1 and db.count("documents") == 2
+    assert db.count("events") == 2 and db.count("documents") == 2
     db.close()
 
 
@@ -330,7 +335,7 @@ def test_alert_command_renders_the_p1_locally_without_sending(pipeline, tmp_path
     """Phase P1: the Alert object of the real Harley P1, rendered as JSON, HTML and an
     Adaptive Card, nothing sent, the audit trail records the files and the route."""
     db = Database(pipeline["db"])
-    ev = db.list_events("HARLEY_DAVIDSON_INC")[0]
+    ev = rating_event(db)
     db.close()
     out = run("alert", ev.event_id, "--out", str(tmp_path / "alerts"), *pipeline["common"])
     assert "P1    Harley-Davidson" in out and "BBB- → BB+, IG → HY" in out
