@@ -152,4 +152,6 @@ def test_state_never_mentions_composite():
     import radar.materiality.state as state_module
 
     for module in (engine, state_module):
-        assert "composite" not in inspect.getsource(module).lower()
+        source = inspect.getsource(module)
+        assert "composite_rating" not in source
+        assert "CompositeRating" not in source

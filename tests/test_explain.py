@@ -21,7 +21,7 @@ def rules():
 
 def document() -> RawDocument:
     return RawDocument(
-        doc_id="doc_test", source_type="edgar", url="https://www.sec.gov/Archives/edgar/data/1/x.htm", title="10-Q 0000000001-26-000003",
+        doc_id=HEX, source_type="edgar", url="https://www.sec.gov/Archives/edgar/data/1/x.htm", title="10-Q 0000000001-26-000003",
         published_at=datetime(2026, 8, 5, tzinfo=UTC), retrieved_at=datetime(2026, 10, 6, tzinfo=UTC), content_hash=HEX,
         raw_size_bytes=10, normalizer_version="sec-html-1.0", text="x" * 10, raw_path="p", extra={"form": "10-Q"},
     )  # fmt: skip
