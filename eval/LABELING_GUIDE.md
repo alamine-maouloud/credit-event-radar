@@ -22,7 +22,11 @@ Every document receives exactly one `behaviour`:
 
 Statements about a subsidiary, a brand, a segment, a competitor or the market are not the
 issuer's guidance: they never create an occurrence and never turn a document into
-`guidance_mentioned_not_actionable` on their own.
+`guidance_mentioned_not_actionable` on their own. The level that counts is the one at which
+the issuer states its guidance: the Group, or its principal division when the metric is only
+guided there (Volkswagen gives investment ratio, net cash flow and net liquidity for the
+Automotive Division). When a sentence gives both the Group and a sub-scope (TRATON Group and
+TRATON Operations), only the Group figure is an occurrence.
 
 ## 2. Occurrence-level fields
 
@@ -31,14 +35,15 @@ One occurrence per metric and per period stated. A document may hold several occ
 
 | field | rule |
 |---|---|
-| `metric` | one of `revenue`, `ebitda`, `ebit`, `fcf`, `margin`, `capex`, `other`. `margin` covers operating return on sales and operating margin; `ebit` covers operating result, operating profit, clean CCS operating result; `fcf` covers free cash flow and net cash flow; `capex` covers investment ratio and organic capex. |
+| `metric` | one of `revenue`, `ebitda`, `ebit`, `fcf`, `margin`, `capex`, `other`. `margin` covers operating return on sales and operating margin; `ebit` covers operating result, operating profit, clean CCS operating result; `fcf` covers free cash flow and net cash flow; `capex` covers investment ratio and organic capex; `other` covers a result-related amount of the issuer outside the list (net liquidity, net debt), always with its `metric_label`. |
 | `metric_label` | the metric exactly as written in the evidence, lower or upper case as in the text. |
 | `basis` | `absolute` (an amount), `yoy_change_pct` (growth versus previous year in percent), `margin_pct` (a ratio in percent). |
 | `unit` | `EUR_BN`, `EUR_MN`, `USD_BN`, `USD_MN`, `PCT`. A range given in billions stays in billions. |
+| `document_date` | document level: the publication date printed in the document (dateline "Munich, July 23, 2026", report cover date), not the feed timestamp; TRATON's RSS stamps the evening before the dateline. Used as the anti look-ahead bound for the occurrences. |
 | `period` | the fiscal period as written, normalised to the year (`2026`) or the year and half (`H2 2026`). |
-| `current_lower`, `current_upper` | the range now stated, both equal for a point estimate; `null` when the text gives no number (then the occurrence does not exist, see section 1). |
+| `current_lower`, `current_upper` | the range now stated, both equal for a point estimate (`around`, `approximately`). Both `null` only for an explicit comparator without a written number (`in line with the previous year`), see the Numbers paragraph; a statement with neither number nor comparator is not an occurrence (section 3). |
 | `previous_lower`, `previous_upper` | the earlier range only when the same document states it; otherwise `null`. Never filled from memory or from another document. |
-| `status` | `raised`, `cut`, `reaffirmed`, `new`, `withdrawn`, `mentioned`. `new` when the text gives a range without saying it changed or was maintained. `reaffirmed` requires words such as confirms, maintains, reaffirms, unchanged, still expected, continues to expect, in line with the previous forecast; the wording may sit in an adjacent sentence of the same outlook paragraph. `raised`/`cut` require either explicit words or a stated earlier range that differs. |
+| `status` | `raised`, `cut`, `reaffirmed`, `new`, `withdrawn`, `mentioned`. `new` when the text gives a range without saying it changed or was maintained. `reaffirmed` requires words such as confirms, maintains, reaffirms, unchanged, still expected, continues to expect, in line with the previous forecast; the wording may sit in an adjacent sentence of the same outlook paragraph. `raised`/`cut` require either explicit words or a stated earlier range that differs; a range narrowed "to the upper end of the previous ranges" is `raised`, narrowed to the lower end is `cut`, narrowed or adjusted without a side and without the earlier range is `new`. The wording may sit in an adjacent sentence of the same outlook paragraph; when it does, include that sentence in the evidence. |
 | `evidence_quote` | verbatim sentence or sentences from the normalised text that contain the metric label, every number of the occurrence and the unit. Prefer the shortest span that holds them all. Copy characters exactly, including typographic quotes and signs such as `+3`. |
 | `start_offset`, `end_offset` | character offsets of `evidence_quote` in the normalised text of the document (the text stored by the pipeline, `normalizer_version` recorded). Computed by `scripts/gold_guidance.py`, never by hand. |
 
@@ -52,7 +57,11 @@ percent, per cent are equivalent.
 
 ## 3. What is not an occurrence
 
-- Expectations about markets, industry volumes, prices, exchange rates or raw materials.
+- Expectations about markets, industry volumes, prices, exchange rates or raw materials
+  (OMV's Brent, gas price, indicator margin and utilization assumptions).
+- Quantities without a monetary or percent unit of the schema: production in kboe/d, sales
+  volumes in tonnes or units, unit costs in USD/bbl. They may enter a later schema version.
+- Segment items, even monetary (segment CAPEX, exploration expenditure of one segment).
 - Statements about past periods, including the quarter being reported.
 - Targets beyond a fiscal year horizon (a 2030 ambition) unless stated as guidance for a
   fiscal year.

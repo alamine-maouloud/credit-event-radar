@@ -573,7 +573,7 @@ documents:
 
   - gold_id: G-TR-04
     fixture: tests/fixtures/gold/guidance/traton_fy2025_results
-    document_date: "2026-03-03"
+    document_date: "2026-03-04"
     behaviour: guidance_maintained
     notes: First guidance for fiscal 2026, stated as bullet points.
     occurrences:
@@ -613,7 +613,7 @@ documents:
 
   - gold_id: G-TR-05
     fixture: tests/fixtures/gold/guidance/traton_q1_2026_results
-    document_date: "2026-04-28"
+    document_date: "2026-04-29"
     behaviour: guidance_maintained
     notes: Full-year forecast confirmed.
     occurrences:
@@ -642,9 +642,9 @@ documents:
 
   - gold_id: G-TR-06
     fixture: tests/fixtures/ir/traton_h1_2026_results
-    document_date: "2026-07-22"
+    document_date: "2026-07-23"
     behaviour: guidance_changed
-    notes: Outlook narrowed (title and section heading); the earlier ranges are not restated, so previous bounds stay null and raised reflects the higher floor of each range. The same sentence also gives a margin range for TRATON Operations (7.1 to 8.1%), a sub-scope not labelled.
+    notes: Outlook narrowed "to the upper end of the previous ranges" (explicit upward wording in the sentence before the figures); the earlier ranges are not restated, so previous bounds stay null. The same sentence also gives a margin range for TRATON Operations (7.1 to 8.1%), a sub-scope not labelled.
     occurrences:
       - metric: revenue
         metric_label: "sales revenue"
@@ -656,7 +656,7 @@ documents:
         current_upper: 7
         period: "2026"
         status: raised
-        evidence_quote: "For unit sales and sales revenue in 2026, we now expect a range of 0 to +7%."
+        evidence_quote: "The business performance so far in our core markets allows us to narrow our full-year outlook for some key performance indicators to the upper end of the previous ranges. For unit sales and sales revenue in 2026, we now expect a range of 0 to +7%."
       - metric: margin
         metric_label: "adjusted operating return on sales"
         basis: margin_pct
@@ -671,14 +671,14 @@ documents:
 
   - gold_id: G-TR-07
     fixture: tests/fixtures/gold/guidance/traton_q2_2026_unit_sales
-    document_date: "2026-07-09"
+    document_date: "2026-07-10"
     behaviour: no_guidance
     notes: Unit sales; the US demand remark is a market comment.
     occurrences: []
 
   - gold_id: G-TR-08
     fixture: tests/fixtures/gold/guidance/traton_fy2025_unit_sales
-    document_date: "2026-01-19"
+    document_date: "2026-01-20"
     behaviour: no_guidance
     notes: Preliminary unit sales only.
     occurrences: []
