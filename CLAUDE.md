@@ -57,6 +57,7 @@ credit-event-radar/
 │   └── verification/          # claim_support
 ├── src/radar/
 │   ├── models.py              # schémas pydantic
+│   ├── config.py              # chargement validé des YAML et du seed (seul I/O de la Phase 1)
 │   ├── db.py                  # schéma SQLite + accès
 │   ├── ratings.py             # échelles, notches, notation composite (pur)
 │   ├── connectors/            # base.py, edgar.py, ir_feeds.py, news_rss.py
@@ -121,7 +122,7 @@ uv run pytest -q && uv run ruff check .
 
 ## Statut
 
-- [ ] Phase 1 · Fondations : repo, schémas, échelles de notation, notation composite, config, seeds
+- [x] Phase 1 · Fondations : repo, schémas, échelles de notation, notation composite, config, seeds (2026-10-06)
 - [ ] Phase 2 · Ingestion : EDGAR, flux IR, news RSS, snapshots, hash, déduplication
 - [ ] Phase 3 · Extraction : structurée (EDGAR) et LLM (schémas stricts + validation des spans)
 - [ ] Phase 4 · Moteur de matérialité : rules.yaml, modificateurs, explication « Why? »
