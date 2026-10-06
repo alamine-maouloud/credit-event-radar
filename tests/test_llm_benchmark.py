@@ -435,3 +435,69 @@ def test_benchmark_runs_the_liquidity_kind_with_its_own_scorer(tmp_path):
     assert run["extractor_version"] == "llm-liquidity-1.0"
     assert summary.metrics["dev"]["document_flag"]["recall"] == 1.0
     assert summary.metrics["dev"]["negative_statements"]["precision"] == 1.0
+
+
+def test_benchmark_runs_the_going_concern_kind_with_its_presence_field(tmp_path):
+    """The row writer reads the presence field of any family schema
+    (has_going_concern_statements), the scorer flags on doubt alone."""
+    from radar.eval.going_concern import load_going_concern_gold
+
+    text = "Issuer Test A AG quarterly report\nThese conditions raise substantial doubt about the Company's ability to continue as a going concern.\n"
+    quote = "These conditions raise substantial doubt about the Company's ability to continue as a going concern."
+    start = text.index(quote)
+    gold_rows = [
+        {
+            "gold_id": "GC-T-01", "issuer_id": "ISSUER_TEST_A", "fixture": "tests/fixtures/none/g",
+            "source_url": "https://example.invalid/g", "document_date": "2026-05-11",
+            "raw_sha256": "a" * 64, "normalized_sha256": doc(text).doc_id, "normalizer_version": "t",
+            "split": "dev", "expected_flag": True, "notes": None, "ineligible": [],
+            "statements": [{"status": "doubt", "evidence_quote": quote, "start_offset": start, "end_offset": start + len(quote)}],
+        }
+    ]  # fmt: skip
+    gold_path = tmp_path / "gc.jsonl"
+    gold_path.write_text("\n".join(json.dumps(r) for r in gold_rows) + "\n")
+
+    class GoingConcernProvider(LLMProvider):
+        name = "openai"
+
+        def complete(self, request: ExtractionRequest) -> ExtractionResponse:
+            payload = {"has_going_concern_statements": True, "statements": [
+                {"risk_type": "going_concern", "status": "doubt", "period": None,
+                 "evidence_quote": quote, "start_offset": start, "end_offset": start + len(quote)}]}  # fmt: skip
+            raw = json.dumps(payload)
+            return ExtractionResponse(raw_json=raw, model_id=request.model_id, resolved_model=request.model_id,
+                                      provider=self.name, input_tokens=request.estimated_input_tokens,
+                                      output_tokens=estimate_tokens(raw), latency_ms=5, reasoning_effort="low")  # fmt: skip
+
+    db = Database(tmp_path / "r.db")
+    db.init_schema()
+    out = tmp_path / "run"
+    summary = run_benchmark(
+        load_going_concern_gold(gold_path),
+        db=db,
+        universe=UNIVERSE,
+        provider=GoingConcernProvider(),
+        cache=LLMCache(db),
+        budget=RunBudget(limit_usd=5.0, pricing=load_pricing()),
+        prompt=load_prompt(ROOT / "prompts" / "extraction" / "going_concern.v1.yaml"),
+        config=_config(),
+        out_dir=out,
+        load_document=lambda row, universe, root: doc(text, published=row.document_date),
+        kind="going_concern",
+        gold_path=gold_path,
+        selection={
+            "kind": "going_concern",
+            "role": "explicit",
+            "name": "openai_terra",
+            "model_id": "gpt-5.6-terra",
+            "provider": "openai",
+            "reason": "test",
+        },
+    )
+    rows = [json.loads(line) for line in (out / "outputs.jsonl").read_text().splitlines()]
+    assert rows[0]["run_status"] == "ok" and rows[0]["has_going_concern_statements"] is True
+    assert rows[0]["statements"][0]["validation"]["status"] == "VALID"
+    run = json.loads((out / "run.json").read_text())
+    assert run["kind"] == "going_concern" and run["schema_version"] == "going_concern-1.0"
+    assert run["model_selection"]["role"] == "explicit"
+    assert summary.metrics["dev"]["document_flag"]["recall"] == 1.0

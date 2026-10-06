@@ -183,12 +183,9 @@ def run_benchmark(
                 )
             if result.parsed is not None:
                 parsed = result.parsed
-                if kind == "guidance":
-                    row["has_guidance"] = parsed.has_guidance
-                elif kind == "liquidity":
-                    row["has_liquidity_statements"] = parsed.has_liquidity_statements
-                else:
-                    row["has_covenant_statements"] = parsed.has_covenant_statements
+                # the "has_<kind>_statements" presence field of the family schema
+                presence = "has_guidance" if kind == "guidance" else f"has_{kind}_statements"
+                row[presence] = getattr(parsed, presence)
                 row["statements"] = _statement_entries(
                     parsed, doc, issuer_names(issuer), gold.document_date, issuer.segments, kind
                 )
