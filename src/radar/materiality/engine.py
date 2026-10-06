@@ -798,7 +798,9 @@ class MaterialityEngine:
             state_after=ctx.state_after,
             provenance=Provenance(
                 agency_ratings_used=event.family == "rating" or bool(state and state.entries),
-                llm_used=LLM_ROLE_BY_METHOD.get(event.extraction_method, event.extraction_method),
+                llm_used=LLM_ROLE_BY_METHOD.get(
+                    event.enrichment_method or event.extraction_method, event.extraction_method
+                ),
                 extraction_method=event.extraction_method,
             ),
             rules_version=self.rules.version,

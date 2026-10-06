@@ -82,6 +82,32 @@ def render_explanation(
         lines.append("")
 
     lines += _h("Decision provenance")
+    detectors = sorted(
+        {s.extractor_version for s in event.evidence if s.evidence_type != "llm_statement"}
+    )
+    lines.append(
+        f"Detected by: deterministic extractor ({event.extraction_method}"
+        + (f", {', '.join(detectors)}" if detectors else "")
+        + ")"
+    )
+    source = event.fields.get("guidance_source") if isinstance(event.fields, dict) else None
+    if event.enrichment_method == "llm_validated" and isinstance(source, dict):
+        n = len(source.get("statement_ids") or [])
+        lines.append(
+            f"Enriched by: validated LLM statements ({source.get('model_id')}, prompt "
+            f"{source.get('prompt_version')}, schema {source.get('schema_version')}, "
+            f"{n} statement{'s' if n != 1 else ''} applied)"
+        )
+        conflicts = event.fields.get("llm_guidance_conflicts") or []
+        if conflicts:
+            lines.append(
+                "Enrichment conflicts: deterministic reading kept for "
+                + ", ".join(
+                    f"{c['field']} ({c['deterministic']} vs LLM {c['llm']})" for c in conflicts
+                )
+            )
+    else:
+        lines.append("Enriched by: none (deterministic fields only)")
     lines.append(
         f"Agency ratings used: {'YES' if decision.provenance.agency_ratings_used else 'NO'}"
     )

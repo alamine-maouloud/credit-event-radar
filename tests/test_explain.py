@@ -106,3 +106,52 @@ def test_explanation_reports_llm_role_when_llm_extracted(rules, scales):
     event = rating_event("SP", "BBB-", "BB+", method="llm_validated")
     text = render_explanation(decide(rules, scales, event, None), event, {})
     assert "LLM used: field extraction (validated against source text)" in text
+
+
+def _enriched_event():
+    event = ev(
+        "earnings",
+        "earnings_release",
+        guidance_status="cut",
+        guidance_metric="fcf",
+        guidance_old=4.5,
+        guidance_new=2.5,
+        guidance_change_pct=-44.4,
+    )
+    source = {
+        "method": "llm_validated",
+        "enrichment_version": "guidance-enrichment-1.0",
+        "statement_ids": ["s" * 64],
+        "llm_call_ids": [7],
+        "model_id": "gpt-5.6-terra",
+        "resolved_model": "gpt-5.6-terra",
+        "prompt_version": "1.1.0",
+        "schema_version": "guidance-1.0",
+    }
+    return event.model_copy(
+        update={
+            "enrichment_method": "llm_validated",
+            "fields": {**event.fields, "guidance_source": source},
+        }
+    )
+
+
+def test_explanation_separates_detection_enrichment_and_decision(rules, scales):
+    event = _enriched_event()
+    decision = decide(rules, scales, event, None)
+    text = render_explanation(decision, event, {})
+    assert "Detected by: deterministic extractor (structured)" in text
+    assert (
+        "Enriched by: validated LLM statements (gpt-5.6-terra, prompt 1.1.0, "
+        "schema guidance-1.0, 1 statement applied)"
+    ) in text
+    assert "Priority decided by: deterministic rules engine (rules.yaml 1.5)" in text
+    assert decision.provenance.llm_used != "none"
+    assert "ERN-02  TRUE" in text
+
+
+def test_explanation_names_no_enrichment_on_a_plain_event(rules, scales):
+    event = ev("earnings", "earnings_release", guidance_status="reaffirmed")
+    text = render_explanation(decide(rules, scales, event, None), event, {})
+    assert "Enriched by: none (deterministic fields only)" in text
+    assert "Detected by: deterministic extractor (structured)" in text
