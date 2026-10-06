@@ -331,3 +331,24 @@ GuidanceEnrichment from the VALID statements only and applies it:
 End to end tests cover a quantitative cut at and below the threshold, an explicit
 reaffirmation, a mentioned statement, a scope violation, an invalid statement, a replay
 from the cache at zero cost and the protection of a deterministic field.
+
+## ADR-018 · Liquidity statements: the model qualifies, the code checks the polarity and sets the flag (Phase 3.4a, 2026-10-06)
+
+Each risk family gets its own schema and prompt rather than one generic extraction. For
+liquidity the model reports every statement of the issuer about its own liquidity and
+qualifies it from the words of the passage: deteriorated, concern, stable, improved or
+mentioned. The code then checks that qualification. A negative status is accepted only when
+the passage holds a deterioration or worry wording that is not negated in its sentence;
+"we have no liquidity concerns" read as concern is rejected as POLARITY_MISMATCH, read as
+stable or mentioned it is valid. Positive and neutral statuses are never rejected on
+polarity: a wrong positive reading costs a miss, never a false alert. Span, entity, date,
+segment scope, numbers and unit are checked as for guidance.
+
+The flag is set by code alone: fields.flags gains "liquidity" when at least one VALID
+statement has a negative status at Group level, which ERN-01 then turns into a P1. Generic
+mentions ("liquidity risk management") stay recorded as mentioned and never set the flag. A
+deterministic flag is never removed; when the model reads the same passage as stable, the
+disagreement is recorded and shown. The deterministic liquidity pattern was tightened at the
+same time: a bare "liquidity risk" of a risk section and a negated worry no longer raise it.
+Covenants and going concern will follow the same mould, with the negated going concern
+sentence of the OMV report as a permanent test.

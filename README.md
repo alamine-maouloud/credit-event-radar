@@ -60,6 +60,7 @@ radar llm-extract --alternative openai_sol --out eval/runs/sol-2026-10-06
 radar llm-eval --run eval/runs/terra-2026-10-06            # re-score against the frozen gold set
 radar llm-compare --run eval/runs/a --run eval/runs/b   # side by side, one category per statement
 radar llm-extract --events                                  # statements for the stored earnings events, events untouched
+radar llm-extract --events --kind liquidity                 # liquidity statements (flag set by code only)
 radar llm-apply                                             # apply VALID statements, decide again, audit before/after
 ```
 
