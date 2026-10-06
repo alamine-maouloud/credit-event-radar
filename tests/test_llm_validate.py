@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from radar.llm.validate import validate_statement
-from tests.llm_helpers import ISSUER_NAMES, VW_LIKE, doc, statement
+from tests.llm_helpers import FULL_QUOTE, ISSUER_NAMES, SHORT_QUOTE, VW_LIKE, doc, statement
 
 D = date(2026, 4, 30)
 
@@ -34,14 +34,26 @@ def test_wrong_offsets_but_unique_quote_is_relocated():
 
 def test_fuzzy_match_at_or_above_90_is_accepted_but_recorded():
     typo = "The Group's operating return on sales is expected to range betwen 4.0 and 5.5 percent."
-    result = validate(statement(quote=typo))
+    result = validate(
+        statement(
+            quote=typo,
+            previous_lower=None,
+            previous_upper=None,
+            status="new",
+            direction_claimed=None,
+        )
+    )
     assert result.status == "VALID" and result.match_kind == "fuzzy" and result.match_score >= 90
 
 
 def test_fuzzy_below_90_is_rejected():
     result = validate(
         statement(
-            quote="Operating return on sales will be 4.0 to 5.5 percent next year, says management."
+            quote="Operating return on sales will be 4.0 to 5.5 percent next year, says management.",
+            previous_lower=None,
+            previous_upper=None,
+            status="new",
+            direction_claimed=None,
         )
     )
     assert result.status == "INVALID" and result.checks["span_match"] is False
@@ -82,9 +94,8 @@ def test_number_absent_from_quote_is_rejected():
 def test_previous_bounds_may_come_from_elsewhere_in_the_document_but_must_exist():
     """Previous guidance (5.5 to 6.5) is in the next sentence, not in the quote: allowed only
     if the quote is extended or the numbers exist in the document near the metric."""
-    quote = "The Group's operating return on sales is expected to range between 4.0 and 5.5 percent. In March the company had guided for an operating return on sales of between 5.5 and 6.5 percent."
-    assert validate(statement(quote=quote)).status == "VALID"
-    short = statement()  # quote holds only the current range
+    assert validate(statement(quote=FULL_QUOTE)).status == "VALID"
+    short = statement(quote=SHORT_QUOTE)  # quote holds only the current range
     assert validate(short).status == "INVALID"
     assert validate(short).checks["numbers_match"] is False
 

@@ -20,11 +20,11 @@ from radar.config import Universe
 from radar.materiality.engine import Decision
 from radar.models import AgencyRating, CreditEvent, EvidenceSpan, RatingObservation, RawDocument
 
-SCHEMA_VERSION = "5"
+SCHEMA_VERSION = "6"
 TABLES = frozenset(
     {
         "issuers", "issuer_aliases", "ratings", "documents", "events", "event_evidence",
-        "audit_log", "rating_observations", "priority_decisions",
+        "audit_log", "rating_observations", "priority_decisions", "llm_calls", "llm_cache",
     }
 )  # fmt: skip
 
@@ -141,6 +141,32 @@ CREATE TABLE IF NOT EXISTS priority_decisions (
     llm_role TEXT NOT NULL,
     decision_json TEXT NOT NULL,
     decided_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS llm_calls (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id TEXT,
+    event_id TEXT,
+    provider TEXT NOT NULL,
+    model_id TEXT NOT NULL,
+    resolved_model TEXT,
+    prompt_version TEXT NOT NULL,
+    schema_version TEXT NOT NULL,
+    reasoning_effort TEXT,
+    inputs_hash TEXT NOT NULL,
+    outputs_hash TEXT,
+    input_tokens INTEGER,
+    output_tokens INTEGER,
+    cost_usd REAL,
+    latency_ms INTEGER,
+    cached INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    cache_key TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS llm_cache (
+    cache_key TEXT PRIMARY KEY,
+    response_json TEXT NOT NULL,
+    created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -577,6 +603,35 @@ class Database:
             (event_id,),
         ).fetchone()
         return (row["final_priority"], row["decision_status"]) if row else None
+
+    # --------------------------------------------------------------- llm --- #
+
+    def insert_llm_call(self, row: dict[str, Any]) -> None:
+        columns = [
+            "doc_id", "event_id", "provider", "model_id", "resolved_model", "prompt_version",
+            "schema_version", "reasoning_effort", "inputs_hash", "outputs_hash", "input_tokens",
+            "output_tokens", "cost_usd", "latency_ms", "cached", "status", "cache_key",
+        ]  # fmt: skip
+        values = [row.get(c) for c in columns] + [datetime.now(UTC).isoformat()]
+        with self.transaction() as c:
+            c.execute(
+                f"INSERT INTO llm_calls ({', '.join(columns)}, created_at) VALUES "
+                f"({', '.join('?' for _ in columns)}, ?)",
+                values,
+            )
+
+    def llm_cache_get(self, key: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT response_json FROM llm_cache WHERE cache_key = ?", (key,)
+        ).fetchone()
+        return row["response_json"] if row else None
+
+    def llm_cache_put(self, key: str, response_json: str, created_at: str) -> None:
+        with self.transaction() as c:
+            c.execute(
+                "INSERT OR REPLACE INTO llm_cache VALUES (?, ?, ?)",
+                (key, response_json, created_at),
+            )
 
     # ------------------------------------------------------------- audit --- #
 

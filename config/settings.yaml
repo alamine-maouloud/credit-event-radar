@@ -4,37 +4,42 @@
 version: "1.0"
 
 llm:
-  default_provider: anthropic
+  default_provider: openai
   cache_dir: data/llm_cache
-  budget_usd_env: LLM_BUDGET_USD
-  # Temperature 0 everywhere for reproducibility. Responses are cached by
-  # (model, prompt version, input hash).
+  # Hard stop before any call that would exceed the run budget (.env, see .env.example)
+  run_budget_usd_env: LLM_RUN_BUDGET_USD
+  # Prices live in a versioned file, never in the code
+  pricing_file: config/llm_pricing.yaml
+  # Temperature 0 everywhere. Responses are cached by document hash, extractor version,
+  # provider, exact model id, prompt version, schema version and reasoning effort.
   roles:
     extraction:
-      provider: anthropic
-      model: claude-haiku-4-5-20251001
+      provider: openai
+      model: gpt-5.6-terra
       temperature: 0
+      reasoning_effort: low
     notes:
-      provider: anthropic
-      model: claude-sonnet-5-5
+      provider: openai
+      model: gpt-5.6-terra
       temperature: 0
+      reasoning_effort: low
     verification:
-      provider: anthropic
-      model: claude-haiku-4-5-20251001
+      provider: openai
+      model: gpt-5.6-terra
       temperature: 0
-  # Second backend for the LLM comparison (SPEC 15.4). Model ids to confirm in Phase 3.
+      reasoning_effort: low
+  # Benchmark (SPEC 15.4): exact ids only, never the bare alias gpt-5.6. Anthropic stays
+  # TO_CONFIRM until the official catalogue is checked on the day of the first real run.
   benchmark_alternatives:
-    openai:
+    openai_sol:
       extraction:
         provider: openai
-        model: TO_CONFIRM
+        model: gpt-5.6-sol
         temperature: 0
-      notes:
-        provider: openai
-        model: TO_CONFIRM
-        temperature: 0
-      verification:
-        provider: openai
+        reasoning_effort: low
+    anthropic:
+      extraction:
+        provider: anthropic
         model: TO_CONFIRM
         temperature: 0
 

@@ -20,6 +20,15 @@ VW_LIKE = (
 )
 
 
+SHORT_QUOTE = (
+    "The Group's operating return on sales is expected to range between 4.0 and 5.5 percent."
+)
+FULL_QUOTE = (
+    "The Group's operating return on sales is expected to range between 4.0 and 5.5 percent. "
+    "In March the company had guided for an operating return on sales of between 5.5 and 6.5 percent."
+)
+
+
 def doc(text: str = VW_LIKE, published: date | None = date(2026, 4, 30)) -> RawDocument:
     return RawDocument(
         doc_id=sha256_hex(text),
@@ -42,10 +51,7 @@ def doc(text: str = VW_LIKE, published: date | None = date(2026, 4, 30)) -> RawD
 def statement(text: str = VW_LIKE, quote: str | None = None, **overrides):
     from radar.llm.schemas import GuidanceStatement
 
-    quote = (
-        quote
-        or "The Group's operating return on sales is expected to range between 4.0 and 5.5 percent."
-    )
+    quote = quote or FULL_QUOTE
     start = text.index(quote) if quote in text else 0
     base = dict(
         metric="margin",

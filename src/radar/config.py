@@ -61,6 +61,7 @@ class ModelRole(BaseModel):
     provider: Literal["anthropic", "openai", "azure_openai"]
     model: str
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    reasoning_effort: Literal["minimal", "low", "medium", "high"] | None = None
 
 
 class LLMSettings(BaseModel):
@@ -68,7 +69,8 @@ class LLMSettings(BaseModel):
 
     default_provider: Literal["anthropic", "openai", "azure_openai"]
     cache_dir: str
-    budget_usd_env: str = "LLM_BUDGET_USD"
+    run_budget_usd_env: str = "LLM_RUN_BUDGET_USD"
+    pricing_file: str = "config/llm_pricing.yaml"
     roles: dict[Literal["extraction", "notes", "verification"], ModelRole]
     benchmark_alternatives: dict[str, dict[str, ModelRole]] = Field(default_factory=dict)
 
