@@ -324,3 +324,21 @@ def test_the_going_concern_heading_is_not_a_liquidity_worry():
     assert only("Results. Liquidity concerns persisted in the quarter.").fields["flags"] == [
         "liquidity"
     ]
+
+
+def test_the_report_period_is_read_from_the_cover_with_or_without_a_qualifier():
+    plain = TEN_Q.replace(
+        "For the quarterly period ended June 30, 2026", "For the period ended June 30, 2026"
+    )
+    assert (
+        extract_periodic_report(edgar_doc(plain), "ISSUER_TEST_A").events[0].fields["period"]
+        == "period ended June 30, 2026"
+    )
+    wrapped = TEN_Q.replace(
+        "For the quarterly period ended June 30, 2026",
+        "For the quarterly period\nended June 30, 2026",
+    )
+    assert (
+        extract_periodic_report(edgar_doc(wrapped), "ISSUER_TEST_A").events[0].fields["period"]
+        == "quarterly period ended June 30, 2026"
+    )

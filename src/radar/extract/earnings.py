@@ -246,8 +246,8 @@ def extract_earnings_events(doc: RawDocument, issuer_id: str) -> Extraction:
 
 PERIODIC_FORMS = {"10-Q", "10-Q/A", "10-K", "10-K/A", "20-F", "40-F"}
 _PERIOD_ENDED_RE = re.compile(
-    r"(?i)\bfor the (?:quarterly|fiscal|transition|annual) period ended\s+"
-    r"([A-Z][a-z]+ \d{1,2}, \d{4})"
+    r"(?i)\bfor\s+the\s+(?:(quarterly|fiscal|transition|annual)\s+)?period\s+ended\s+"
+    r"([A-Z][a-z]+\s+\d{1,2},\s+\d{4})"
 )
 
 
@@ -264,9 +264,8 @@ def extract_periodic_report(doc: RawDocument, issuer_id: str) -> Extraction:
     title, title_span = _title_and_span(doc)
     m = _PERIOD_ENDED_RE.search(doc.text[:20000])
     if m:
-        period = (
-            f"{m.group(0).split(' period ended')[0].split()[-1].lower()} period ended {m.group(1)}"
-        )
+        qualifier = f"{m.group(1).lower()} " if m.group(1) else ""
+        period = f"{qualifier}period ended {' '.join(m.group(2).split())}"
     elif extra.get("report_date"):
         period = f"{form} period ended {extra['report_date']}"
     else:
