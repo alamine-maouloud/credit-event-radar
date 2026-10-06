@@ -352,3 +352,32 @@ disagreement is recorded and shown. The deterministic liquidity pattern was tigh
 same time: a bare "liquidity risk" of a risk section and a negated worry no longer raise it.
 Covenants and going concern will follow the same mould, with the negated going concern
 sentence of the OMV report as a permanent test.
+
+## ADR-019 · Covenant statements: a stated breach stays a breach, its resolution is kept apart (Phase 3.4b, 2026-10-06)
+
+The covenant family follows the liquidity mould with one schema of its own: a status
+(compliant, risk_of_breach, breached, mentioned) and a resolution (none, waived, cured,
+amended). A breach actually stated stays "breached" whatever happened next: for a credit
+analyst the breach is the event, the waiver or the cure is the context, so the code sets
+the covenant flag on a stated breach and the explanation names the resolution ("flag:
+covenant (resolution waived)"). A preventive amendment or a waiver without a breach
+demonstrated is a mention with a resolution and never a flag; an anticipated breach is
+recorded without a flag in V1.
+
+The validator checks the wording per status: a breach needs a non-compliance, breach,
+violation or failure to meet stated for the issuer, neither negated nor hypothetical; an
+event of default counts only when the window ties it to a covenant or a non-compliance,
+because a payment default is not a covenant breach; "compliant" is contradicted by a
+stated breach; "risk_of_breach" needs an anticipation; the resolution needs its word.
+The shared checks apply (span, entity, dates, segment scope including the segment as the
+sentence's subject, agency report as a third party document). The deterministic covenant
+flag was tightened the same way: a waiver, an amendment or a definition alone no longer
+raises it.
+
+Both flag families share one enrichment (the flag follows a validated negative status, a
+deterministic flag is never removed, disagreements are recorded) and one scorer (statement
+precision, recall and status accuracy, negative statement precision and recall, document
+flag precision, recall and false positive rate, resolution accuracy for covenants), per
+split. The gold set V1 is frozen before any call; the final blind holdout and the runs wait
+for API credits, in the agreed order: the four Sol documents of liquidity holdout V3, then
+Terra on covenants, the dev reading, Sol, the blind holdout, the closing.

@@ -61,6 +61,7 @@ radar llm-eval --run eval/runs/terra-2026-10-06            # re-score against th
 radar llm-compare --run eval/runs/a --run eval/runs/b   # side by side, one category per statement
 radar llm-extract --events                                  # statements for the stored earnings events, events untouched
 radar llm-extract --events --kind liquidity                 # liquidity statements (flag set by code only)
+radar llm-extract --events --kind covenant                  # covenant statements (breach flag set by code only)
 radar llm-apply                                             # apply VALID statements, decide again, audit before/after
 ```
 
