@@ -135,7 +135,7 @@ def test_observation_and_decision_roundtrip(db: Database, scales):
     )
     obs = RatingObservation(
         observation_id="obs_1", issuer_id="ISSUER_TEST_A", agency="MOODYS", rating="Baa3", outlook="stable", watch="none",
-        rating_type="long_term_issuer", scope="issuer", as_of=date(2026, 6, 30), doc_id="d" * 64, evidence_span_id="span_1",
+        rating_type="long_term_issuer", scope="issuer", rating_date=date(2026, 6, 30), observed_at=date(2026, 8, 5), as_of_basis="stated", doc_id="d" * 64, evidence_span_id="span_1",
         evidence=span, extractor_version="t", verification_method="structured_table",
     )  # fmt: skip
     assert db.insert_observation(obs) is True and db.insert_observation(obs) is False

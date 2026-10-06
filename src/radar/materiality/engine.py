@@ -501,15 +501,21 @@ def ern03(ctx: _Context) -> Outcome:
 def ern04(ctx: _Context) -> Outcome:
     if ctx.family != "earnings":
         return False, "not an earnings event", {}
+    status = ctx.fields.get("guidance_status")
+    data = {"guidance_status": status}
+    if status not in ("reaffirmed", "in_line"):
+        if status:
+            return False, f"guidance statement is '{status}', not a confirmation", data
+        return False, "no explicit guidance statement in the source (ADR-012)", data
     metric, pct = ctx.guidance()
     if metric and pct is not None and pct < 0:
-        return False, f"{metric} guidance cut {pct:+.2f} %", {}
+        return False, f"guidance statement contradicted by a {metric} cut of {pct:+.2f} %", data
     if ctx.fields.get("guidance_qualified_significant") is True:
-        return False, "issuer qualified the guidance cut as significant", {}
+        return False, "issuer qualified the guidance cut as significant", data
     flagged = sorted(ctx.flags() & (CRITICAL_FLAGS | {"impairment"}))
     if flagged:
-        return False, f"flags present: {', '.join(flagged)}", {}
-    return True, "earnings event without guidance cut or warning flag", {}
+        return False, f"flags present: {', '.join(flagged)}", data
+    return True, f"explicit deterministic evidence: guidance {status} (verified span)", data
 
 
 # --------------------------------------------------------------- issuance --- #

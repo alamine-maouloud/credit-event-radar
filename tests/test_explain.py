@@ -53,11 +53,37 @@ def test_explanation_for_split_rating_p1(rules, scales):
     assert "Agency ratings used: YES" in text
     assert "Composite rating used: NO" in text
     assert "LLM used: NO" in text
-    assert "Rules version: 1.2" in text
+    assert "Rules version: 1.3" in text
     assert (
         "https://www.sec.gov/Archives/edgar/data/1/x.htm" in text
         and HEX in text
         and "2026-08-05" in text
+    )
+
+
+def test_explanation_shows_as_of_basis(rules, scales):
+    from datetime import timedelta
+
+    from tests.materiality_helpers import D
+
+    st = state(
+        rules,
+        scales,
+        candidate("MOODYS", "Baa3"),
+        candidate(
+            "FITCH",
+            "BBB",
+            as_of=D - timedelta(days=2),
+            as_of_basis="retrieval",
+            verification="structured_table_current",
+        ),
+    )
+    event = rating_event("SP", "BBB-", "BB+")
+    text = render_explanation(decide(rules, scales, event, st), event, {})
+    assert "as_of: 2026-06-30 (stated by the source)" in text
+    assert (
+        "as_of: 2026-07-06 (retrieval: observed on the source that day, prospective use only)"
+        in text
     )
 
 

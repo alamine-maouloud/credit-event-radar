@@ -57,6 +57,8 @@ CompositeMethod = Literal["middle", "average"]
 CompositeRounding = Literal["nearest_weaker", "ceil", "floor"]
 
 PRIORITY_ORDER: dict[str, int] = {"P3": 0, "P2": 1, "P1": 2}
+GuidanceStatus = Literal["reaffirmed", "in_line", "raised", "cut", "withdrawn"]
+AsOfBasis = Literal["stated", "retrieval"]
 
 
 # --------------------------------------------------------------------------- #
@@ -149,6 +151,10 @@ class EarningsFields(BaseModel):
     guidance_change_pct: float | None = None
     guidance_qualified_significant: bool | None = Field(
         default=None, description="The issuer itself calls the guidance cut significant"
+    )
+    guidance_status: GuidanceStatus | None = Field(
+        default=None,
+        description="Explicit deterministic statement about guidance found in the source",
     )
     flags: list[Literal["liquidity", "going_concern", "covenant", "impairment"]] = Field(
         default_factory=list
@@ -270,6 +276,11 @@ class RatingObservation(BaseModel):
 
     Distinct from the hand-verified seed: ``verification_method`` says how the value was
     obtained and ``evidence_span_id`` points at the exact table row or sentence.
+
+    ``rating_date`` is the date the source states for the rating (an "as of" line, a dated
+    row). ``observed_at`` is the day the value was observed in the document. When the
+    source gives no date (a current ratings page), ``as_of_basis`` is ``retrieval``: the
+    observation may feed decisions from ``observed_at`` onwards, never earlier (ADR-011).
     """
 
     observation_id: str
@@ -280,12 +291,29 @@ class RatingObservation(BaseModel):
     watch: Watch = "none"
     rating_type: RatingType
     scope: RatingScope = "issuer"
-    as_of: date
+    rating_date: date | None
+    observed_at: date
+    as_of_basis: AsOfBasis
     doc_id: str
     evidence_span_id: str
     evidence: EvidenceSpan
     extractor_version: str
-    verification_method: Literal["structured_table", "structured_sentence"]
+    verification_method: Literal[
+        "structured_table", "structured_table_current", "structured_sentence"
+    ]
+
+    @model_validator(mode="after")
+    def _basis_matches_dates(self) -> RatingObservation:
+        if self.as_of_basis == "stated" and self.rating_date is None:
+            raise ValueError("as_of_basis 'stated' requires rating_date")
+        if self.as_of_basis == "retrieval" and self.rating_date is not None:
+            raise ValueError("as_of_basis 'retrieval' means the source states no rating date")
+        return self
+
+    @property
+    def as_of(self) -> date:
+        """Date from which the observation may be used for a decision."""
+        return self.rating_date if self.rating_date is not None else self.observed_at
 
 
 class CompositeRating(BaseModel):

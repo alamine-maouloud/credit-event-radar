@@ -38,7 +38,12 @@ def test_three_observations_with_as_of_date_and_spans():
     )
     obs = {o.agency: o for o in result.observations}
     assert set(obs) == {"MOODYS", "SP", "FITCH"}
-    assert all(o.as_of == date(2026, 6, 30) for o in obs.values())
+    assert all(
+        o.as_of == date(2026, 6, 30) and o.rating_date == date(2026, 6, 30) for o in obs.values()
+    )
+    assert all(
+        o.as_of_basis == "stated" and o.observed_at == date(2026, 1, 1) for o in obs.values()
+    )
     assert (obs["MOODYS"].rating, obs["MOODYS"].outlook, obs["MOODYS"].watch) == (
         "Baa3",
         "stable",

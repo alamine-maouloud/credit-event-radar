@@ -13,7 +13,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from radar.config import RatingStateParams
-from radar.models import Outlook, RatingCategory, RatingScope, Watch
+from radar.models import AsOfBasis, Outlook, RatingCategory, RatingScope, Watch
 from radar.ratings import RatingScales, UnknownRatingError, category, to_notch
 
 Origin = Literal["seed", "observation", "event"]
@@ -32,6 +32,10 @@ class RatingCandidate(BaseModel):
     origin: Origin
     source: str = Field(description="Seed URL, document id or event id")
     verification: str = Field(description="e.g. seed:DATE_VERIFIED, structured_table, event")
+    as_of_basis: AsOfBasis = Field(
+        default="stated",
+        description="stated: the source dates the rating; retrieval: observed on that day only",
+    )
 
 
 class RatingStateEntry(BaseModel):
@@ -42,6 +46,7 @@ class RatingStateEntry(BaseModel):
     outlook: Outlook | None = None
     watch: Watch = "none"
     as_of: date
+    as_of_basis: AsOfBasis = "stated"
     age_days: int
     origin: Origin
     source: str
@@ -162,6 +167,7 @@ def build_rating_state(
             outlook=winner.outlook,
             watch=winner.watch,
             as_of=winner.as_of,
+            as_of_basis=winner.as_of_basis,
             age_days=(as_of - winner.as_of).days,
             origin=winner.origin,
             source=winner.source,

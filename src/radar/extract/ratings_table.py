@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import date
 
 from radar.audit import stable_hash
 from radar.config import parse_outlook
@@ -40,6 +41,11 @@ _FOOTNOTE_RE = re.compile(r"(\(\w{1,2}\)|\*+|†|‡)+$")
 class ObservationExtraction:
     observations: list[RatingObservation]
     skipped: list[Skipped]
+
+
+def observed_at(doc: RawDocument) -> date:
+    """Day the document was published, else the day it was retrieved."""
+    return (doc.published_at or doc.retrieved_at).date()
 
 
 def _lines(text: str) -> list[tuple[int, int, str]]:
@@ -167,7 +173,9 @@ def extract_rating_observations(
                     watch=watch,
                     rating_type="long_term_issuer",
                     scope="issuer",
-                    as_of=as_of,
+                    rating_date=as_of,
+                    observed_at=observed_at(doc),
+                    as_of_basis="stated",
                     doc_id=doc.doc_id,
                     evidence_span_id=span_id,
                     evidence=span,

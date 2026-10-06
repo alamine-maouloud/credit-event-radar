@@ -53,11 +53,13 @@ def candidate(
     watch: str = "none",
     source: str = "doc_test",
     verification: str = "structured_table",
+    as_of_basis: str = "stated",
 ) -> RatingCandidate:
     return RatingCandidate(
         agency=agency,
         rating=rating,
         as_of=as_of,
+        as_of_basis=as_of_basis,
         origin=origin,
         rating_type=rating_type,
         scope=scope,

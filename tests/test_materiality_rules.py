@@ -53,7 +53,7 @@ def test_decision_lists_every_rule_and_modifier(rules, scales):
     d = decide(rules, scales, rating_event("SP", "BBB-", "BB+"))
     assert [r.id for r in d.rules] == [r.id for r in rules.rules]
     assert [m.id for m in d.modifiers] == [m.id for m in rules.modifiers]
-    assert d.rules_version == "1.2"
+    assert d.rules_version == "1.3"
 
 
 # ------------------------------------------------- RAT-01 / 03 / 05 / 08 --- #
@@ -300,9 +300,9 @@ def test_impairment_is_ern03_not_ern01(rules, scales):
         ("ebitda", -25.0, {"ERN-02"}),
         ("fcf", -9.99, {"ERN-03"}),
         ("revenue", -0.5, {"ERN-03"}),
-        ("revenue", 0.0, {"ERN-04"}),
-        ("revenue", 3.0, {"ERN-04"}),
-        ("capex", -30.0, {"ERN-04"}),  # metric outside the rule's scope
+        ("revenue", 0.0, set()),  # no explicit guidance statement: nothing can be concluded
+        ("revenue", 3.0, set()),
+        ("capex", -30.0, set()),  # metric outside the rule's scope, no statement
     ],
 )
 def test_guidance_thresholds(rules, scales, metric, pct, expected):
@@ -312,6 +312,37 @@ def test_guidance_thresholds(rules, scales, metric, pct, expected):
         ev("earnings", "guidance_update", guidance_metric=metric, guidance_change_pct=pct),
     )
     assert triggered(d) == expected
+    if not expected:
+        assert d.final_priority is None and d.decision_status == "NO_APPLICABLE_RULE"
+
+
+@pytest.mark.parametrize("status", ["reaffirmed", "in_line"])
+def test_ern04_requires_explicit_guidance_evidence(rules, scales, status):
+    d = decide(rules, scales, ev("earnings", "earnings_release", guidance_status=status))
+    assert triggered(d) == {"ERN-04"} and d.final_priority == "P3"
+    assert status in outcome(d, "ERN-04").reason
+
+
+@pytest.mark.parametrize("status", ["raised", "cut", "withdrawn", None])
+def test_ern04_not_from_other_statements(rules, scales, status):
+    fields = {"guidance_status": status} if status else {}
+    d = decide(rules, scales, ev("earnings", "earnings_release", **fields))
+    assert "ERN-04" not in triggered(d)
+
+
+def test_ern04_not_when_status_contradicts_numbers(rules, scales):
+    d = decide(
+        rules,
+        scales,
+        ev(
+            "earnings",
+            "x",
+            guidance_status="reaffirmed",
+            guidance_metric="fcf",
+            guidance_change_pct=-1.0,
+        ),
+    )
+    assert "ERN-04" not in triggered(d) and "ERN-03" in triggered(d)
 
 
 def test_guidance_pct_computed_from_old_and_new(rules, scales):
@@ -336,9 +367,11 @@ def test_guidance_qualified_significant_without_number(rules, scales):
     assert triggered(d) == {"ERN-02"}
 
 
-def test_ern04_default_earnings_release_skeleton(rules, scales):
+def test_earnings_release_skeleton_has_no_priority(rules, scales):
+    """An 8-K Item 2.02 says results were published, not that they were in line (ADR-012)."""
     d = decide(rules, scales, ev("earnings", "earnings_release", form="8-K", edgar_item="2.02"))
-    assert triggered(d) == {"ERN-04"} and d.final_priority == "P3"
+    assert triggered(d) == set() and d.final_priority is None
+    assert "no explicit guidance statement" in outcome(d, "ERN-04").reason
 
 
 def test_ern04_not_with_flags_or_cut(rules, scales):
@@ -422,7 +455,7 @@ def test_provenance_fields(rules, scales):
     assert d.provenance.composite_used is False
     assert d.provenance.llm_used == "none"
     pd = d.to_priority_decision()
-    assert pd.llm_role == "none" and pd.rules_version == "1.2"
+    assert pd.llm_role == "none" and pd.rules_version == "1.3"
     assert pd.triggered_rules == ["RAT-01", "RAT-02"]
     assert any("S&P" in line or "SP" in line for line in pd.rule_details)
 

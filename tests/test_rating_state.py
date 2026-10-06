@@ -140,6 +140,28 @@ def test_after_action_on_unknown_agency_adds_it(rules, scales):
     assert set(after.entries) == {"MOODYS", "SP"}
 
 
+def test_retrieval_basis_observation_is_prospective_only(rules, scales):
+    """A rating read from a current ratings page on day X exists from X onwards, never before."""
+    page_day = D - timedelta(days=4)
+    cand = candidate(
+        "SP",
+        "BBB+",
+        as_of=page_day,
+        as_of_basis="retrieval",
+        verification="structured_table_current",
+    )
+    usable = state(rules, scales, cand, as_of=D)
+    assert usable.entries["SP"].as_of_basis == "retrieval" and usable.entries["SP"].age_days == 4
+    backtest = state(rules, scales, cand, as_of=page_day - timedelta(days=1))
+    assert "SP" not in backtest.entries
+    assert any("after" in r for r in reasons(backtest, "SP"))
+
+
+def test_stated_basis_is_the_default(rules, scales):
+    st = state(rules, scales, candidate("MOODYS", "Baa3"))
+    assert st.entries["MOODYS"].as_of_basis == "stated"
+
+
 def test_empty_state(rules, scales):
     st = state(rules, scales)
     assert st.entries == {} and st.weakest() is None

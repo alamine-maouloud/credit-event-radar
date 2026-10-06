@@ -20,7 +20,7 @@ from radar.config import Universe
 from radar.materiality.engine import Decision
 from radar.models import AgencyRating, CreditEvent, EvidenceSpan, RatingObservation, RawDocument
 
-SCHEMA_VERSION = "3"
+SCHEMA_VERSION = "4"
 TABLES = frozenset(
     {
         "issuers", "issuer_aliases", "ratings", "documents", "events", "event_evidence",
@@ -115,7 +115,9 @@ CREATE TABLE IF NOT EXISTS rating_observations (
     watch TEXT NOT NULL,
     rating_type TEXT NOT NULL,
     scope TEXT NOT NULL,
-    as_of TEXT NOT NULL,
+    rating_date TEXT,
+    observed_at TEXT NOT NULL,
+    as_of_basis TEXT NOT NULL,
     doc_id TEXT NOT NULL,
     evidence_span_id TEXT NOT NULL,
     char_start INTEGER NOT NULL,
@@ -449,7 +451,7 @@ class Database:
         with self.transaction() as c:
             c.execute(
                 """INSERT INTO rating_observations VALUES
-                   (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                   (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     obs.observation_id,
                     obs.issuer_id,
@@ -459,7 +461,9 @@ class Database:
                     obs.watch,
                     obs.rating_type,
                     obs.scope,
-                    obs.as_of.isoformat(),
+                    obs.rating_date.isoformat() if obs.rating_date else None,
+                    obs.observed_at.isoformat(),
+                    obs.as_of_basis,
                     obs.doc_id,
                     obs.evidence_span_id,
                     obs.evidence.char_start,
@@ -475,7 +479,7 @@ class Database:
     def observations_for(self, issuer_id: str) -> list[RatingObservation]:
         rows = self.conn.execute(
             "SELECT * FROM rating_observations WHERE issuer_id = ? "
-            "ORDER BY as_of, agency, observation_id",
+            "ORDER BY observed_at, agency, observation_id",
             (issuer_id,),
         )
         out = []
@@ -500,7 +504,9 @@ class Database:
                     watch=r["watch"],
                     rating_type=r["rating_type"],
                     scope=r["scope"],
-                    as_of=r["as_of"],
+                    rating_date=r["rating_date"],
+                    observed_at=r["observed_at"],
+                    as_of_basis=r["as_of_basis"],
                     doc_id=r["doc_id"],
                     evidence_span_id=r["evidence_span_id"],
                     evidence=span,

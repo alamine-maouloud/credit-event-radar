@@ -66,7 +66,11 @@ def render_explanation(
             lines.append(
                 f"  {entry.rating}  {entry.category}" + (f"  ({', '.join(extra)})" if extra else "")
             )
-            lines.append(f"  as_of: {entry.as_of.isoformat()}")
+            if entry.as_of_basis == "retrieval":
+                basis = "retrieval: observed on the source that day, prospective use only"
+            else:
+                basis = "stated by the source"
+            lines.append(f"  as_of: {entry.as_of.isoformat()} ({basis})")
             lines.append(f"  age: {entry.age_days} days")
             lines.append(f"  source: {entry.source} ({entry.origin}, {entry.verification})")
         if state.ignored:

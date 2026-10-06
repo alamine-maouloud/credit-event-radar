@@ -173,6 +173,7 @@ def rating_candidates(
                 rating_type=o.rating_type,
                 scope=o.scope,
                 as_of=o.as_of,
+                as_of_basis=o.as_of_basis,
                 origin="observation",
                 source=o.doc_id,
                 verification=o.verification_method,

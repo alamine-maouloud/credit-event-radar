@@ -18,11 +18,12 @@
 # events or fundamentals only uses data whose as_of / effective_date is on or before the
 # event's effective date D. Ingestion timestamps are never used for decisions.
 
-version: "1.2"
+version: "1.3"
 changelog:
   - "1.0: initial matrix from docs/SPEC.md 9.3 and 9.4"
   - "1.1 (2026-10-06): RAT-01, RAT-02, RAT-08 and MOD-01 rewritten on agency-level ratings; the composite no longer drives any rule (ADR-001)"
   - "1.2 (2026-10-06): formal definition and direction per rule, rating_state parameters with look-ahead guard, RAT-01 and RAT-03 orthogonal, RAT-05 excludes the IG/HY crossing, no priority when no rule applies"
+  - "1.3 (2026-10-06): ERN-04 requires an explicit deterministic guidance statement (reaffirmed or in line); an earnings release alone has no applicable rule (ADR-012)"
 
 thresholds:
   guidance_cut_p1_pct: 10          # ERN-02: guidance cut >= 10 % on revenue, EBITDA or FCF
@@ -185,11 +186,14 @@ rules:
     priority: P3
     direction: neutral
     condition: results_in_line_with_guidance
-    description: Results in line with guidance
+    description: Results explicitly reported in line with guidance, or guidance explicitly maintained
     definition: >-
-      family = earnings and no guidance cut (guidance_change_pct null or >= 0) and not
-      guidance_qualified_significant and flags does not intersect {liquidity,
-      going_concern, covenant, impairment}.
+      family = earnings and guidance_status in {reaffirmed, in_line}, i.e. an explicit
+      deterministic statement found in the source (verified span), and no scoped guidance
+      cut, not guidance_qualified_significant, and flags does not intersect {liquidity,
+      going_concern, covenant, impairment}. The mere existence of an earnings release never
+      satisfies this rule: without an explicit statement the event has no applicable rule
+      (ADR-012).
 
   - id: ISS-01
     family: issuance
