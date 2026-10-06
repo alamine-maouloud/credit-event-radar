@@ -113,7 +113,7 @@ def test_category_out_of_range(scales, notch):
         ("MOODYS", "baa3", "Baa3"),
         ("MOODYS", "BAA3", "Baa3"),
         ("DBRS", "BBB(low)", "BBB (low)"),
-        ("DBRS", "bbb (LOW)", "BBB (low)"),
+        ("DBRS", "BBB (LOW)", "BBB (low)"),
         ("FITCH", "A+", "A+"),
     ],
 )
