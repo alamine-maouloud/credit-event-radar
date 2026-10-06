@@ -137,12 +137,23 @@ PDF_NORMALIZER_VERSION = "pdf-text-1.0"
 
 
 def pdf_to_text(raw: bytes) -> str:
-    """Page texts joined by newlines, before whitespace normalisation (PyMuPDF)."""
+    """One line per text block (paragraph), lines of a block joined with spaces (PyMuPDF).
+
+    Keeping a paragraph on one line lets the sentence splitter see sentences that span
+    visual lines in the PDF.
+    """
     import pymupdf
 
+    paragraphs: list[str] = []
     with pymupdf.open(stream=raw, filetype="pdf") as document:
-        pages = [page.get_text("text") for page in document]
-    return "\n".join(pages)
+        for page in document:
+            for block in page.get_text("blocks"):
+                if block[6] != 0:
+                    continue  # image block
+                lines = [line.strip() for line in str(block[4]).split("\n") if line.strip()]
+                if lines:
+                    paragraphs.append(" ".join(lines))
+    return "\n".join(paragraphs)
 
 
 def normalize_pdf(raw: bytes) -> str:

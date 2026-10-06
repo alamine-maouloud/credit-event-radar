@@ -1,0 +1,53 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/en/investors/news-and-events/news/2026/omv-announces-redemption-of-nc6-hybrid-notes-and-considers-also-issue-of-new-hybrid-bond",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T14:06:09.148846+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "a189563c36080eb9955f291a4fa4b086261b217f64dda909da466bc0c556d2b8",
+  "raw_size_bytes": 261287,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "802d920c9da7778db250cc00464a1b5b86a8745069b3de3f5ed6cd245525e8c5",
+  "normalized_chars": 4037,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "omv_ir_news",
+    "kind": "sitemap",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-06-02"
+  },
+  "title": "omv_ir_news",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "issuance",
+        "event_type": "redemption",
+        "effective_date": "2026-06-02",
+        "fields": {
+          "amount": null,
+          "currency": null,
+          "amount_eur_equiv": null,
+          "coupon": null,
+          "maturity": null,
+          "seniority": "hybrid"
+        },
+        "n_spans": 2
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "redemption",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "OMV"
+}

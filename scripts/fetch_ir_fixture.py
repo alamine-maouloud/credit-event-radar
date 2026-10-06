@@ -33,10 +33,20 @@ from radar.snapshot import FetchedBytes
 
 
 def expected_extraction(doc, issuer, scales, universe, seed, rules) -> dict:
-    ratings, others, observations, profile = run_extractors(doc, issuer, scales)
+    """Expected outcome, observations, stored events and decisions after a full process run."""
+    _, _, _, profile = run_extractors(doc, issuer, scales)
     out: dict = {"table_profile": profile, "observations": [], "events": [], "decisions": []}
-    if observations:
-        for o in observations.observations:
+    keys = ("agency", "old_rating", "new_rating", "rating", "new_outlook", "old_outlook", "watch",
+            "amount", "currency", "amount_eur_equiv", "coupon", "maturity", "seniority",
+            "guidance_status", "flags", "period")  # fmt: skip
+    with tempfile.TemporaryDirectory() as tmp:
+        db = Database(Path(tmp) / "r.db")
+        db.init_schema()
+        db.replace_universe(universe)
+        db.replace_ratings(seed)
+        db.insert_document(doc)
+        process(db, universe, scales, rules)
+        for o in db.observations_for(issuer.id):
             out["observations"].append(
                 {
                     "agency": o.agency,
@@ -47,27 +57,16 @@ def expected_extraction(doc, issuer, scales, universe, seed, rules) -> dict:
                     "as_of_basis": o.as_of_basis,
                 }  # fmt: skip
             )
-    for ev in [*ratings.events, *others.events]:
-        keys = ("agency", "old_rating", "new_rating", "rating", "new_outlook", "old_outlook", "watch",
-                "amount", "currency", "amount_eur_equiv", "coupon", "maturity", "seniority",
-                "guidance_status", "flags", "period")  # fmt: skip
-        out["events"].append(
-            {
-                "family": ev.family,
-                "event_type": ev.event_type,
-                "effective_date": ev.effective_date.isoformat() if ev.effective_date else None,
-                "fields": {k: ev.fields.get(k) for k in keys if k in ev.fields},
-                "n_spans": len(ev.evidence),
-            }
-        )
-    with tempfile.TemporaryDirectory() as tmp:
-        db = Database(Path(tmp) / "r.db")
-        db.init_schema()
-        db.replace_universe(universe)
-        db.replace_ratings(seed)
-        db.insert_document(doc)
-        process(db, universe, scales, rules)
         for ev in db.list_events(issuer.id):
+            out["events"].append(
+                {
+                    "family": ev.family,
+                    "event_type": ev.event_type,
+                    "effective_date": ev.effective_date.isoformat() if ev.effective_date else None,
+                    "fields": {k: ev.fields.get(k) for k in keys if k in ev.fields},
+                    "n_spans": len(ev.evidence),
+                }
+            )
             d = db.get_decision(ev.event_id)
             out["decisions"].append(
                 {
@@ -81,20 +80,59 @@ def expected_extraction(doc, issuer, scales, universe, seed, rules) -> dict:
     return out
 
 
+def recompute(directory: Path) -> None:
+    """Recompute the expected block of an existing fixture from its bytes, no network."""
+    from radar.connectors.fixture import FixtureAdapter, load_manifest, write_fixture
+    from radar.normalize import SecHtmlNormalizer
+
+    manifest = load_manifest(directory)
+    universe = load_universe(CONFIG_DIR / "universe.yaml")
+    scales = load_rating_scales(CONFIG_DIR / "rating_scales.yaml")
+    rules = load_rules(CONFIG_DIR / "rules.yaml")
+    seed = load_ratings_seed(SEEDS_DIR / "ratings_seed.csv", scales, universe)
+    issuer = universe.by_id(manifest["issuer_id"])
+    with tempfile.TemporaryDirectory() as tmp:
+        adapter = FixtureAdapter(directory, Path(tmp), SecHtmlNormalizer())
+        doc = adapter.fetch(date(2000, 1, 1), [issuer])[0]
+        raw = Path(doc.raw_path).read_bytes()
+    expected = expected_extraction(doc, issuer, scales, universe, seed, rules)
+    fetched = FetchedBytes(
+        url=manifest["source_url"], content=raw,
+        retrieved_at=datetime.fromisoformat(manifest["retrieved_at"]), content_type=manifest.get("content_type"),
+    )  # fmt: skip
+    doc = doc.model_copy(update={"retrieved_at": fetched.retrieved_at})
+    write_fixture(
+        directory, fetched, doc, role=manifest["role"], issuer_id=issuer.id, expected=expected
+    )
+    print(
+        f"{directory.name}: outcome {expected['outcome']}, {len(expected['observations'])} observation(s), {len(expected['events'])} stored event(s), decisions {[(d['event_type'], d['final_priority']) for d in expected['decisions']]}"
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--url", required=True)
-    parser.add_argument("--issuer-id", required=True)
     parser.add_argument(
-        "--source-id", required=True, help="id of the ir_sources entry in universe.yaml"
+        "--url",
     )
+    parser.add_argument(
+        "--issuer-id",
+    )
+    parser.add_argument("--source-id", help="id of the ir_sources entry in universe.yaml")
     parser.add_argument(
         "--published", default=None, help="YYYY-MM-DD publication date of the document"
     )
     parser.add_argument("--title", default=None)
     parser.add_argument("--role", default="demo_watchlist")
     parser.add_argument("--out", required=True, type=Path)
+    parser.add_argument(
+        "--recompute-expected",
+        action="store_true",
+        help="No network: recompute expected from the stored bytes",
+    )
     args = parser.parse_args()
+    if args.recompute_expected:
+        recompute(args.out)
+        return
 
     load_dotenv()
     settings = load_settings(CONFIG_DIR / "settings.yaml")

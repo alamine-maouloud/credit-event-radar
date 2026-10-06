@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.volkswagen-group.com/en/press-releases/first-quarter-volkswagen-group-makes-progress-in-a-challenging-environment-overhead-costs-reduced-by-one-billion-euro-transformation-to-be-accelerated-further-20360",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T14:13:12.390483+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "c37111ca1af03c015879c979ae3853b6818e699ad39befb5548704acc230cc41",
+  "raw_size_bytes": 137848,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "19e353c17176723b8b2408d7c078b22cf72cb04f82550a9bfc8142c0702fb712",
+  "normalized_chars": 15930,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "vw_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-04-30"
+  },
+  "title": "First Quarter: Volkswagen Group makes progress in a challenging environment, overhead costs reduced by one billion euro",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-04-30",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "First Quarter"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

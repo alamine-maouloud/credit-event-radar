@@ -1,0 +1,55 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://traton.com/en/newsroom/press-releases/traton-group-issues-its-first-green-bond-and-green-loan-for-a-total-of-850-million-for-investments-in-battery-electric-commercial-vehicles.html",
+  "content_type": "text/html;charset=UTF-8",
+  "retrieved_at": "2026-10-06T14:13:15.139602+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "0fbb48d583c0032f95ed52a9d07a10ad6e9df4357a5e97481478f511d6751d6e",
+  "raw_size_bytes": 77130,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "ff214f437d5892a2d1e55525d13cfa93d56bc997833787d6b659593b4eacc031",
+  "normalized_chars": 4873,
+  "extra": {
+    "content_type": "text/html;charset=UTF-8",
+    "source_id": "traton_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-05-06"
+  },
+  "title": "TRATON GROUP issues its first Green Bond and Green Loan for a total of 850 million euro",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "issuance",
+        "event_type": "new_issue",
+        "effective_date": "2026-05-06",
+        "fields": {
+          "amount": 500000000.0,
+          "currency": "EUR",
+          "amount_eur_equiv": 500000000.0,
+          "coupon": 3.875,
+          "maturity": null,
+          "seniority": null
+        },
+        "n_spans": 3
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "new_issue",
+        "final_priority": "P3",
+        "triggered": [
+          "ISS-04"
+        ]
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "TRATON"
+}

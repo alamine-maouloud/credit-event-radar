@@ -1,0 +1,50 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://traton.com/en/newsroom/press-releases/traton-group-improves-profitability-and-increases-incoming-orders-by-30-percent.html",
+  "content_type": "text/html;charset=UTF-8",
+  "retrieved_at": "2026-10-06T14:13:17.871123+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "dd9f6c83026869e0c1ad9e551e687b48090352029de646b0df17f442fe953e5f",
+  "raw_size_bytes": 86975,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "eb76004aa311c7a5bb3408ffddc6c0a6fdf4b79523912004771ec7c695f85473",
+  "normalized_chars": 10509,
+  "extra": {
+    "content_type": "text/html;charset=UTF-8",
+    "source_id": "traton_press_rss",
+    "kind": "rss",
+    "document_type": "press_release",
+    "table_profile": null,
+    "expected_content": "html",
+    "published": "2026-07-22"
+  },
+  "title": "TRATON GROUP improves profitability and increases incoming orders by 30% in the first half of 2026",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "earnings",
+        "event_type": "earnings_release",
+        "effective_date": "2026-07-22",
+        "fields": {
+          "guidance_status": null,
+          "flags": [],
+          "period": "first half"
+        },
+        "n_spans": 1
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "earnings_release",
+        "final_priority": null,
+        "triggered": []
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "TRATON"
+}

@@ -1,0 +1,78 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://uploads.vw-mms.de/system/production/documents/cws/003/138/file_en/5243d053bc3bcf65f12e84d878cd3f8ac1ceacaa/RatingsDirect_ResearchUpdate_VolkswagenOutlookRevisedToNegativeOnSlower-Than-AnticipatedRecoveryInCreditMetrics_AffirmedAt_BBB_A-2_3495688_Dec-17-2025.pdf?1766048131",
+  "content_type": "application/pdf",
+  "retrieved_at": "2026-10-06T14:13:07.479719+00:00",
+  "raw_file": "document.pdf.gz",
+  "raw_sha256": "a2457a40804340f80ea89b5db951c0f80644998ba15b7123ab52841a8790d5eb",
+  "raw_size_bytes": 179813,
+  "normalizer_version": "pdf-text-1.0",
+  "normalized_sha256": "a807b4cea0d6cc1c1b9bfcee659fba72b4b276213ea7ecdf9c08c3155374b6db",
+  "normalized_chars": 42160,
+  "extra": {
+    "content_type": "application/pdf",
+    "source_id": "vw_rating_releases",
+    "kind": "page_links",
+    "document_type": "rating_report",
+    "table_profile": null,
+    "expected_content": "pdf",
+    "published": null
+  },
+  "title": "S&P RatingsDirect Research Update: Volkswagen Outlook Revised To Negative; Affirmed At BBB+/A-2",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [
+      {
+        "family": "rating",
+        "event_type": "outlook_change",
+        "effective_date": "2025-12-17",
+        "fields": {
+          "agency": "SP",
+          "old_rating": null,
+          "new_rating": null,
+          "rating": "BBB+",
+          "new_outlook": "negative",
+          "old_outlook": "stable",
+          "watch": null
+        },
+        "n_spans": 47
+      },
+      {
+        "family": "rating",
+        "event_type": "affirmation",
+        "effective_date": "2025-03-27",
+        "fields": {
+          "agency": "SP",
+          "old_rating": null,
+          "new_rating": null,
+          "rating": "BBB+",
+          "new_outlook": null,
+          "old_outlook": null,
+          "watch": null
+        },
+        "n_spans": 3
+      }
+    ],
+    "decisions": [
+      {
+        "event_type": "outlook_change",
+        "final_priority": "P2",
+        "triggered": [
+          "RAT-06"
+        ]
+      },
+      {
+        "event_type": "affirmation",
+        "final_priority": "P3",
+        "triggered": [
+          "RAT-10"
+        ]
+      }
+    ],
+    "outcome": "EVENTS"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

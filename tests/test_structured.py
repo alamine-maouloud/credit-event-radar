@@ -372,3 +372,24 @@ def test_parse_more_date_formats(text, expected):
     from radar.extract.dates import find_dates
 
     assert [d for d, _, _ in find_dates(text)] == [expected]
+
+
+def test_default_agency_applies_only_without_mention(scales):
+    text = "We revised our outlook on Issuer Test A to negative from stable."
+    assert extract_rating_actions(doc(text), "ISSUER_TEST_A", scales).events == []
+    ev = extract_rating_actions(doc(text), "ISSUER_TEST_A", scales, default_agency="SP").events[0]
+    assert ev.fields["agency"] == "SP" and ev.fields["agency_basis"] == "document"
+    assert not any(s.field == "agency" for s in ev.evidence)
+
+
+def test_document_agency_detection(scales):
+    from radar.extract.structured import document_agency
+
+    assert document_agency(doc("Nothing here. Source: S&P Global Ratings."), scales) == "SP"
+    assert document_agency(doc("Moody's and Fitch Ratings both commented."), scales) is None
+    long = (
+        "Fitch Ratings - Frankfurt - 07 Apr 2025. "
+        + "Body text. " * 80
+        + "Later: Moody's disagrees."
+    )
+    assert document_agency(doc(long), scales) == "FITCH"

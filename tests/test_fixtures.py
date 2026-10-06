@@ -10,8 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from radar.connectors.fixture import list_fixtures, load_fixture
-from radar.normalize import NORMALIZER_VERSION, SecHtmlNormalizer
+from radar.connectors.fixture import (
+    fixture_bytes_available,
+    list_fixtures,
+    load_fixture,
+    load_manifest,
+)
+from radar.normalize import normalizer_for
 from radar.snapshot import build_raw_document, sha256_hex
 
 FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures"
@@ -24,9 +29,12 @@ def test_at_least_one_fixture_exists():
 
 @pytest.mark.parametrize("directory", FIXTURE_DIRS, ids=[d.name for d in FIXTURE_DIRS])
 def test_fixture_replays_identically(directory: Path, tmp_path: Path):
+    if not fixture_bytes_available(directory):
+        pytest.skip(f"private fixture bytes not present for {directory.name}")
     fixture = load_fixture(directory)
     m = fixture.manifest
-    assert m["normalizer_version"] == NORMALIZER_VERSION, "regenerate the manifest on purpose"
+    normalizer = normalizer_for(m.get("content_type"), fixture.raw)
+    assert m["normalizer_version"] == normalizer.version, "regenerate the manifest on purpose"
     assert sha256_hex(fixture.raw) == m["raw_sha256"]
     assert len(fixture.raw) == m["raw_size_bytes"]
 
@@ -35,7 +43,7 @@ def test_fixture_replays_identically(directory: Path, tmp_path: Path):
             fixture.fetched,
             source_type=m["source_type"],
             raw_dir=tmp_path,
-            normalizer=SecHtmlNormalizer(),
+            normalizer=normalizer,
         )
         for _ in range(2)
     ]
@@ -51,7 +59,7 @@ def test_fixture_replays_identically(directory: Path, tmp_path: Path):
 
 @pytest.mark.parametrize("directory", FIXTURE_DIRS, ids=[d.name for d in FIXTURE_DIRS])
 def test_fixture_manifest_has_provenance(directory: Path):
-    m = load_fixture(directory).manifest
+    m = load_manifest(directory)
     for key in (
         "role",
         "source_url",

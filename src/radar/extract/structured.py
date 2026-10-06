@@ -113,7 +113,7 @@ _OUTLOOK_WORDS = r"(stable|negative|positive|developing|evolving)"
 _OUTLOOK_REVISION_RES = [
     re.compile(
         r"(?i:\b(?:revis(?:ed|es|ing)|chang(?:ed|es|ing)|lower(?:ed|s|ing)|rais(?:ed|es|ing)|mov(?:ed|es|ing)|set)"
-        r"\s+(?:the\s+|its\s+|their\s+)?(?:rating\s+|long-term\s+)?outlooks?\b[^.;]{0,120}?\bto\s+)"
+        r"\s+(?:the\s+|its\s+|their\s+|our\s+)?(?:rating\s+|long-term\s+)?outlooks?\b[^.;]{0,120}?\bto\s+)"
         rf"(?i:{_OUTLOOK_WORDS})\b(?i:(?:\s+from\s+{_OUTLOOK_WORDS}\b)?)"
     ),
     re.compile(
@@ -166,7 +166,27 @@ def event_id_for(issuer_id: str, family: str, event_type: str, key: dict[str, ob
     )
 
 
-def extract_rating_actions(doc: RawDocument, issuer_id: str, scales: RatingScales) -> Extraction:
+def document_agency(doc: RawDocument, scales: RatingScales) -> str | None:
+    """Agency an agency-authored document speaks for: the only one it mentions, else the
+    only one mentioned in its header, else None."""
+    pats = _patterns(scales)
+    whole = {pats.by_name[m.group(1).casefold()] for m in pats.agency_re.finditer(doc.text)}
+    if len(whole) == 1:
+        return next(iter(whole))
+    head = {
+        pats.by_name[m.group(1).casefold()]
+        for m in pats.agency_re.finditer(doc.text[:HEADER_CHARS])
+    }
+    if len(head) == 1:
+        return next(iter(head))
+    return None
+
+
+def extract_rating_actions(
+    doc: RawDocument, issuer_id: str, scales: RatingScales, *, default_agency: str | None = None
+) -> Extraction:
+    """Rating actions stated in sentences. ``default_agency`` applies to sentences that
+    name no agency in an agency-authored document ("we revised our outlook")."""
     pats = _patterns(scales)
     events: list[CreditEvent] = []
     skipped: list[Skipped] = []
@@ -177,7 +197,9 @@ def extract_rating_actions(doc: RawDocument, issuer_id: str, scales: RatingScale
             for m in pats.agency_re.finditer(sentence.text)
         ]
         if not mentions:
-            continue
+            if default_agency is None:
+                continue
+            mentions = [(0, 0, default_agency)]  # document-level agency, no span
         for agency_id in sorted({a for _, _, a in mentions}):
             for m in pats.transition_re[agency_id].finditer(sentence.text):
                 abs_start = sentence.start + m.start()
@@ -249,7 +271,7 @@ def extract_rating_actions(doc: RawDocument, issuer_id: str, scales: RatingScale
                     ),
                 ]
                 agency_mention = [
-                    (s, e) for s, e, a in mentions if a == agency_id and s < m.start()
+                    (s, e) for s, e, a in mentions if a == agency_id and s < m.start() and e > s
                 ]
                 if agency_mention:
                     s, e = agency_mention[-1]
@@ -366,7 +388,31 @@ def extract_rating_actions(doc: RawDocument, issuer_id: str, scales: RatingScale
             event = _non_transition_event(doc, issuer_id, scales, pats, sentence, mentions)
             if event is not None:
                 events.append(event)
-    return Extraction(events, skipped)
+    return Extraction(_merge_same_id(events), skipped)
+
+
+def _merge_same_id(events: list[CreditEvent]) -> list[CreditEvent]:
+    """Several sentences of one document may state the same action (title, body): keep the
+    most complete statement and union the evidence, so no field is lost to ordering."""
+    merged: dict[str, CreditEvent] = {}
+    for ev in events:
+        current = merged.get(ev.event_id)
+        if current is None:
+            merged[ev.event_id] = ev
+            continue
+        richer, poorer = sorted(
+            (current, ev), key=lambda e: sum(v is not None for v in e.fields.values()), reverse=True
+        )
+        fields = dict(richer.fields)
+        for key, value in poorer.fields.items():
+            if fields.get(key) is None and value is not None:
+                fields[key] = value
+        seen = {(s.char_start, s.char_end, s.field) for s in richer.evidence}
+        evidence = list(richer.evidence) + [
+            s for s in poorer.evidence if (s.char_start, s.char_end, s.field) not in seen
+        ]
+        merged[ev.event_id] = richer.model_copy(update={"fields": fields, "evidence": evidence})
+    return list(merged.values())
 
 
 def _find_rating_label(text: str, alt: str) -> tuple[str, int, int] | None:
@@ -452,7 +498,7 @@ def _non_transition_event(doc, issuer_id, scales, pats, sentence, mentions) -> C
         return None  # an affirmation without an identifiable rating is not an event
 
     evidence = [exact_span(doc, sentence.start, sentence.end, extractor_version=EXTRACTOR_VERSION)]
-    agency_mention = [(s, e) for s, e, a in mentions if a == agency_id]
+    agency_mention = [(s, e) for s, e, a in mentions if a == agency_id and e > s]
     if agency_mention:
         s0, e0 = agency_mention[0]
         evidence.append(
@@ -536,7 +582,13 @@ def _non_transition_event(doc, issuer_id, scales, pats, sentence, mentions) -> C
         old_outlook=old_outlook,  # type: ignore[arg-type]
         watch=watch,  # type: ignore[arg-type]
     ).model_dump()
-    fields.update({"rating": canonical, "extractor_version": EXTRACTOR_VERSION})
+    fields.update(
+        {
+            "rating": canonical,
+            "agency_basis": "sentence" if agency_mention else "document",
+            "extractor_version": EXTRACTOR_VERSION,
+        }
+    )
     key = {
         "agency": agency_id, "rating": canonical, "new_outlook": new_outlook, "watch": watch,
         "date": effective.isoformat() if effective else f"{doc.doc_id}:{sentence.start}",

@@ -11,9 +11,12 @@ investment recommendation.
 
 ## Status
 
-Phases 1, 2 and 4 done: schemas, rating scales, hand-verified seed, EDGAR ingestion with raw
-snapshots and hashes, deterministic rating-action and ratings-table extraction, a pure
-materiality engine on agency ratings with a rule-by-rule explanation, and an audit trail.
+Phases 1, 2, 4 and 2b done: schemas, rating scales, hand-verified seed, EDGAR and issuer
+investor-relations ingestion (RSS, sitemap, page links, pages; robots.txt honoured) with raw
+snapshots and hashes, deterministic extraction of rating actions, ratings tables, issuance and
+results statements, a pure materiality engine on agency ratings with a rule-by-rule
+explanation, and an audit trail. Documents that match nothing end as NO_EVENT, never as a
+guessed event.
 The historical control case (a real 10-Q where S&P moved an issuer from BBB- to BB+ while
 Moody's and Fitch stayed investment grade) is scored P1 by RAT-01 and RAT-02 end to end,
 offline, without any LLM. See `CLAUDE.md` for the phase checklist, `docs/SPEC.md` for the

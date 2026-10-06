@@ -1,0 +1,32 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://uploads.vw-mms.de/system/production/documents/cws/002/992/file_en/784f6654e0e0744554ada44f8f03340711950aa0/Fitch_Revises_Volkswagen_s_Outlook_to_Negative_Affirms_IDR_at_A-.pdf?1744026244",
+  "content_type": "application/pdf",
+  "retrieved_at": "2026-10-06T14:13:04.430515+00:00",
+  "raw_file": "document.pdf.gz",
+  "raw_sha256": "88dbe67d028997bff34a3643c2230a9ac428cb2dcb1ea1f41897bb1c4c29fc26",
+  "raw_size_bytes": 479235,
+  "normalizer_version": "pdf-text-1.0",
+  "normalized_sha256": "a34e95395c1703578f3bb9bf314678d64f1eebb1ece96b6f0d30a86b3ebb5e85",
+  "normalized_chars": 14607,
+  "extra": {
+    "content_type": "application/pdf",
+    "source_id": "vw_rating_releases",
+    "kind": "page_links",
+    "document_type": "rating_report",
+    "table_profile": null,
+    "expected_content": "pdf",
+    "published": null
+  },
+  "title": "Fitch Revises Volkswagen's Outlook to Negative; Affirms IDR at A-",
+  "anchors": [],
+  "expected": {
+    "table_profile": null,
+    "observations": [],
+    "events": [],
+    "decisions": [],
+    "outcome": "UNREADABLE_TEXT"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

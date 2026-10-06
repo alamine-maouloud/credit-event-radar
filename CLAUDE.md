@@ -65,9 +65,9 @@ credit-event-radar/
 │   ├── dedup.py               # clé métier + fenêtre de dates
 │   ├── db.py                  # schéma SQLite + accès
 │   ├── ratings.py             # échelles, notches, notation composite (pur)
-│   ├── connectors/            # base.py, edgar.py, ir_feeds.py, news_rss.py
+│   ├── connectors/            # base.py, edgar.py, ir.py (rss, sitemap, liens, page), robots.py, fixture.py
 │   ├── resolve.py             # rattachement document → émetteur
-│   ├── extract/               # structured.py, llm_extract.py, spans.py
+│   ├── extract/               # structured.py (phrases), ratings_table.py, issuance.py, earnings.py, dates.py, spans.py ; llm_extract.py en Phase 3
 │   ├── materiality/           # engine.py, state.py, explain.py (pur, sans I/O ni LLM)
 │   ├── llm/                   # provider.py, anthropic_client.py, openai_client.py, cache.py
 │   ├── context/               # fundamentals.py, summarize.py
@@ -101,6 +101,8 @@ uv run radar init-db
 uv run radar seed                          # universe.yaml + ratings_seed.csv
 uv run radar ingest --since 2026-09-01     # EDGAR, User-Agent déclaré obligatoire dans .env
 uv run radar ingest --since 2026-01-01 --source fixtures   # rejoue les fixtures golden hors ligne
+uv run radar ingest --since 2026-09-01 --source ir         # sources IR de universe.yaml (robots.txt, cadence, User-Agent)
+uv run radar documents                     # documents stockés avec leur issue : EVENTS, OBSERVATIONS_ONLY, NO_EVENT, UNREADABLE_TEXT, UNRESOLVED
 uv run radar process                       # rattachement → extraction → dédup → audit (matérialité en Phase 4)
 uv run radar events                        # liste des événements stockés
 uv run radar show-event <id>               # champs, passages sources, hashes, trace d'audit
@@ -137,6 +139,7 @@ uv run pytest -q && uv run ruff check .
 - [x] Phase 1 · Fondations : repo, schémas, échelles de notation, notation composite, config, seeds (2026-10-06)
 - [x] Phase 2 · Ingestion : EDGAR, snapshots, hash, déduplication, extraction structurée déterministe, audit, P1 Harley de bout en bout sans LLM (2026-10-06). Flux IR et news RSS reportés en Phase 2b, après le moteur de matérialité (ADR-004)
 - [x] Phase 4 · Moteur de matérialité : rules.yaml v1.2, 19 règles et 3 modificateurs testés avant implémentation, état des notations à D anti look-ahead, observations de tableaux, `show-event --explain`, Harley P1 par RAT-01 et RAT-02 (2026-10-06)
+- [x] Phase 2b · Sources IR réelles (Volkswagen, TRATON, OMV) : adaptateur générique configuré par émetteur (rss, sitemap, liens, page), robots.txt et cadence, PDF, profils de tableaux, extracteurs émissions et résultats, NO_EVENT et UNREADABLE_TEXT, fixtures privées à manifeste public (2026-10-06)
 - [ ] Phase 3 · Extraction LLM : schémas stricts + validation des spans
 - [ ] Phase 5 · Contexte, vérification des claims, notes de comité FR/EN
 - [ ] Phase 6 · Alertes (Teams, email, local) et viewer Streamlit

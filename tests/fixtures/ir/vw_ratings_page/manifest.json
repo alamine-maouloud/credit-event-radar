@@ -1,0 +1,65 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.volkswagen-group.com/en/ratings-15756",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T14:05:23.610148+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "04a9bb6af0551fca290bfffaff7325d8d0a153272e16a6c89640aa75febbc569",
+  "raw_size_bytes": 92932,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "b95ab1a520245b3318034c2768fcab15a96e97273bf9f361517459f01a00663c",
+  "normalized_chars": 6022,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "vw_ratings_page",
+    "kind": "page",
+    "document_type": "ratings_page",
+    "table_profile": "current_by_agency",
+    "expected_content": "html",
+    "published": null
+  },
+  "title": "vw_ratings_page",
+  "anchors": [],
+  "expected": {
+    "table_profile": "current_by_agency",
+    "observations": [
+      {
+        "agency": "DBRS",
+        "rating": "BBB (high)",
+        "outlook": "stable",
+        "watch": "none",
+        "rating_date": null,
+        "as_of_basis": "retrieval"
+      },
+      {
+        "agency": "FITCH",
+        "rating": "A-",
+        "outlook": "negative",
+        "watch": "none",
+        "rating_date": null,
+        "as_of_basis": "retrieval"
+      },
+      {
+        "agency": "MOODYS",
+        "rating": "Baa1",
+        "outlook": "stable",
+        "watch": "none",
+        "rating_date": null,
+        "as_of_basis": "retrieval"
+      },
+      {
+        "agency": "SP",
+        "rating": "BBB+",
+        "outlook": "negative",
+        "watch": "none",
+        "rating_date": null,
+        "as_of_basis": "retrieval"
+      }
+    ],
+    "events": [],
+    "decisions": [],
+    "outcome": "OBSERVATIONS_ONLY"
+  },
+  "issuer_id": "VOLKSWAGEN"
+}

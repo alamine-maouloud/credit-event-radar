@@ -144,3 +144,47 @@ specification states: RAT-05 excludes the IG/HY crossing, RAT-07 excludes the bo
 case of RAT-04, RAT-09 excludes the rising star of RAT-08, ISS-04 excludes ISS-01 and
 ISS-02. Every rule and modifier is evaluated and reported, triggered or not, with the
 data it used, so `radar show-event <id> --explain` is the engine's own output.
+
+## ADR-010 · Issuer sources: terms checked by hand, private fixtures, short quotes only
+
+Date: 2026-10-06. Status: accepted.
+
+**Context.** Phase 2b reads official investor-relations sites. Their robots.txt files
+allow crawling (Volkswagen, TRATON and OMV were checked on 2026-10-06) but their legal
+notices restrict reproduction: TRATON forbids reproduction without agreement, OMV allows
+personal and informative use only. Agency releases republished by Volkswagen are S&P,
+Fitch and DBRS copyright. The repository is meant to be public.
+
+**Decision.** Every source is listed in `universe.yaml` with a note on what was checked.
+The adapter declares its User-Agent, honours robots.txt and keeps a two-second cadence per
+host. Raw snapshots stay on the local disk. Real documents used as fixtures are private:
+only their manifest (URL, hashes, dates, size, expected extraction) is committed, the
+bytes live in a gitignored file fetched by `scripts/fetch_ir_fixture.py`, and the local
+integration test skips when they are absent. Public tests use synthetic documents. Any
+user-facing output quotes short spans with the source URL, never full documents.
+
+## ADR-011 · rating_date versus observed_at
+
+Date: 2026-10-06. Status: accepted.
+
+A rating observation carries ``rating_date`` (the date the source states, if any),
+``observed_at`` (the day the value was seen in the document) and ``as_of_basis``. A
+current ratings page states no date: its observations are ``retrieval``-based and may feed
+decisions from ``observed_at`` onwards, never before, which the rating state enforces by
+treating ``observed_at`` as the as-of date. The explanation prints the basis next to every
+rating used so an analyst can tell a stated date from a page visit.
+
+## ADR-012 · Nothing is inferred: NO_EVENT, UNREADABLE_TEXT and tightened rules
+
+Date: 2026-10-06. Status: accepted.
+
+**Decision.** A stored document that matches no deterministic extractor ends with outcome
+``NO_EVENT`` and an audit entry; a document whose normalised text is not readable English
+(a PDF font without a Unicode map, for instance) ends with ``UNREADABLE_TEXT`` and is not
+extracted. Rules that previously inferred a benign reading were tightened in rules.yaml
+1.3 and 1.4: ERN-04 needs an explicit statement that guidance was maintained or that
+results are in line; ISS-04 needs a known EUR-equivalent amount below the threshold or an
+explicit tap; redemptions, intentions to issue and amounts that also cover a loan never
+become issuance events. A results release that recaps a past bond does not create a new
+issuance event. The consequence is accepted: many real documents end with no priority,
+which is the honest answer until Phase 3 adds validated extraction of quantities.

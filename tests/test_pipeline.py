@@ -155,3 +155,57 @@ def test_unresolved_document_outcome(db, scales):
 def test_audit_entry_helper_roundtrip(db):
     db.audit(AuditEntry(step="discover", status="skipped", message="x: disallowed by robots.txt"))
     assert db.audit_entries()[-1]["step"] == "discover"
+
+
+def test_unreadable_text_is_reported_not_inferred(db, scales):
+    garbled = "9;A =PT-Q=98&' -AYA:9? 9;A :&Q,='[I? -&SN?9 :=,89=B ?9-N:9N-A " * 20
+    s = run(
+        db, scales, doc(garbled, document_type="rating_report", kind="page_links", published=None)
+    )
+    assert s.events_new == 0 and s.no_event == 0
+    status = db.list_document_status()[0]
+    assert status["outcome"] == "UNREADABLE_TEXT"
+    assert any("UNREADABLE_TEXT" in e["message"] for e in db.audit_entries(doc_id=status["doc_id"]))
+
+
+def test_results_release_recap_of_a_bond_is_not_a_new_issuance(db, scales):
+    text = (
+        "First half 2026\nIssuer Test A AG confirms its outlook for 2026. "
+        "In May, Issuer Test A placed its first green bond with a volume of EUR 500 million."
+    )
+    s = run(
+        db,
+        scales,
+        doc(
+            text,
+            title="Issuer Test A improves profitability in the first half of 2026",
+            published=date(2026, 7, 22),
+        ),
+    )
+    events = db.list_events("ISSUER_TEST_A")
+    assert [e.event_type for e in events] == ["earnings_release"]
+    assert s.decisions == {"P3": 1}
+    assert db.get_decision(events[0].event_id).triggered_ids() == ["ERN-04"]
+    skipped = [
+        e
+        for e in db.audit_entries()
+        if "issuance_mentioned_in_results_release" in (e["message"] or "")
+    ]
+    assert skipped
+
+
+def test_agency_report_without_agency_in_sentence_uses_document_agency(db, scales):
+    text = (
+        "Research Update: Issuer Test A AG Outlook Revised To Negative; Affirmed At 'BBB+/A-2'\n"
+        "December 17, 2025\n"
+        "We therefore revised our outlook on Issuer Test A to negative from stable, and affirmed our 'BBB+/A-2' long- and short-term issuer credit ratings.\n"
+        "Source: S&P Global Ratings. Copyright 2025 by Standard & Poor's Financial Services LLC."
+    )
+    s = run(db, scales, doc(text, document_type="rating_report", kind="page_links", published=None))
+    events = db.list_events("ISSUER_TEST_A")
+    assert s.events_new == 1 and len(events) == 1
+    ev = events[0]
+    assert ev.event_type == "outlook_change" and ev.fields["agency"] == "SP"
+    assert ev.fields["new_outlook"] == "negative" and ev.fields["rating"] == "BBB+"
+    assert ev.effective_date == date(2025, 12, 17)
+    assert db.get_decision(ev.event_id).final_priority == "P2"

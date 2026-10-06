@@ -7,6 +7,7 @@ No LLM is involved anywhere in this module.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import date
@@ -20,7 +21,13 @@ from radar.extract.earnings import extract_earnings_events
 from radar.extract.issuance import extract_issuance_events
 from radar.extract.ratings_table import extract_rating_observations
 from radar.extract.spans import verify_span
-from radar.extract.structured import Extraction, extract_edgar_items, extract_rating_actions
+from radar.extract.structured import (
+    Extraction,
+    Skipped,
+    document_agency,
+    extract_edgar_items,
+    extract_rating_actions,
+)
 from radar.materiality.engine import Decision, MaterialityEngine, PriorContext, PriorEvent
 from radar.materiality.state import RatingCandidate, RatingState, build_rating_state
 from radar.models import CreditEvent, RawDocument
@@ -54,6 +61,28 @@ OUTCOME_EVENTS = "EVENTS"
 OUTCOME_OBSERVATIONS_ONLY = "OBSERVATIONS_ONLY"
 OUTCOME_NO_EVENT = "NO_EVENT"
 OUTCOME_UNRESOLVED = "UNRESOLVED"
+OUTCOME_UNREADABLE = "UNREADABLE_TEXT"
+
+_COMMON_WORDS = {
+    "the", "and", "for", "with", "from", "that", "this", "are", "was", "has", "have", "been",
+    "will", "its", "our", "not", "which", "their", "than", "also",
+}  # fmt: skip
+_WORD_RE = re.compile(r"[A-Za-z]+")
+READABLE_MIN_COMMON_PER_1000 = 6.0
+
+
+def text_is_readable(text: str) -> bool:
+    """Deterministic guard against garbled extraction (e.g. a PDF font without Unicode map).
+
+    Texts shorter than 500 characters are always considered readable; longer texts need at
+    least READABLE_MIN_COMMON_PER_1000 common English words (three letters or more) per
+    1000 characters. Calibrated on the Phase 2b documents: readable pages score 10 to 30,
+    a PDF with a font lacking a Unicode map scores under 2.
+    """
+    if len(text) < 500:
+        return True
+    hits = sum(1 for w in _WORD_RE.findall(text) if w.lower() in _COMMON_WORDS)
+    return hits * 1000 / len(text) >= READABLE_MIN_COMMON_PER_1000
 
 
 def document_kind(doc: RawDocument) -> str:
@@ -89,15 +118,30 @@ def run_extractors(
         )
         return empty, empty, observations, profile
     if kind == "rating_report":
-        return extract_rating_actions(doc, issuer.id, scales), empty, None, None
+        agency = document_agency(doc, scales)
+        ratings = extract_rating_actions(doc, issuer.id, scales, default_agency=agency)
+        return ratings, empty, None, None
     ratings = extract_rating_actions(doc, issuer.id, scales)
     others = Extraction([], [])
-    for result in (
-        extract_issuance_events(doc, issuer.id),
-        extract_earnings_events(doc, issuer.id),
-    ):
-        others.events.extend(result.events)
-        others.skipped.extend(result.skipped)
+    issuance = extract_issuance_events(doc, issuer.id)
+    earnings = extract_earnings_events(doc, issuer.id)
+    others.events.extend(earnings.events)
+    others.skipped.extend(earnings.skipped)
+    if earnings.events:
+        # A results release recaps past transactions: issuance sentences are not new events.
+        for ev in issuance.events:
+            span = ev.evidence[0]
+            others.skipped.append(
+                Skipped(
+                    "issuance_mentioned_in_results_release",
+                    span.char_start,
+                    span.char_end,
+                    ev.event_type,
+                )
+            )
+    else:
+        others.events.extend(issuance.events)
+    others.skipped.extend(issuance.skipped)
     return ratings, others, None, None
 
 
@@ -383,6 +427,20 @@ def process(
         )
 
         issuer = universe.by_id(issuer_id)
+        if not text_is_readable(doc.text):
+            db.mark_processed(doc.doc_id, OUTCOME_UNREADABLE)
+            db.audit(
+                AuditEntry(
+                    step="process",
+                    doc_id=doc.doc_id,
+                    status="skipped",
+                    message=(
+                        "UNREADABLE_TEXT: normalised text does not look like readable English "
+                        f"({doc.normalizer_version}); no extraction, nothing inferred"
+                    ),
+                )
+            )
+            continue
         ratings, items, observations, profile = run_extractors(doc, issuer, scales)
         stored_observations = (
             _store_observations(db, doc, observations, summary) if observations else 0

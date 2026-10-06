@@ -19,7 +19,7 @@ from radar.models import CreditEvent, EvidenceSpan, RawDocument
 EARNINGS_EXTRACTOR_VERSION = "structured-earnings-1.0"
 
 _RESULTS_TITLE_RE = re.compile(
-    r"(?i)\b(?:(?:first|second|third|fourth)\s+quarter|Q[1-4]|half[- ]year|H[12]\b|nine[- ]months|9M\b|"  # noqa: E501
+    r"(?i)\b(?:(?:first|second|third|fourth)\s+quarter|Q[1-4]|half[- ]year|(?:first|second)\s+half|H[12]\b|nine[- ]months|9M\b|"  # noqa: E501
     r"full[- ]year|fiscal[- ]year|FY\s?20\d\d|annual results|results|interim report|trading update)\b"  # noqa: E501
 )
 _STATEMENTS: list[tuple[str, re.Pattern[str]]] = [

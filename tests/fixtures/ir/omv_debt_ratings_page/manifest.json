@@ -1,0 +1,65 @@
+{
+  "role": "demo_watchlist",
+  "source_type": "ir_feed",
+  "source_url": "https://www.omv.com/en/investors/omv-on-the-capital-markets/debt-and-ratings",
+  "content_type": "text/html; charset=utf-8",
+  "retrieved_at": "2026-10-06T14:05:28.398885+00:00",
+  "raw_file": "document.htm.gz",
+  "raw_sha256": "128c63d33316a4723578be3750234efd753f4fb2b044e77daecde8800c92ff2d",
+  "raw_size_bytes": 310957,
+  "normalizer_version": "sec-html-1.0",
+  "normalized_sha256": "2eda49cf8793278bfd8156e7c7e715f35dd563f9b398d8fcdaae628ec7b248b1",
+  "normalized_chars": 8192,
+  "extra": {
+    "content_type": "text/html; charset=utf-8",
+    "source_id": "omv_debt_ratings_page",
+    "kind": "page",
+    "document_type": "ratings_page",
+    "table_profile": "dated_by_agency",
+    "expected_content": "html",
+    "published": null
+  },
+  "title": "omv_debt_ratings_page",
+  "anchors": [],
+  "expected": {
+    "table_profile": "dated_by_agency",
+    "observations": [
+      {
+        "agency": "FITCH",
+        "rating": "A-",
+        "outlook": "stable",
+        "watch": "none",
+        "rating_date": "2025-07-15",
+        "as_of_basis": "stated"
+      },
+      {
+        "agency": "FITCH",
+        "rating": "A-",
+        "outlook": "stable",
+        "watch": "none",
+        "rating_date": "2026-07-09",
+        "as_of_basis": "stated"
+      },
+      {
+        "agency": "MOODYS",
+        "rating": "A3",
+        "outlook": "stable",
+        "watch": "none",
+        "rating_date": "2025-07-23",
+        "as_of_basis": "stated"
+      },
+      {
+        "agency": "MOODYS",
+        "rating": "A3",
+        "outlook": "stable",
+        "watch": "none",
+        "rating_date": "2026-06-01",
+        "as_of_basis": "stated"
+      }
+    ],
+    "events": [],
+    "decisions": [],
+    "outcome": "OBSERVATIONS_ONLY"
+  },
+  "issuer_id": "OMV"
+}
