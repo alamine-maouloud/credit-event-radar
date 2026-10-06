@@ -1,0 +1,281 @@
+# Covenant gold set V1, hand-written labels (eval/COVENANT_LABELING_GUIDE.md). DRAFT until frozen.
+# status compliant | risk_of_breach | breached | mentioned ; resolution none | waived | cured | amended.
+# A breach stays breached whatever its resolution; a payment default is not a covenant breach.
+version: "1.0-draft"
+documents:
+
+  # ---------------------------------------------------------------- dev --- #
+  - gold_id: C-GPRO-01
+    fixture: tests/fixtures/edgar/gopro_10q_2026q1
+    split: dev
+    expected_flag: true
+    notes: Breaches of the 2025 Credit Agreement covenants, waived or cured, with an anticipated future non-compliance. "cured or waived" in one sentence is labelled cured, waived is equally defensible.
+    statements:
+      - status: breached
+        resolution: waived
+        agreement: "2025 Credit Agreement"
+        evidence_quote: "Additionally, as of March 31, 2026, the Company was not in compliance with the financial covenants under its 2025 Credit Agreement due to the impact of the timing of redemption of sales incentives, revenue mix, and timing of working capital changes which impact the covenant calculation. The Company subsequently received a waiver from the lender of the 2025 Credit Agreement on May 8, 2026."
+      - status: mentioned
+        evidence_quote: "Future non-compliance with financial covenants may limit the Company’s access to existing credit facilities or result in an acceleration of debt obligations, which would further adversely impact liquidity."
+      - status: breached
+        resolution: cured
+        evidence_quote: "Additionally, the Company has not met certain covenants in the last two quarters which were subsequently cured or waived and does not expect to be able to meet the future minimum financial covenants in its 2021 Credit Agreement and 2025 Credit Agreement, including, but not limited to minimum liquidity, minimum EBITDA and a minimum asset coverage ratio, as further discussed in Note 4."
+      - status: risk_of_breach
+        evidence_quote: "The Company is actively evaluating potential remediation options for the expectation that it will be unable to comply with its financial covenants under the 2021 Credit Agreement and the 2025 Credit Agreement within the next twelve months, including seeking waivers or amendments from its lenders."
+      - status: mentioned
+        agreement: "2021 Credit Agreement"
+        evidence_quote: "The 2021 Credit Agreement contains customary representations, warranties, affirmative and negative covenants, and events of default."
+      - status: compliant
+        evidence_quote: "For the period ended December 31, 2025, the Company was in compliance with the liquidity and asset coverage ratio financial covenants contained in the 2021 Credit Agreement; however, the 2021 Credit Agreement also required the Company to be in compliance with the financial covenants within the 2025 Credit Agreement."
+      - status: breached
+        resolution: cured
+        covenant_label: "minimum EBITDA covenant"
+        evidence_quote: "The Company was not in compliance with the 2025 Credit Agreement asset coverage ratio of 1.25x or the minimum EBITDA covenant of not less than $10.0 million for the fiscal quarter ending December 31, 2025 and subsequently cured the non-compliance by entering into an amendment on February 27, 2026."
+      - status: breached
+        resolution: none
+        covenant_label: "minimum asset coverage ratio"
+        evidence_quote: "For the period ended March 31, 2026, the Company was in compliance with the liquidity and asset coverage ratio financial covenants contained in the 2021 Credit Agreement; however, the Company was not in compliance with the minimum asset coverage ratio of 1.05x under the 2025 Credit Agreement."
+      - status: breached
+        resolution: waived
+        evidence_quote: "On May 8, 2026, the Company received a waiver from the Lender under the 2025 Credit Agreement waiving the asset coverage ratio non-compliance as of March 31, 2026."
+    ineligible:
+      - reason: not_covenant
+        evidence_quote: "Upon an event of default, the lender may, subject to customary cure rights, require the immediate payment of all amounts outstanding."
+
+  - gold_id: C-CVR-01
+    fixture: tests/fixtures/edgar/chicago_rivet_10q_2026q1
+    split: dev
+    expected_flag: true
+    statements:
+      - status: mentioned
+        agreement: "March 2025 Credit Agreement"
+        evidence_quote: "The March 2025 Credit Agreement includes certain financial covenants such as minimum profitability for the twelve months ended December 31, 2025, and minimum tangible net worth."
+      - status: breached
+        resolution: none
+        evidence_quote: "As of December 31, 2025 and March 31, 2026, the Company was not in compliance with all such financial covenants."
+      - status: breached
+        resolution: none
+        covenant_label: "minimum annual profitability covenant"
+        evidence_quote: "As of December 31, 2025, the Company was not in compliance with the minimum annual profitability covenant, however, the Company was in compliance with the other financial covenants contained in the credit agreement."
+      - status: breached
+        resolution: waived
+        evidence_quote: "On February 27, 2026, the lender waived this covenant violation, and no new covenants were added to the credit agreement."
+      - status: breached
+        resolution: waived
+        covenant_label: "minimum net worth covenant"
+        evidence_quote: "As of March 31, 2026, the Company was not in compliance with the minimum net worth covenant, and the lender waived this covenant violation on May 6, 2026."
+      - status: breached
+        resolution: none
+        evidence_quote: "Specifically, the Company was not in compliance with the minimum annual profitability covenant, however, the Company was in compliance with the other financial covenants contained in the credit agreement."
+      - status: mentioned
+        evidence_quote: "However, uncertainty remains with respect to the Company's ability to increase sales, secure additional financing or liquidity, comply with loan covenants, or achieve projected cost savings."
+    ineligible: []
+
+  - gold_id: C-MVST-01
+    fixture: tests/fixtures/edgar/microvast_10q_2026q2
+    split: dev
+    expected_flag: false
+    notes: Substantial doubt about the going concern, but in compliance with all covenants; risk factors are mentions.
+    statements:
+      - status: compliant
+        evidence_quote: "As of June 30, 2026, the Company was in compliance with all material terms and covenants under its loan agreements, credit agreements, and bonds."
+      - status: compliant
+        evidence_quote: "As of June 30, 2026, we were in compliance with all material terms and covenants under our loan agreements, credit agreements, and bonds."
+      - status: compliant
+        evidence_quote: "As of June 30, 2026, we were in compliance with all material terms and covenants of our loan agreements, credit agreements and bonds."
+      - status: mentioned
+        agreement: "2022 Facility Agreement"
+        evidence_quote: "The 2022 Facility Agreement contains certain customary restrictive covenants, including but not limited to disposal of assets and dividend distribution without the consent of the lender, and certain customary events of default."
+      - status: mentioned
+        evidence_quote: "Future non-compliance with financial covenants may limit our access to existing credit facilities or result in an acceleration of debt obligations, which would further adversely impact liquidity."
+      - status: mentioned
+        evidence_quote: "Restrictive covenants, the need for waivers or amendments, cross-default provisions, and acceleration of our indebtedness could adversely affect our liquidity."
+      - status: mentioned
+        evidence_quote: "Our loan agreements, credit agreements, and bonds payable contain restrictive covenants and customary events of default that may limit our operational and financial flexibility."
+    ineligible: []
+
+  - gold_id: C-HYFM-01
+    fixture: tests/fixtures/edgar/hydrofarm_10q_2026q2
+    split: dev
+    expected_flag: false
+    notes: An event of default from a missed interest payment, a forbearance and a Nasdaq non-compliance, none of which is a covenant breach; the amendment adds covenants.
+    statements:
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "Amendment No. 2 amends the Credit Agreement to, among other things, (i) replace JPMorgan with FEAC as the Agents; and (ii) require each Credit Party to covenant and agree to (A) regularly provide certain liquidity reports and cash flow forecasts, (B) regularly provide certain aging reports and inventory reports, and (C) maintain a minimum liquidity of $1 million."
+      - status: mentioned
+        evidence_quote: "The Company was required to maintain certain reporting requirements, affirmative covenants and negative covenants, pursuant to terms outlined in the agreement."
+    ineligible:
+      - reason: not_covenant
+        evidence_quote: "As a result of the Company’s failure to pay the interest within the grace period, an event of default occurred with respect to the Term Loan."
+      - reason: not_covenant
+        evidence_quote: "On April 1, 2026, the Listing Qualifications Department of The Nasdaq Stock Market LLC (“Nasdaq”) notified the Company that it was not in compliance with the $2.5 million minimum stockholders' equity requirement under Nasdaq Listing Rule 5550(b)(1)."
+      - reason: not_covenant
+        evidence_quote: "The Share Purchase Agreement contains customary representations and warranties of the parties, covenants and indemnification provisions."
+
+  - gold_id: C-CODI-01
+    fixture: tests/fixtures/edgar/compass_diversified_10q_2026q2
+    split: dev
+    expected_flag: false
+    notes: Amended covenants and a 2025 forbearance at the parent, covenant breaches at portfolio companies (segments), no stated breach of the Company's own covenants.
+    statements:
+      - status: mentioned
+        agreement: "2022 Credit Facility"
+        evidence_quote: "The Company is subject to customary affirmative and restrictive covenants under the 2022 Credit Facility, including financial maintenance covenants."
+      - status: mentioned
+        resolution: amended
+        evidence_quote: "We believe the Sixth Amendment provides additional time and flexibility to execute our deleveraging and liquidity plans; however, our ability to maintain adequate liquidity and comply with the amended covenants will depend on our operating performance, cash generation, asset monetization activity and other factors discussed in this Form 10-Q."
+      - status: mentioned
+        evidence_quote: "The outstanding principal amounts of the Senior Notes reflect paid-in-kind payments made in 2025 in connection with an indenture forbearance arrangement which was described in detail in the 2025 Form 10-K."
+      - status: mentioned
+        evidence_quote: "The indentures governing the Senior Notes contain customary restrictive covenants, subject to certain exceptions, including limitations on the incurrence of additional indebtedness, restricted payments, transactions with affiliates, asset sales, mergers and consolidations, subsidiary guarantees, liens, sale-leaseback transactions and certain investments."
+    ineligible:
+      - reason: segment
+        evidence_quote: "Velocity was not in compliance with the fixed charge coverage ratio or leverage ratio in their intercompany credit agreement at September 30, 2025, December 31, 2025, March 31, 2026 and June 30, 2026 and was granted a waiver for the covenant violations in each period."
+      - reason: segment
+        evidence_quote: "In the second quarter of 2026, we amended the Altor intercompany credit agreement to amend the applicable fixed charge coverage ratio covenant as Altor was not expected to be in compliance with the ratio through the remainder of 2026 based on their forecast for the remainder of 2026."
+
+  - gold_id: C-GM-01
+    fixture: tests/fixtures/edgar/general_motors_10q_2026q2
+    split: dev
+    expected_flag: false
+    statements:
+      - status: compliant
+        evidence_quote: "We have reviewed our covenants in effect as of June 30, 2026 and determined we are in compliance and expect to remain in compliance in the future."
+      - status: mentioned
+        evidence_quote: "Several of our loan facilities, including our credit facilities, require compliance with certain financial and operational covenants as well as regular reporting to lenders."
+    ineligible:
+      - reason: not_covenant
+        evidence_quote: "General Motors Holdings LLC agreed, on behalf of our wholly owned subsidiary (the Seller), to indemnify Stellantis for certain losses resulting from any inaccuracy of the representations and warranties or breaches of our covenants included in the Agreement and for certain other liabilities, including costs related to certain emissions claims, product liabilities, and recalls."
+
+  - gold_id: C-CAT-01
+    fixture: tests/fixtures/edgar/caterpillar_10q_2026q2
+    split: dev
+    expected_flag: false
+    notes: Covenant levels reported for the Company and for Cat Financial (a segment), a hypothetical non-compliance consequence; no compliance statement in so many words.
+    statements:
+      - status: mentioned
+        covenant_label: "required covenant"
+        evidence_quote: "At June 30, 2026, Caterpillar’s consolidated net worth was $19.463 billion, which was above the $9.000 billion required covenant in the Credit Facility."
+      - status: mentioned
+        evidence_quote: "In the event Caterpillar or Cat Financial does not meet one or more of their respective financial covenants under the Credit Facility in the future (and are unable to obtain a consent or waiver), the syndicate of banks may terminate the commitments allocated to the party that does not meet its covenants."
+      - status: mentioned
+        evidence_quote: "The aforementioned financial covenants are being reported as calculated under the Credit Facility and not pursuant to U.S. GAAP."
+    ineligible:
+      - reason: segment
+        evidence_quote: "At June 30, 2026, Cat Financial’s covenant interest coverage ratio was 1.54 to 1."
+      - reason: segment
+        evidence_quote: "In addition, at June 30, 2026, Cat Financial’s six-month covenant leverage ratio was 7.96 to 1."
+      - reason: not_covenant
+        evidence_quote: "The master netting agreements may also provide for net settlement of all outstanding contracts with a counterparty in the case of an event of default or a termination event."
+
+  - gold_id: C-F-01
+    fixture: tests/fixtures/edgar/ford_motor_10q_2026q2
+    split: dev
+    expected_flag: false
+    statements:
+      - status: mentioned
+        covenant_label: "liquidity covenant"
+        evidence_quote: "The corporate credit facility contains a liquidity covenant that requires us to maintain a minimum of $4 billion in aggregate of domestic cash, cash equivalents, and loaned and marketable securities and/or availability under the corporate credit facility, supplemental revolving credit facility, and 364-day revolving credit facility."
+      - status: mentioned
+        evidence_quote: "The corporate credit facility is unsecured and free of material adverse change conditions to borrowing, restrictive financial covenants (for example, interest or fixed-charge coverage ratio, debt-to-equity ratio, and minimum net worth requirements), and credit rating triggers that could limit our ability to obtain funding or trigger early repayment."
+    ineligible:
+      - reason: not_covenant
+        evidence_quote: "We also enter into master agreements with counterparties that may allow for netting of exposures in the event of default or breach of the counterparty agreement."
+
+  - gold_id: C-PCAR-01
+    fixture: tests/fixtures/edgar/paccar_10q_2026q2
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible:
+      - reason: not_covenant
+        evidence_quote: "Each agreement permits the net settlement of amounts owed in the event of default and certain other termination events."
+  - gold_id: C-CMI-01
+    fixture: tests/fixtures/edgar/cummins_10q_2026q2
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible:
+      - reason: not_covenant
+        evidence_quote: "Any future non-compliance with the Settlement Agreements will likely subject us to further stipulated penalties and other adverse consequences."
+  - gold_id: C-VW-FY25
+    fixture: tests/fixtures/gold/guidance/vw_fy2025_results
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: C-OMV-Q4-25
+    fixture: tests/fixtures/gold/guidance/omv_q4_2025_report
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: C-VW-DEL-H1-26
+    fixture: tests/fixtures/gold/guidance/vw_h1_2026_deliveries
+    split: dev
+    expected_flag: false
+    statements: []
+    ineligible: []
+
+  # ------------------------------------------------------------ holdout --- #
+  - gold_id: C-NFE-01
+    fixture: tests/fixtures/edgar/new_fortress_energy_10q_2026q2
+    split: holdout
+    expected_flag: true
+    notes: Events of default from missed interest and principal payments (not covenant breaches) under forbearance, plus a stated non-compliance with covenant requirements.
+    statements:
+      - status: breached
+        resolution: none
+        evidence_quote: "As of June 30, 2026 and December 31, 2025, the outstanding debt balances under the New 2029 Notes, Term Loan B, Term Loan A, and Revolving Facility were classified as current, primarily due to the existing events of default and/or non-compliance with covenant requirements"
+      - status: mentioned
+        evidence_quote: "inability to service our debt and comply with our covenant restrictions;"
+    ineligible:
+      - reason: not_covenant
+        evidence_quote: "An event of default under the indenture governing the New 2029 Notes arose on November 20, 2025, when the contractual grace period for interest payments on such notes expired."
+      - reason: not_covenant
+        evidence_quote: "An event of default under the Term Loan B Credit Agreement arose on December 17, 2025, when the contractual grace period for interest payments on the loans expired."
+      - reason: not_covenant
+        evidence_quote: "The Company also did not make the principal payment of $3,181 due on December 31, 2025, and the event of default arising from the failure to make this principal payment, as well as subsequent principal and interest payments, was also covered by the Term Loan B Forbearance Agreement."
+
+  - gold_id: C-SNBR-01
+    fixture: tests/fixtures/edgar/sleep_number_10q_2026q1
+    split: holdout
+    expected_flag: false
+    notes: Forbearance on "Specified Defaults" that the text never ties to a covenant, an anticipated non-compliance, compliance with all covenants except those defaults. No breach stated for a covenant, so no flag; wrapped lines are quoted as printed.
+    statements:
+      - status: risk_of_breach
+        evidence_quote: "June 30, 2026, the Company was not able to amend covenants beyond July 1, 2026 and therefore the Company\nanticipates that it will not remain in compliance with the financial covenants of its Credit Agreement for the next twelve\nmonths."
+      - status: mentioned
+        evidence_quote: "Following such amendment, the Company was in\ncompliance with all covenants (other than with respect to the Specified Defaults)."
+    ineligible: []
+
+  - gold_id: C-HOG-01
+    fixture: tests/fixtures/edgar/harley_davidson_inc_10q_2026q2
+    split: holdout
+    expected_flag: false
+    statements:
+      - status: compliant
+        evidence_quote: "As of June 30, 2026 and 2025, Harley-Davidson Financial Services Inc. and the Company remained in compliance with all of the then existing covenants."
+      - status: mentioned
+        evidence_quote: "Operating and Financial Covenants – Harley-Davidson Financial Services Inc. and the Company are subject to various operating and financial covenants related to the credit facilities and various operating covenants under the medium-term and senior notes and the U.S. and Canadian asset-backed commercial paper conduit facilities."
+      - status: mentioned
+        evidence_quote: "No financial covenants are required under the medium-term or senior notes or the U.S. or Canadian asset-backed commercial paper conduit facilities."
+    ineligible:
+      - reason: segment
+        evidence_quote: "The Term Loan includes negative covenants restricting the ability of LiveWire Group, Inc. to incur indebtedness, create liens, sell assets, make investments, make fundamental changes, make dividends or other restricted payments and enter into affiliate transactions."
+      - reason: not_covenant
+        evidence_quote: "Based on its expectation that NHTSA will make Inconsequentiality Determinations, the Company does not expect that these regulatory noncompliance matters will result in material costs in the future, and no costs have been accrued to date."
+
+  - gold_id: C-DE-01
+    fixture: tests/fixtures/edgar/deere_10q_2026q3
+    split: holdout
+    expected_flag: false
+    statements: []
+    ineligible: []
+  - gold_id: C-TR-H1-26
+    fixture: tests/fixtures/ir/traton_h1_2026_results
+    split: holdout
+    expected_flag: false
+    statements: []
+    ineligible: []

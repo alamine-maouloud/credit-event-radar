@@ -378,6 +378,7 @@ issuers:
     ir_sources: []
     tags: [historical_control, sec_filer, holdout_v3]
     rating_status: unverified
+    segments: ["Velocity", "Altor", "Lugano", "Sterno", "Honey Pot", "BOA"]
     notes: Liquidity holdout V3 document only (10-Q 2026). Private fixture bytes.
   - id: HYDROFARM
     name: Hydrofarm

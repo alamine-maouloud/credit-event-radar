@@ -371,3 +371,36 @@ def test_covenant_replay_from_cache_is_free_and_idempotent(world):
     assert {r.status for r in results} <= {"already_applied", "no_valid_statement"}
     assert world["db"].count("event_enrichments") == n
     assert {k: _priority(world, k) for k in DOCS} == before
+
+
+def test_compliance_stated_without_with_is_compliant():
+    quote = "We have reviewed our covenants in effect as of June 30, 2026 and determined we are in compliance and expect to remain in compliance in the future."
+    text = "Issuer Test A AG report\n" + quote
+    st = CovenantStatement(
+        risk_type="covenant",
+        status="compliant",
+        evidence_quote=quote,
+        start_offset=text.index(quote),
+        end_offset=text.index(quote) + len(quote),
+    )
+    result = validate_covenant_statement(
+        st, doc(text), ISSUER_NAMES, document_date=date(2026, 7, 21)
+    )
+    assert result.status == "VALID", result.reasons
+
+
+def test_a_month_named_may_is_not_a_hypothetical_modal():
+    quote = "On May 8, 2026, the Company received a waiver from the Lender under the 2025 Credit Agreement waiving the asset coverage ratio non-compliance as of March 31, 2026."
+    text = "Issuer Test A AG report\n" + quote
+    st = CovenantStatement(
+        risk_type="covenant",
+        status="breached",
+        resolution="waived",
+        evidence_quote=quote,
+        start_offset=text.index(quote),
+        end_offset=text.index(quote) + len(quote),
+    )
+    result = validate_covenant_statement(
+        st, doc(text), ISSUER_NAMES, document_date=date(2026, 5, 11)
+    )
+    assert result.status == "VALID", result.reasons

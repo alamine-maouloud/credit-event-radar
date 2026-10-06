@@ -216,7 +216,8 @@ def _negated(sentence: str, marker_start: int) -> bool:
 # the window is a hypothetical risk factor, not a present worry (Phase 3.4a closing rule):
 # the statement stays valid as mentioned, it never sets the flag.
 _ADVERSE_EFFECT_RE = re.compile(r"(?i)^adversely\s+(?:impact|affect)")
-_HYPOTHETICAL_MODAL_RE = re.compile(r"(?i)\b(?:may|could|might|would)\b")
+# "May 8, 2026" is a date, not a modal
+_HYPOTHETICAL_MODAL_RE = re.compile(r"(?i)\b(?:may|could|might|would)\b(?!\s+\d)")
 
 
 def liquidity_polarity_ok(quote: str, status: str) -> tuple[bool, str | None]:
@@ -360,7 +361,8 @@ _BREACH_RE = re.compile(
 _DEFAULT_RE = re.compile(r"(?i)\bevents?\s+of\s+default\b")
 _COVENANT_LINK_RE = re.compile(r"(?i)covenant|compliance")
 _COMPLIANT_RE = re.compile(
-    r"(?i)(?<!not )(?<!not\n)\bin\s+compliance\s+with\b|\bremained\s+in\s+compliance\b|"
+    r"(?i)(?<!not )(?<!not\n)\bin\s+compliance\s+with\b|"
+    r"\b(?:are|were|is|was|remain(?:s|ed)?)\s+in\s+compliance\b(?!\s+with\s+(?:certain\s+)?nasdaq)|"
     r"\bcomplied\s+with\b|\bno\s+(?:breach|violation|default|event\s+of\s+default)\b|"
     r"\bnot\s+in\s+(?:breach|default)\b"
 )
@@ -390,7 +392,9 @@ def _actual_breach(sentence: str) -> bool:
         if any(_HYPOTHETICAL_PREFIX_RE.fullmatch(w.strip(",;:()")) for w in words):
             continue
         if _HYPOTHETICAL_MODAL_RE.search(before) and not re.search(
-            r"(?i)\b(?:was|were|is|are|has|have|had)\b", before
+            r"(?i)\b(?:was|were|is|are|has|have|had|received|obtained|occurred|arose|"
+            r"entered|remained|failed|did)\b",
+            before,
         ):
             continue
         if _DEFAULT_RE.fullmatch(m.group(0)) and not _COVENANT_LINK_RE.search(sentence):
