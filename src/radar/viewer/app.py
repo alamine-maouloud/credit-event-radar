@@ -213,7 +213,10 @@ def _event_detail(db: Database, universe, rules, settings) -> None:
     wanted = st.query_params.get("event")
     ids = [r["event_id"] for r in rows]
     labels = {
-        r["event_id"]: f"{r['priority'] or 'NONE'} · {r['issuer_name']} · {r['title']}"
+        r["event_id"]: (
+            f"{r['priority'] or 'NONE'} · {r['issuer_name']} · {r['title']} · "
+            f"{r['effective_date'] or 'undated'}"
+        )
         for r in rows
     }
     index = ids.index(wanted) if wanted in ids else 0

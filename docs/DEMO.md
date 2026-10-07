@@ -13,7 +13,8 @@ uv run radar viewer --db data/demo.db               # http://localhost:8501
 ```
 
 Check `uv run radar events --db data/demo.db` once: the event ids below are stable hashes
-of the issuer, the family, the type and the period, so they survive a rebuild. Open the
+of the issuer, the family, the type and the period, so they survive a rebuild. The event
+selector of the viewer filters on any part of its label: priority, issuer, title, date. Open the
 viewer in a window of at least 1280 x 800, light theme, sidebar visible. Keep `.env`,
 terminals and file paths out of the frame.
 
@@ -83,8 +84,8 @@ d'exploitation. L'extracteur déterministe repère la phrase ; les énoncés du 
 validés mot à mot contre le texte, la confirment ; la règle ERN-01 décide le P1. La
 provenance nomme le modèle, la version du prompt et la raison de ce choix. »
 
-**01:15 OMV, no false P1.** In the event selector type `cac94` (the OMV Q4 2024 report),
-Enter. Badge NONE, "No priority (NO_APPLICABLE_RULE)". Scroll to "Statements read by the
+**01:15 OMV, no false P1.** In the event selector type `2025-02-04` (the OMV Q4 2024 report,
+published that day), Enter. Badge NONE, "No priority (NO_APPLICABLE_RULE)". Scroll to "Statements read by the
 model": going_concern, negated, no flag: "From today's perspective, we assume that ... the
 Company's ability to continue as a going concern is not impacted."
 Say: "OMV writes that its ability to continue as a going concern is not impacted. An early
