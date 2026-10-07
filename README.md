@@ -211,3 +211,8 @@ exclusively from publicly disclosed information. The historical stress cases are
 filings of issuers outside the demo watchlist, used as controls; they are not positions
 of any portfolio. Every output is a draft to be validated by an analyst. No investment
 recommendation is made or implied.
+
+## License
+
+MIT for the code (see LICENSE). Excerpts of public filings quoted in the gold sets and the
+fixtures remain the property of their issuers and are cited as such.

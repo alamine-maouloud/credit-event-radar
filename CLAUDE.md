@@ -9,7 +9,7 @@ Credit Event Radar détecte les événements crédit (notations, résultats, nou
 
 ## Contexte
 
-Projet personnel d'Alamine (M2 Data & AI, ECE Paris) pour candidater au stage « Gestion de projet / Intelligence Artificielle » (janvier 2027) du pôle Fixed Income de Rothschild & Co Asset Management. Le prototype reflète les missions publiées de ce stage : identifier des cas d'usage IA dans le workflow des analystes crédit et des gérants, construire une bibliothèque de prompts FR/EN normalisés, mettre en place des alertes intelligentes Teams/Email sur les événements de crédit, évaluer des solutions et documenter.
+Projet personnel d'Alamine (M2 Data & AI, ECE Paris) préparé pour un stage en gestion de projet IA dans la gestion obligataire (janvier 2027). Le prototype reflète des missions publiées pour ce type de poste : identifier des cas d'usage IA dans le workflow des analystes crédit et des gérants, construire une bibliothèque de prompts FR/EN normalisés, mettre en place des alertes intelligentes Teams/Email sur les événements de crédit, évaluer des solutions et documenter.
 
 **La spécification complète est dans `docs/SPEC.md`. Lis-la avant toute tâche structurante.**
 
