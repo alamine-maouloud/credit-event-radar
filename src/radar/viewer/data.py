@@ -19,13 +19,24 @@ def _priority_rank(priority: str | None) -> int:
     return PRIORITY_ORDER.get(priority or "", -1)
 
 
-def watchlist_rows(db: Database, universe: Universe, scales: RatingScales) -> list[dict[str, Any]]:
+def watchlist_rows(
+    db: Database,
+    universe: Universe,
+    scales: RatingScales,
+    featured: set[str] | frozenset[str] | None = None,
+) -> list[dict[str, Any]]:
     """One row per issuer: universe, composite from the hand-verified seed (analytical
-    metadata only), event count, last event, highest priority. Issuers tagged neither live
-    nor historical appear only when they carry events."""
+    metadata only), documents ingested, event count, last event, highest priority, and
+    whether the issuer is a featured demo case (presentation only). Issuers tagged neither
+    live nor historical appear only when they carry events."""
     events = defaultdict(list)
     for event in db.list_events():
         events[event.issuer_id].append(event)
+    documents: dict[str, int] = defaultdict(int)
+    for status in db.list_document_status():
+        if status.get("issuer_id"):
+            documents[status["issuer_id"]] += 1
+    featured = set(featured or ())
     rows = []
     for issuer in universe.issuers:
         kind = universe_of(issuer)
@@ -57,6 +68,8 @@ def watchlist_rows(db: Database, universe: Universe, scales: RatingScales) -> li
                     "golden seed" if golden else ("seed, not signed off" if composite else "")
                 ),
                 "rating_status": issuer.rating_status,
+                "documents": documents.get(issuer.id, 0),
+                "featured": issuer.id in featured,
                 "events": len(own),
                 "last_event": max(dates).isoformat() if dates else "",
                 "highest_priority": best,
@@ -64,6 +77,25 @@ def watchlist_rows(db: Database, universe: Universe, scales: RatingScales) -> li
         )
     rows.sort(key=lambda r: (UNIVERSE_ORDER[r["universe"]], r["name"]))
     return rows
+
+
+def split_watchlist(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """What the screens show by default: the live issuers with documents, the rest of the
+    live universe not yet ingested, the featured demo cases, the other historical stress
+    cases (every real result kept, General Motors included), the other issuers."""
+    return {
+        "live": [r for r in rows if r["universe"] == "live_watchlist" and r["documents"]],
+        "not_ingested": [
+            r for r in rows if r["universe"] == "live_watchlist" and not r["documents"]
+        ],
+        "featured": [
+            r for r in rows if r["universe"] == "historical_stress_case" and r["featured"]
+        ],
+        "historical": [
+            r for r in rows if r["universe"] == "historical_stress_case" and not r["featured"]
+        ],
+        "other": [r for r in rows if r["universe"] == "other"],
+    }
 
 
 def alert_rows(db: Database, universe: Universe) -> list[dict[str, Any]]:

@@ -494,27 +494,32 @@ position. The composite shown on the watchlist is the structural one from the se
 its basis ("seed, not signed off" until rows are GOLDEN); it is metadata and never a rule
 input (ADR-001).
 
-## ADR-024 · A periodic report is a results publication; cache-only replays (2026-10-07)
+## ADR-024 · Periodic reports are results publications; flag hardening on long filings; cache-only replays (2026-10-07)
 
 A 10-Q or 10-K went through the EDGAR item mapping only (8-K items, prospectus forms), so
-the historical stress cases, which are quarterly reports, carried no earnings event and
-the LLM flag families could not attach to them in the pipeline. The quarterly or annual
-report is a results publication in substance (SPEC 6.1 names the 8-K 2.02; the report is
-the document behind it), so `extract_periodic_report` now yields one earnings_release
-event per 10-Q or 10-K, dated at filing, with the period read from the cover ("for the
-quarterly period ended June 30, 2026"), the deterministic flags of the same scan as a
-results release and no guidance reading (a report does not guide). On a report only the
-going concern, whose wording rules are strict, is a deterministic flag: the risk factors of
-a 10-Q are full of hypothetical covenant, liquidity and impairment language ("could face
-liquidity constraints"), which raised false P1 on Deere, PACCAR, General Motors and Compass
-in the first demo build; those families come from the validated statements of the LLM
-path, the candidates are recorded with their reason in the audit. No new event type: the
-same family, type, rules and enrichment apply. The scan is one function shared by both
-extractors (structured-earnings-1.3, which also keeps the "Liquidity and Going Concern"
-heading out of the liquidity flag).
+a quarterly report carried no earnings event and the flag families could not attach to it
+in the pipeline. The quarterly or annual report is a results publication in substance
+(SPEC 6.1 names the 8-K 2.02; the report is the document behind it), so
+`extract_periodic_report` now yields one earnings_release event per 10-Q or 10-K, dated at
+filing, with the period read from the cover ("for the quarterly period ended June 30,
+2026", which is the event's own passage) and no guidance reading (a report does not
+guide). No new event type: the same family, type, rules and enrichment apply. The scan is
+one function shared by both extractors (structured-earnings-1.3).
+
+Integrating the reports exposed a weakness of the simple deterministic patterns: the
+generic risk factors of a 10-Q ("we could face liquidity constraints", "breaches of our
+covenants could ...") matched the liquidity and covenant patterns and raised false
+positives on Deere, PACCAR, General Motors and Compass Diversified, filings where the
+validated statements of the LLM path find no flag. On periodic reports, the liquidity,
+covenant and impairment families therefore rely on the validated LLM statements only,
+while the going concern keeps its strict deterministic path (the shared wording rules of
+ADR-021: a doubt stated for now, not hypothetical, not described, not alleviated). The
+candidates set aside are recorded in the audit with their reason. Results releases, short
+and factual, keep the deterministic flags of every family. A local test on the real
+filings guards the behaviour. The "Liquidity and Going Concern" section heading is also
+kept out of the liquidity pattern.
 
 `radar llm-extract --cache-only` replays the cached answers of the benchmark runs on the
 pipeline events with a provider that refuses every call and a budget below any estimate:
 the demo database (`scripts/build_demo_db.py`) is built from the fixtures in hand and the
 cache at zero cost, then applied, decided, alerted and exported.
-

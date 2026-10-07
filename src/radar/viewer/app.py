@@ -32,6 +32,7 @@ from radar.viewer.data import (  # noqa: E402
     event_alert,
     passage_context,
     routing_rows,
+    split_watchlist,
     summary_counts,
     watchlist_rows,
 )
@@ -71,15 +72,33 @@ def _dashboard(db: Database, universe, scales, settings) -> None:
     )
     alerts = alert_rows(db, universe)
     counts = summary_counts(alerts)
-    issuers = watchlist_rows(db, universe, scales)
+    groups = split_watchlist(watchlist_rows(db, universe, scales, settings.demo.featured_issuers))
     cols = st.columns(5)
     cols[0].metric("P1", counts["P1"])
     cols[1].metric("P2", counts["P2"])
     cols[2].metric("P3", counts["P3"])
-    cols[3].metric("Live watchlist", sum(1 for r in issuers if r["universe"] == "live_watchlist"))
-    cols[4].metric(
-        "Historical stress cases",
-        sum(1 for r in issuers if r["universe"] == "historical_stress_case"),
+    cols[3].metric("Live watchlist", len(groups["live"]))
+    cols[4].metric("Historical stress cases", len(groups["featured"]) + len(groups["historical"]))
+    st.markdown("#### Featured demo cases")
+    featured_ids = set(settings.demo.featured_issuers)
+    st.dataframe(
+        [
+            {
+                k: r[k]
+                for k in (
+                    "priority",
+                    "issuer_name",
+                    "universe_label",
+                    "title",
+                    "effective_date",
+                    "rules",
+                )
+            }
+            for r in alerts
+            if r["issuer_id"] in featured_ids and r["priority"]
+        ],
+        width="stretch",
+        hide_index=True,
     )
     st.markdown("#### Latest alerts")
     st.dataframe(
@@ -102,38 +121,45 @@ def _dashboard(db: Database, universe, scales, settings) -> None:
     )
     st.markdown(
         "#### Historical stress cases\nPublic filings of issuers outside the demo watchlist, "
-        "used as controls for the detectors. They are not positions of any portfolio."
+        "used as controls for the detectors. They are not positions of any portfolio; the "
+        "featured cases are a presentation choice, every result is shown as decided."
     )
     st.markdown("#### Model routing, one benchmark per family")
     st.dataframe(routing_rows(settings), width="stretch", hide_index=True)
     st.caption(DISCLAIMER)
 
 
-def _watchlist(db: Database, universe, scales) -> None:
+def _watchlist(db: Database, universe, scales, settings) -> None:
     st.title("Watchlist")
-    rows = watchlist_rows(db, universe, scales)
-    columns = ("name", "sector", "country", "composite", "events", "last_event", "highest_priority")
+    groups = split_watchlist(watchlist_rows(db, universe, scales, settings.demo.featured_issuers))
+    columns = (
+        "name", "sector", "country", "composite", "documents", "events", "last_event",
+        "highest_priority",
+    )  # fmt: skip
+
+    def table(rows):
+        st.dataframe([{k: r[k] for k in columns} for r in rows], width="stretch", hide_index=True)
+
     st.markdown("### Live watchlist")
-    st.dataframe(
-        [{k: r[k] for k in columns} for r in rows if r["universe"] == "live_watchlist"],
-        width="stretch",
-        hide_index=True,
-    )
-    st.markdown("### Historical stress cases")
+    table(groups["live"])
+    with st.expander(f"Universe, not yet ingested ({len(groups['not_ingested'])} issuers)"):
+        table(groups["not_ingested"])
+    st.markdown("### Featured demo cases")
     st.caption(
-        "Public filings of issuers outside the demo watchlist, used as controls for the "
-        "detectors (fallen angel, going concern, covenant breach, denied doubt). "
+        "Public filings of issuers outside the demo watchlist, chosen to show one behaviour "
+        "each (fallen angel, going concern, covenant breach, denied doubt). "
         "They are not positions of any portfolio."
     )
-    st.dataframe(
-        [{k: r[k] for k in columns} for r in rows if r["universe"] == "historical_stress_case"],
-        width="stretch",
-        hide_index=True,
+    table(groups["featured"])
+    st.markdown("### Historical stress cases")
+    st.caption(
+        "The other control filings, with their real result as decided; nothing is altered "
+        "for the presentation."
     )
-    other = [r for r in rows if r["universe"] == "other"]
-    if other:
+    table(groups["historical"])
+    if groups["other"]:
         st.markdown("### Other issuers with events")
-        st.dataframe([{k: r[k] for k in columns} for r in other], width="stretch", hide_index=True)
+        table(groups["other"])
     st.caption(
         "Composite: hand-verified seed ratings, analytical metadata only, never a rule input."
     )
@@ -311,7 +337,7 @@ def main() -> None:
         if screen == "Dashboard":
             _dashboard(db, universe, scales, settings)
         elif screen == "Watchlist":
-            _watchlist(db, universe, scales)
+            _watchlist(db, universe, scales, settings)
         elif screen == "Alerts":
             _alerts(db, universe)
         else:

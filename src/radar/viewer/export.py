@@ -10,7 +10,14 @@ from pathlib import Path
 from radar.alerts.render import COLORS, render_html
 from radar.config import CONFIG_DIR, Rules, Settings, Universe, load_rating_scales
 from radar.db import Database
-from radar.viewer.data import alert_rows, event_alert, routing_rows, summary_counts, watchlist_rows
+from radar.viewer.data import (
+    alert_rows,
+    event_alert,
+    routing_rows,
+    split_watchlist,
+    summary_counts,
+    watchlist_rows,
+)
 
 STYLE = """
 body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; margin: 0;
@@ -57,7 +64,7 @@ def export_site(
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "alerts").mkdir(exist_ok=True)
     written: list[Path] = []
-    issuers = watchlist_rows(db, universe, scales)
+    groups = split_watchlist(watchlist_rows(db, universe, scales, settings.demo.featured_issuers))
     alerts = alert_rows(db, universe)
     counts = summary_counts(alerts)
     alert_html = []
@@ -80,9 +87,7 @@ def export_site(
         f"<td>{_e(r['reason'])}</td></tr>"
         for r in routing_rows(settings)
     )
-    live = [r for r in issuers if r["universe"] == "live_watchlist"]
-    hist = [r for r in issuers if r["universe"] == "historical_stress_case"]
-    other = [r for r in issuers if r["universe"] == "other"]
+    live, hist, other = groups["live"], groups["historical"], groups["other"]
     parts = [
         "<!DOCTYPE html>",
         '<html lang="en"><head><meta charset="utf-8">',
@@ -97,10 +102,16 @@ def export_site(
         f"{counts['NONE']}</p>",
         "<h2>Live watchlist</h2>",
         _watchlist_table(live),
-        "<h2>Historical stress cases</h2>",
-        "<p class='note'>Public filings of issuers outside the demo watchlist, used as controls "
-        "for the detectors (fallen angel, going concern, covenant breach, denied doubt). "
+        f"<p class='tag'>Universe, not yet ingested: {len(groups['not_ingested'])} issuers "
+        "(kept in the universe, no document yet).</p>",
+        "<h2>Featured demo cases</h2>",
+        "<p class='note'>Public filings of issuers outside the demo watchlist, chosen to show "
+        "one behaviour each (fallen angel, going concern, covenant breach, denied doubt). "
         "They are not positions of any portfolio.</p>",
+        _watchlist_table(groups["featured"]),
+        "<h2>Historical stress cases</h2>",
+        "<p class='note'>The other control filings, with their real result as decided; "
+        "nothing is altered for the presentation.</p>",
         _watchlist_table(hist),
         ("<h2>Other issuers with events</h2>" + _watchlist_table(other)) if other else "",
         "<h2>Alerts and events</h2>",

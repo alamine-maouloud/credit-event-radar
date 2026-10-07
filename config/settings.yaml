@@ -117,3 +117,11 @@ alerts:
   teams_webhook_env: TEAMS_WEBHOOK_URL
   # The viewer the Teams card links to for the FR and EN notes (Streamlit, Phase P2)
   viewer_base_url: http://localhost:8501
+
+demo:
+  # Presentation only: the featured cases of the demo scenario (viewer, static export). The
+  # other historical stress cases stay in the data with their real result, never altered.
+  featured_issuers: [HARLEY_DAVIDSON_INC, HYDROFARM, FTC_SOLAR, OMV, VOLKSWAGEN]
+  # One cap for every committee note generated during the demo, in USD, read from .env
+  generation_budget_env: DEMO_GENERATION_BUDGET_USD
+

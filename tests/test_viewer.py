@@ -18,6 +18,7 @@ from radar.viewer.data import (
     event_alert,
     passage_context,
     routing_rows,
+    split_watchlist,
     watchlist_rows,
 )
 from radar.viewer.export import export_site
@@ -114,6 +115,7 @@ def test_export_site_writes_an_index_and_one_page_per_decided_event(world):
     db.close()
     index = (out / "index.html").read_text()
     assert "Live watchlist" in index and "Historical stress cases" in index
+    assert "Featured demo cases" in index and "not yet ingested" in index
     assert "Harley-Davidson" in index and "P1" in index and 'href="alerts/' in index
     pages = list((out / "alerts").glob("*.html"))
     assert len(pages) == 1 and "Why this priority?" in pages[0].read_text()
@@ -155,3 +157,21 @@ def test_viewer_command_launches_streamlit_on_the_app(monkeypatch, tmp_path):
     assert "streamlit" in argv and "run" in argv and argv[-1].endswith("8765") or "8765" in argv
     assert any(str(a).endswith("viewer/app.py") for a in argv)
     assert kw["env"]["RADAR_DB"].endswith("x.db") and "streamlit" in out.lower()
+
+
+def test_the_screens_split_featured_cases_from_the_other_historical_ones(world, scales):
+    db = Database(world["db"])
+    rows = watchlist_rows(db, world["universe"], scales, world["settings"].demo.featured_issuers)
+    db.close()
+    groups = split_watchlist(rows)
+    # only the Harley filing was ingested here: no live issuer has a document yet
+    assert groups["live"] == [] and len(groups["not_ingested"]) >= 3
+    assert {r["issuer_id"] for r in groups["featured"]} == {
+        "HARLEY_DAVIDSON_INC",
+        "HYDROFARM",
+        "FTC_SOLAR",
+    }
+    hist = {r["issuer_id"] for r in groups["historical"]}
+    assert "GENERAL_MOTORS" in hist and not hist & {r["issuer_id"] for r in groups["featured"]}
+    hog = next(r for r in groups["featured"] if r["issuer_id"] == "HARLEY_DAVIDSON_INC")
+    assert hog["documents"] == 1 and hog["featured"] is True and hog["highest_priority"] == "P1"

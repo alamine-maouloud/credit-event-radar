@@ -422,3 +422,13 @@ def test_stress_case_issuers_are_historical_controls_outside_the_watchlist(unive
         issuer = universe.by_id(issuer_id)
         assert "historical_control" in issuer.tags and "demo_watchlist" not in issuer.tags
         assert issuer.rating_status == "unverified" and issuer.ir_sources == []
+
+
+def test_demo_settings_are_presentation_only(settings):
+    """Featured cases are a presentation list: every id is a universe issuer, no rule or
+    decision reads it, and General Motors (a known false flag) is not featured."""
+    universe = load_universe(CONFIG_DIR / "universe.yaml")
+    ids = {i.id for i in universe.issuers}
+    assert settings.demo.featured_issuers and set(settings.demo.featured_issuers) <= ids
+    assert "GENERAL_MOTORS" not in settings.demo.featured_issuers
+    assert settings.demo.generation_budget_env == "DEMO_GENERATION_BUDGET_USD"

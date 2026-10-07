@@ -171,6 +171,17 @@ class AlertsSettings(BaseModel):
     viewer_base_url: str = "http://localhost:8501"
 
 
+class DemoSettings(BaseModel):
+    """Presentation only (viewer, static export, demo scenario): which issuers are put
+    forward. No decision, score or priority depends on it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    featured_issuers: list[str] = Field(default_factory=list)
+    # one cap for every note generated during the demo, read from .env (SPEC 12, Phase P3)
+    generation_budget_env: str = "DEMO_GENERATION_BUDGET_USD"
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -180,6 +191,7 @@ class Settings(BaseModel):
     paths: PathsSettings
     ingestion: IngestionSettings
     alerts: AlertsSettings
+    demo: DemoSettings = Field(default_factory=DemoSettings)
 
 
 def load_settings(path: Path = CONFIG_DIR / "settings.yaml") -> Settings:
