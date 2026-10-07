@@ -1,11 +1,12 @@
-# Demo script, two minutes
+# Demo script, two minutes, live
 
-The spine of the presentation: one run of the viewer on the demo database, four featured
-cases, each showing one behaviour. Everything on screen comes from public filings and the
+The spine of the presentation, run live in front of the audience (an interview, a
+screen share): one run of the viewer on the demo database, four featured cases, each
+showing one behaviour. Everything on screen comes from public filings and the
 deterministic rules; the model reads and quotes, the rules decide. No Rothschild branding,
 no private data, no claim that is not on screen.
 
-## Before recording
+## Before presenting
 
 ```bash
 uv run python scripts/build_demo_db.py --fresh     # fixtures + cached model answers, zero cost
@@ -28,8 +29,8 @@ terminals and file paths out of the frame.
 
 ## Timeline
 
-Spoken lines are given in English; the French version follows each one for a French
-recording. Speak over the clicks, do not wait for them.
+Spoken lines are given in English; the French version follows each one. Speak over the
+clicks, do not wait for them.
 
 **00:00 Dashboard.** Screen "Dashboard" in the sidebar.
 Say: "Credit Event Radar monitors public information for credit-relevant events on a bond
@@ -101,7 +102,7 @@ alerter est la moitié du produit. »
 "Teams card JSON" download, or show the rendered card from `outputs/alerts/<date>/
 evt_9618eb5ad2d366339e69.card.json` in the Adaptive Cards designer, or the HTML alert
 `outputs/alerts/<date>/evt_9618eb5ad2d366339e69.html` in a browser tab prepared before
-recording.
+the presentation.
 Say: "The same object becomes a Teams card: badge, three sourced facts, the rules, links to
 the sources and to the notes. Teams and e-mail are sent only when configured; the local
 rendering is always there."
@@ -137,7 +138,7 @@ validation déterministe et les règles de crédit décident. »
 deterministic decisions, every claim sourced." FR : « Credit Event Radar. Données publiques,
 décisions déterministes, chaque affirmation sourcée. »
 
-## Guard rails while recording
+## Guard rails while presenting
 
 - Never show `.env`, API keys, local absolute paths or the terminal that started the viewer.
 - Do not open General Motors: a known false liquidity flag from a boilerplate sentence,
