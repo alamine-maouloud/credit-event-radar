@@ -25,9 +25,31 @@ def build_extraction_request(
     reasoning_effort: str | None = None,
     max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
 ) -> ExtractionRequest:
+    return build_request_from_text(
+        doc.text, issuer_name, document_date, prompt, schema_name=schema_name,
+        json_schema=json_schema, model_id=model_id, temperature=temperature,
+        reasoning_effort=reasoning_effort, max_output_tokens=max_output_tokens,
+    )  # fmt: skip
+
+
+def build_request_from_text(
+    source_text: str,
+    issuer_name: str,
+    document_date: str,
+    prompt: Prompt,
+    *,
+    schema_name: str,
+    json_schema: dict[str, Any],
+    model_id: str,
+    temperature: float = 0.0,
+    reasoning_effort: str | None = None,
+    max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
+) -> ExtractionRequest:
+    """The same request for any source text (a document, or the verified facts of an
+    alert for the committee note prose)."""
     system, user = render_prompt(
         prompt,
-        {"issuer_name": issuer_name, "document_date": document_date, "source_text": doc.text},
+        {"issuer_name": issuer_name, "document_date": document_date, "source_text": source_text},
     )
     return ExtractionRequest(
         system=system,

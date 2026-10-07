@@ -160,6 +160,8 @@ class Alert(BaseModel):
     decision_provenance: DecisionProvenance
     route: AlertRouteInfo | None = None
     explanation: str
+    # the event's own fields (no LLM lists, no provenance blocks): the note's indicators
+    fields: dict[str, Any] = Field(default_factory=dict)
     disclaimer: str = DISCLAIMER
 
     @property
@@ -403,4 +405,11 @@ def build_alert(
         if route
         else None,
         explanation=render_explanation(decision, event, documents),
+        fields={
+            k: v
+            for k, v in fields.items()
+            if not k.startswith("llm_")
+            and not k.endswith("_source")
+            and not k.endswith("_conflicts")
+        },
     )

@@ -450,6 +450,103 @@ def alert(
     typer.echo(f"{rendered} alert(s) rendered")
 
 
+@app.command("note")
+def note(
+    event_id: str,
+    lang: Annotated[str, typer.Option("--lang", help="fr | en")] = "fr",
+    no_llm: Annotated[
+        bool, typer.Option("--no-llm", help="Deterministic note only, no key, no call")
+    ] = False,
+    out: Annotated[Path, typer.Option("--out", help="Notes directory")] = ROOT
+    / "outputs"
+    / "notes",
+    db: DbOption = None,
+) -> None:
+    """Committee note FR or EN (SPEC 12): deterministic and complete without any model. With
+    a key and DEMO_GENERATION_BUDGET_USD in .env, the notes model writes "Why it matters"
+    and "Points to verify"; every sentence is tied to the verified facts or excluded."""
+    import os
+    from datetime import UTC, datetime
+
+    from radar.alerts import build_alert
+    from radar.audit import AuditEntry
+    from radar.notes import build_note, render_html, render_markdown
+
+    if lang not in ("fr", "en"):
+        raise typer.BadParameter("--lang must be fr or en")
+    database = _db(db)
+    settings = _settings()
+    rules = load_rules(CONFIG_DIR / "rules.yaml")
+    ev = database.get_event(event_id)
+    if ev is None:
+        raise typer.BadParameter(f"unknown event {event_id}")
+    decision = database.get_decision(event_id)
+    if decision is None:
+        raise typer.BadParameter(f"no decision stored for {event_id}; run `radar decide`")
+    documents = {d: doc for d in ev.source_doc_ids if (doc := database.get_document(d))}
+    try:
+        issuer = load_universe(CONFIG_DIR / "universe.yaml").by_id(ev.issuer_id)
+    except KeyError:
+        issuer = None
+    alert = build_alert(ev, decision, documents, issuer, rules=rules, alerts=settings.alerts)
+    prose = provenance = notice = None
+    mode = "deterministic"
+    if not no_llm:
+        from radar.llm.pricing import load_pricing
+        from radar.notes.llm import GenerationLedger, generate_prose
+
+        load_dotenv()
+        raw_cap = (os.environ.get(settings.demo.generation_budget_env) or "").strip()
+        if not raw_cap:
+            notice = (
+                f"prose sections not generated: {settings.demo.generation_budget_env} is not "
+                "set in .env"
+            )
+        else:
+            role = settings.llm.roles["notes"]
+            ledger = GenerationLedger(out / "generation_ledger.json", float(raw_cap))
+            result = generate_prose(
+                database, alert, lang, provider=_provider_for(role.provider),
+                pricing=load_pricing(ROOT / settings.llm.pricing_file), ledger=ledger,
+                model_id=role.model, reasoning_effort=role.reasoning_effort,
+                temperature=role.temperature,
+            )  # fmt: skip
+            prose, provenance, notice = result.prose, result.provenance, result.reason
+            if prose is not None:
+                how = "cached" if result.cached else "generated"
+                mode = f"with {role.model} prose ({how}, {result.cost_usd or 0:.4f} USD)"
+    built = build_note(alert, lang, prose=prose, provenance=provenance, notice=notice)
+    folder = out / datetime.now(UTC).date().isoformat()
+    folder.mkdir(parents=True, exist_ok=True)
+    md_path = folder / f"{event_id}.{lang}.md"
+    html_path = folder / f"{event_id}.{lang}.html"
+    md_path.write_text(render_markdown(built), encoding="utf-8")
+    html_path.write_text(render_html(built), encoding="utf-8")
+    v = built.verification
+    database.audit(
+        AuditEntry(
+            step="note",
+            event_id=event_id,
+            doc_id=ev.source_doc_ids[0] if ev.source_doc_ids else None,
+            model_id=provenance.get("model_id") if provenance else None,
+            prompt_version=provenance.get("prompt_version") if provenance else None,
+            cost_usd=provenance.get("cost_usd") if provenance else None,
+            rules_version=decision.rules_version,
+            status="ok",
+            message=(
+                f"{lang} note {built.note_id[:12]} ({mode}): {v['verified']} verified, "
+                f"{v['unsupported']} unsupported excluded; {md_path}"
+            ),
+        )
+    )
+    typer.echo(f"{lang} note for {built.issuer_name} ({built.priority or 'NONE'}): {mode}")
+    typer.echo(f"      verified {v['verified']}, unsupported excluded {v['unsupported']}")
+    if notice:
+        typer.echo(f"      {notice}")
+    typer.echo(f"      {md_path}")
+    typer.echo(f"      {html_path}")
+
+
 @app.command("viewer")
 def viewer(
     port: Annotated[int, typer.Option("--port", help="Streamlit port")] = 8501,

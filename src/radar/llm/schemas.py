@@ -199,3 +199,10 @@ def going_concern_json_schema() -> dict[str, Any]:
     schema = GoingConcernExtraction.model_json_schema()
     _close(schema)
     return schema
+
+
+def strict_json_schema(model: type[BaseModel]) -> dict[str, Any]:
+    """The closed JSON schema of any output model (OpenAI strict mode)."""
+    schema = model.model_json_schema()
+    _close(schema)
+    return schema

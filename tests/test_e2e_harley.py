@@ -364,3 +364,27 @@ def test_alert_command_renders_the_p1_locally_without_sending(pipeline, tmp_path
     assert (
         entries and "route teams, email, local (immediate); nothing sent" in entries[-1]["message"]
     )
+
+
+def test_note_command_writes_a_complete_note_without_any_model(pipeline, tmp_path):
+    """Phase P3: `radar note --no-llm` needs no key and still produces every section."""
+    db = Database(pipeline["db"])
+    ev = rating_event(db)
+    db.close()
+    for lang, head in (("fr", "NOTE DE COMITÉ DE CRÉDIT"), ("en", "CREDIT COMMITTEE NOTE")):
+        out = run(
+            "note",
+            ev.event_id,
+            "--lang",
+            lang,
+            "--no-llm",
+            "--out",
+            str(tmp_path / "notes"),
+            *pipeline["common"],
+        )
+        assert "deterministic" in out and lang in out
+        folder = next((tmp_path / "notes").iterdir())
+        md = (folder / f"{ev.event_id}.{lang}.md").read_text()
+        assert md.startswith(f"# {head}") and "RAT-01" in md and "BBB- → BB+" in md
+        assert load_fixture(HARLEY).manifest["raw_sha256"] in md
+        assert (folder / f"{ev.event_id}.{lang}.html").exists()
