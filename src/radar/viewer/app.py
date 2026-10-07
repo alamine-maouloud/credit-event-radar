@@ -353,7 +353,7 @@ def main() -> None:
     db_path = os.environ.get("RADAR_DB") or str(ROOT / settings.paths.db)
     default = 3 if st.query_params.get("event") else 0
     screen = st.sidebar.radio("Screen", SCREENS, index=default)
-    st.sidebar.caption(f"Database: {db_path}")
+    st.sidebar.caption(f"Database: {Path(db_path).name}")  # never a local absolute path on screen
     db = Database(Path(db_path))
     try:
         if screen == "Dashboard":
