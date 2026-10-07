@@ -129,12 +129,18 @@ run, every stored statement and every explanation.
 
 ## Quick start
 
-Five minutes, no API key needed: the demo database is built from the public filings kept
-as fixtures and the cached model answers of the benchmark runs.
+Five minutes, no API key, no model call. The demo database is built from the public demo
+bundle (`demo/bundle`): the five public documents are fetched from their official URLs and
+checked against their SHA-256 hashes, the validated model statements recorded for them
+are loaded with their passages rebuilt from the documents and checked against their
+hashes, the rules decide, the four featured cases are verified. If a document cannot be
+fetched, the build stops and names it; nothing is built silently.
 
 ```bash
+git clone https://github.com/alamine-maouloud/credit-event-radar.git && cd credit-event-radar
 uv sync
-uv run python scripts/build_demo_db.py --fresh     # fixtures, rules, cached statements, alerts, static site
+cp .env.example .env                                # put your contact in SEC_USER_AGENT (sec.gov requires it; no key)
+uv run python scripts/build_demo_db.py --fresh     # documents, rules, bundle statements, alerts, static site
 uv run radar viewer --db data/demo.db               # http://localhost:8501
 ```
 
