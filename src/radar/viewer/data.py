@@ -148,7 +148,11 @@ def event_alert(
         issuer = universe.by_id(event.issuer_id)
     except KeyError:
         issuer = None
-    return build_alert(event, decision, documents, issuer, rules=rules, alerts=alerts), documents
+    statements = [r for d in event.source_doc_ids for r in db.statements_for_document(d)]
+    alert = build_alert(
+        event, decision, documents, issuer, rules=rules, alerts=alerts, statements=statements
+    )
+    return alert, documents
 
 
 def passage_context(

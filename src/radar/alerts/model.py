@@ -99,6 +99,22 @@ class AlertSource(BaseModel):
     available: bool = True
 
 
+class RecordedStatement(BaseModel):
+    """A statement the model read and the validator accepted, flag or not: the denial of a
+    doubt ("not impacted", negated), a stable liquidity, a compliance, a mention."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: str
+    status: str
+    text: str
+    resolution: str | None = None
+    doc_id: str
+    char_start: int | None = None
+    char_end: int | None = None
+    negative: bool = False
+
+
 class ModelProvenance(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -157,6 +173,7 @@ class Alert(BaseModel):
     ratings_after: list[AlertRating] = Field(default_factory=list)
     sources: list[AlertSource] = Field(default_factory=list)
     model_provenance: list[ModelProvenance] = Field(default_factory=list)
+    recorded_statements: list[RecordedStatement] = Field(default_factory=list)
     decision_provenance: DecisionProvenance
     route: AlertRouteInfo | None = None
     explanation: str
@@ -274,8 +291,28 @@ def build_alert(
     rules: Rules,
     alerts: AlertsSettings,
     generated_at: datetime | None = None,
+    statements: list[dict[str, Any]] | None = None,
 ) -> Alert:
     fields = event.fields if isinstance(event.fields, dict) else {}
+    recorded = []
+    for row in statements or []:
+        if row.get("validation_status") != "VALID":
+            continue
+        st = row.get("statement_json") or {}
+        kind = row.get("statement_kind") or "guidance"
+        v = row.get("validation_json") or {}
+        recorded.append(
+            RecordedStatement(
+                kind=kind,
+                status=str(st.get("status")),
+                text=str(st.get("evidence_quote") or ""),
+                resolution=st.get("resolution"),
+                doc_id=str(row.get("doc_id")),
+                char_start=v.get("matched_start"),
+                char_end=v.get("matched_end"),
+                negative=st.get("status") in FAMILIES.get(kind, {}).get("negative", ()),
+            )
+        )
     sources: list[AlertSource] = []
     index_of: dict[str, int] = {}
     for i, doc_id in enumerate(event.source_doc_ids, 1):
@@ -396,6 +433,7 @@ def build_alert(
         ratings_after=ratings,
         sources=sources,
         model_provenance=_model_provenance(fields),
+        recorded_statements=recorded,
         decision_provenance=provenance,
         route=AlertRouteInfo(
             channels=list(route.channels),

@@ -114,6 +114,13 @@ def render_html(alert: Alert) -> str:
         )
         or "<li>None: deterministic fields only.</li>"
     )
+    recorded = "".join(
+        f"<li><span class='field'>{_e(r.kind)}</span> <strong>{_e(r.status)}</strong>"
+        + (f" ({_e(r.resolution)})" if r.resolution and r.resolution != "none" else "")
+        + (" · sets the flag" if r.negative else " · no flag")
+        + f"<br><q>{_e(r.text)}</q></li>"
+        for r in alert.recorded_statements
+    )
     p = alert.decision_provenance
     detectors = f", {', '.join(p.detectors)}" if p.detectors else ""
     head = (
@@ -141,6 +148,7 @@ def render_html(alert: Alert) -> str:
         f"<p><small>{_e(_provenance_text(alert))}</small></p>",
         f"<h2>Key facts (verbatim passages)</h2><ul>{facts}</ul>",
         f"<h2>Sources</h2><ul>{sources}</ul>",
+        f"<h2>Statements read by the model (validated)</h2><ul>{recorded}</ul>" if recorded else "",
         f"<h2>Model provenance</h2><ul>{models}</ul>",
         "<h2>Audit</h2>",
         f"<p><small>Alert {_e(alert.alert_id)}, generated {_e(alert.generated_at.isoformat())}, "

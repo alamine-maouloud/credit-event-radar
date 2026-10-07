@@ -239,3 +239,43 @@ def test_sending_is_skipped_without_a_configured_webhook(rules, scales, alerts_s
         "sent": False,
         "detail": "TEAMS_WEBHOOK_URL not configured",
     }
+
+
+def test_validated_statements_without_a_flag_are_recorded_on_the_alert(
+    rules, scales, alerts_settings
+):
+    """The OMV case: the model reads "not impacted", the validator accepts it as negated, the
+    alert shows it and sets nothing."""
+    event = ev("earnings", "earnings_release", period="Q4 2024", flags=[])
+    decision = decide(rules, scales, event, None)
+    rows = [
+        {
+            "statement_kind": "going_concern", "validation_status": "VALID", "doc_id": "doc_test",
+            "statement_json": {"status": "negated", "evidence_quote": "From today's perspective, we assume that the Company's ability to continue as a going concern is not impacted."},
+            "validation_json": {"matched_start": 5, "matched_end": 120},
+        },
+        {
+            "statement_kind": "liquidity", "validation_status": "INVALID", "doc_id": "doc_test",
+            "statement_json": {"status": "concern", "evidence_quote": "rejected"}, "validation_json": {},
+        },
+        {
+            "statement_kind": "covenant", "validation_status": "VALID", "doc_id": "doc_test",
+            "statement_json": {"status": "breached", "resolution": "waived", "evidence_quote": "The Company was not in compliance with the leverage covenant and obtained a waiver."},
+            "validation_json": {"matched_start": 200, "matched_end": 280},
+        },
+    ]  # fmt: skip
+    alert = build_alert(
+        event,
+        decision,
+        {"doc_test": document()},
+        issuer(["demo_watchlist"]),
+        rules=rules,
+        alerts=alerts_settings,
+        statements=rows,
+    )
+    assert alert.priority is None
+    kinds = [(r.kind, r.status, r.negative) for r in alert.recorded_statements]
+    assert kinds == [("going_concern", "negated", False), ("covenant", "breached", True)]
+    assert alert.recorded_statements[1].resolution == "waived"
+    html = render_html(alert)
+    assert "Statements read by the model" in html and "not impacted" in html and "no flag" in html

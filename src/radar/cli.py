@@ -406,7 +406,11 @@ def alert(
             issuer = universe.by_id(ev.issuer_id)
         except KeyError:
             issuer = None
-        built = build_alert(ev, decision, documents, issuer, rules=rules, alerts=settings.alerts)
+        statements = [r for d in ev.source_doc_ids for r in database.statements_for_document(d)]
+        built = build_alert(
+            ev, decision, documents, issuer, rules=rules, alerts=settings.alerts,
+            statements=statements,
+        )  # fmt: skip
         paths = write_alert(built, out, day=day, viewer_base_url=settings.alerts.viewer_base_url)
         outcomes = []
         if send and built.route is not None:
@@ -488,7 +492,11 @@ def note(
         issuer = load_universe(CONFIG_DIR / "universe.yaml").by_id(ev.issuer_id)
     except KeyError:
         issuer = None
-    alert = build_alert(ev, decision, documents, issuer, rules=rules, alerts=settings.alerts)
+    statements = [r for d in ev.source_doc_ids for r in database.statements_for_document(d)]
+    alert = build_alert(
+        ev, decision, documents, issuer, rules=rules, alerts=settings.alerts,
+        statements=statements,
+    )  # fmt: skip
     prose = provenance = notice = None
     mode = "deterministic"
     if not no_llm:

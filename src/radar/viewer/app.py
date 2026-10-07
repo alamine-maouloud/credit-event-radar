@@ -290,6 +290,16 @@ def _event_detail(db: Database, universe, rules, settings) -> None:
             )
         else:
             st.markdown(f"[{s.index}] {s.doc_id} (document not available)")
+    if alert.recorded_statements:
+        st.markdown("### Statements read by the model (validated)")
+        st.caption(
+            "Every validated statement, flag or not: a denied doubt, a stable liquidity or a "
+            "compliance is recorded and never raises an alert."
+        )
+        for r in alert.recorded_statements:
+            effect = "sets the flag" if r.negative else "no flag"
+            res = f" ({r.resolution})" if r.resolution and r.resolution != "none" else ""
+            st.markdown(f"- **{r.kind} · {r.status}{res}** · {effect}  \n  {r.text}")
     if alert.model_provenance:
         st.markdown("### Model provenance")
         for m in alert.model_provenance:
