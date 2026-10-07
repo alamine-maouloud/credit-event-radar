@@ -75,6 +75,10 @@ class CommitteeNote(BaseModel):
     disclaimer: str
 
 
+def _figure(token: str) -> str:
+    return token.replace(",", ".")
+
+
 def verify_claim(text: str, facts: list[AlertFact], context: str = "") -> NoteClaim:
     """SPEC 10, the deterministic controls: a citation is present, every cited passage
     exists, every figure of the sentence appears in the cited passages (or in the event
@@ -85,7 +89,10 @@ def verify_claim(text: str, facts: list[AlertFact], context: str = "") -> NoteCl
     passage_found = citation_present and all(c in by_index for c in citations)
     cited = " ".join(by_index[c].text for c in citations if c in by_index) + " " + context
     body = CITATION_RE.sub("", text)
-    missing = [n for n in NUMBER_RE.findall(body) if n not in cited]
+    # a French sentence writes 6,6 for the 6.6 of an English filing: figures are compared
+    # with the decimal comma read as a point, nothing else is normalised
+    cited_figures = {_figure(n) for n in NUMBER_RE.findall(cited)}
+    missing = [n for n in NUMBER_RE.findall(body) if _figure(n) not in cited_figures]
     checks = {
         "citation_present": citation_present,
         "passage_found": passage_found,

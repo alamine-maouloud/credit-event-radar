@@ -206,3 +206,21 @@ def test_prose_is_refused_without_a_call_when_the_cap_is_spent(
     note = build_note(alert, "en", prose=None, notice=result.reason)
     assert note.why_it_matters.source == "deterministic" and result.reason in render_markdown(note)
     db.close()
+
+
+def test_a_french_decimal_comma_matches_the_filing_figure(rules, scales, settings):
+    """6,6 in a French sentence is the 6.6 of the English filing; 7,6 is not."""
+    from radar.alerts.model import AlertFact
+
+    fact = AlertFact(
+        index=1, text="As of June 30, 2026, we had $6.6 million in cash and a working capital deficit of $108.1 million.",
+        field="flag:liquidity", source=1, doc_id="d", char_start=0, char_end=10, evidence_type="llm_statement",
+        extractor_version="x",
+    )  # fmt: skip
+    ok = verify_claim(
+        "La trésorerie s'élève à 6,6 millions de dollars pour un déficit de 108,1 millions [1].",
+        [fact],
+    )
+    assert ok.status == "VERIFIED"
+    bad = verify_claim("La trésorerie s'élève à 7,6 millions de dollars [1].", [fact])
+    assert bad.status == "UNSUPPORTED" and "7,6" in (bad.reason or "")
