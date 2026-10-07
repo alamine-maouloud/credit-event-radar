@@ -523,3 +523,27 @@ kept out of the liquidity pattern.
 pipeline events with a provider that refuses every call and a budget below any estimate:
 the demo database (`scripts/build_demo_db.py`) is built from the fixtures in hand and the
 cache at zero cost, then applied, decided, alerted and exported.
+
+## ADR-025 · The committee note is deterministic first; model prose is verified sentence by sentence or excluded (Phase P3, 2026-10-07)
+
+`radar note <event_id> --lang fr|en --no-llm` produces a complete note from the Alert
+object without any key: header (issuer, universe, priority and status, event, effective
+date, ratings after the action, the composite named as never used), the key facts as
+verbatim passages numbered and tied to their sources, "why it matters" as one claim per
+triggered rule (the rules engine's own reason), the key indicators from the event's
+fields or "not available in the sources", the points to verify as open questions per
+family and flag, the triggered rules, the sources with their hashes, and the verification
+count. The model improves the restitution, it is never needed to know the facts.
+
+Without `--no-llm`, the notes model (Terra, settings.llm.roles.notes) writes the two prose
+sections from the verified facts only, numbered as the note cites them. Each generated
+sentence passes the deterministic controls of SPEC 10: a citation [n] is present, every
+cited passage exists, every figure of the sentence appears in the cited passages or the
+event header. A sentence that fails is UNSUPPORTED: excluded from the body, listed in the
+annex with its reason, counted. No model judges a claim, no confidence is self-declared.
+One cap covers every note of the demo (DEMO_GENERATION_BUDGET_USD, a ledger under
+outputs/notes): beyond it the prose is refused before any call and the note says so. The
+viewer renders the deterministic note for the "Note FR" and "Note EN" links of the Teams
+card. Known limit: the rule descriptions quoted in the French note are the English text
+of rules.yaml.
+

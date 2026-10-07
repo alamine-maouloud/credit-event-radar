@@ -69,6 +69,8 @@ radar alert <event_id>                                      # Alert object rende
 radar alert --all                                           # every decided event with a priority; --send posts Teams/e-mail only when .env is configured
 radar viewer                                                # Streamlit viewer: dashboard, watchlist (live apart from historical cases), alerts, event detail
 radar export-html --out outputs/site                        # static HTML fallback of the viewer, no server
+radar note <event_id> --lang fr --no-llm                   # committee note, deterministic and complete without any key (also --lang en)
+radar note <event_id> --lang en                            # adds the two Terra prose sections under DEMO_GENERATION_BUDGET_USD (.env), verified sentence by sentence
 uv run python scripts/build_demo_db.py --fresh              # demo database from the fixtures and the LLM cache, zero cost (alerts and site rendered)
 radar llm-apply                                             # apply VALID statements, decide again, audit before/after
 ```
