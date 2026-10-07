@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "documents": [
+    {
+      "fixture": "tests/fixtures/edgar/harley_davidson_inc_10q_2026q2",
+      "label": "Harley-Davidson, 10-Q, S&P downgrade BBB- to BB+",
+      "issuer_id": "HARLEY_DAVIDSON_INC",
+      "role": "historical_control",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/793952/000079395226000061/hog-20260630.htm",
+      "raw_file": "document.htm.gz",
+      "raw_sha256": "5d2c1dcefb63aacf9ff1923ea93b873f3b3e0a85a5671a0982ecefa49a555865",
+      "normalized_sha256": "6698503881b9265d42e4d352badfae3686d4d5f750c06c24a3ddf29afe2dafb0",
+      "normalizer_version": "sec-html-1.0"
+    },
+    {
+      "fixture": "tests/fixtures/edgar/hydrofarm_10q_2026q2",
+      "label": "Hydrofarm, 10-Q, going concern doubt",
+      "issuer_id": "HYDROFARM",
+      "role": "historical_control",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1695295/000143774926028012/hyfm20260630_10q.htm",
+      "raw_file": "document.htm.gz",
+      "raw_sha256": "a1dc6f6a700c7cc2501e24d1161f7ad466d9835f9c9e749da344c5958292f91c",
+      "normalized_sha256": "180f3e871a9c7cb3464a0a5d674d16ecfc1eb241eaf1bb0b6847d5d59eb221b8",
+      "normalizer_version": "sec-html-1.0"
+    },
+    {
+      "fixture": "tests/fixtures/gold/guidance/omv_q4_2024_report",
+      "label": "OMV, Q4 2024 report, denied going concern doubt",
+      "issuer_id": "OMV",
+      "role": "demo_watchlist",
+      "source_url": "https://www.omv.com/downloads/2025/02/920497a2-82d3-6a92-2698-209226f26e37/OMV_Q4_24_EN.pdf",
+      "raw_file": "document.pdf.gz",
+      "raw_sha256": "88062192b78dfd4517080be4ed52e14eb90794599a69b4e7516c478c4a4196f9",
+      "normalized_sha256": "f5e57cb8424c1dafc3cea2ce2f5201ff68ce6deaab5a57be848af1f8ca0e8e90",
+      "normalizer_version": "pdf-text-1.1"
+    },
+    {
+      "fixture": "tests/fixtures/gold/guidance/vw_h1_2025_results",
+      "label": "Volkswagen, H1 2025 results, guidance cut",
+      "issuer_id": "VOLKSWAGEN",
+      "role": "demo_watchlist",
+      "source_url": "https://www.volkswagen-group.com/en/press-releases/volkswagen-group-delivers-solid-results-in-challenging-environment-19501",
+      "raw_file": "document.htm.gz",
+      "raw_sha256": "0d11a73170e4dac476afe8944459fc8e7029540cbbd43b272b5c946d22b9f54e",
+      "normalized_sha256": "e01fe2f82b40161c76da66ce70a0d3a590a00aecdda58211e7e9b18f00eabb8d",
+      "normalizer_version": "ir-html-1.1"
+    },
+    {
+      "fixture": "tests/fixtures/edgar/ftc_solar_10q_2026q2",
+      "label": "FTC Solar, 10-Q, covenant breach waived (reserve)",
+      "issuer_id": "FTC_SOLAR",
+      "role": "historical_control",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1828161/000119312526334042/ftci-20260630.htm",
+      "raw_file": "document.htm.gz",
+      "raw_sha256": "b3ab2466f271a61e73453f32143e0ef404f51de4345928008faef3e1474dbab4",
+      "normalized_sha256": "3e8dddf729461743c793a481e0563637ebacb055d3551a47e2e334bf3954bac6",
+      "normalizer_version": "sec-html-1.0"
+    }
+  ]
+}

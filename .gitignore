@@ -39,3 +39,6 @@ eval/runs/*/outputs.jsonl
 
 # demo database raw snapshots (rebuilt by scripts/build_demo_db.py)
 data/raw-demo/
+# restoration sidecars written by scripts/build_demo_db.py next to fetched bytes
+tests/fixtures/**/restored.json
+

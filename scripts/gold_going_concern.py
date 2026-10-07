@@ -186,7 +186,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--name", default="going_concern_v1", help="gold set name, e.g. going_concern_v1")
+    parser.add_argument(
+        "--name", default="going_concern_v1", help="gold set name, e.g. going_concern_v1"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("build").set_defaults(func=build)
     f = sub.add_parser("freeze")

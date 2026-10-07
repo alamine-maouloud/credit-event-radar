@@ -113,6 +113,7 @@ def run_benchmark(
     gold_path: Path | None = None,
     kind: str = "guidance",
     selection: dict[str, Any] | None = None,
+    cache_only: bool = False,
 ) -> RunSummary:
     spec = KINDS[kind]
     extractor_version = config.extractor_version or spec["extractor_version"]
@@ -166,6 +167,7 @@ def run_benchmark(
                 prompt_version=prompt.version,
                 doc_id=doc.doc_id,
                 schema_version=spec["schema_version"],
+                cache_only=cache_only,
             )
             row.update(
                 run_status=result.status,

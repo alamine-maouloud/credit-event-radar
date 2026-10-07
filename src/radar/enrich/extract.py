@@ -110,6 +110,7 @@ def extract_events(
     kind: str = "guidance",
     extractor_version: str | None = None,
     selection: dict[str, Any] | None = None,
+    cache_only: bool = False,
 ) -> ExtractSummary:
     spec = KINDS[kind]
     extractor_version = extractor_version or spec["extractor_version"]
@@ -157,6 +158,7 @@ def extract_events(
                 doc_id=doc.doc_id,
                 event_id=event.event_id,
                 schema_version=spec["schema_version"],
+                cache_only=cache_only,
             )
             summary.calls += result.status == "ok"
             summary.cached += result.status == "cached"

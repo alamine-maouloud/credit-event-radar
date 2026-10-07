@@ -688,6 +688,7 @@ def llm_extract(
             doc_id=doc,
             kind=kind,
             selection=selection.as_record(),
+            cache_only=cache_only,
         )
         typer.echo(f"model {role.model} as {selection.role} for {kind}: {selection.reason}")
         typer.echo(
@@ -731,6 +732,7 @@ def llm_extract(
         gold_path=gold,
         kind=kind,
         selection=selection.as_record(),
+        cache_only=cache_only,
     )
     typer.echo(
         f"run {summary.run_id}: {summary.n_documents} documents, statuses {summary.statuses}, "

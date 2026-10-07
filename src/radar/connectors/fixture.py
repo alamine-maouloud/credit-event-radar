@@ -21,6 +21,7 @@ from radar.models import RawDocument
 from radar.snapshot import FetchedBytes, sha256_hex
 
 MANIFEST_NAME = "manifest.json"
+RESTORED_NAME = "restored.json"
 
 
 class FixtureBytesMissing(FileNotFoundError):
@@ -32,13 +33,17 @@ class Fixture:
     directory: Path
     manifest: dict[str, Any]
     raw: bytes
+    # written by the demo restoration when the bytes fetched today differ from the manifest
+    # (EDGAR appends a changing anti-bot tag) while the normalised text is identical
+    restored: dict[str, Any] | None = None
 
     @property
     def fetched(self) -> FetchedBytes:
+        retrieved = (self.restored or self.manifest)["retrieved_at"]
         return FetchedBytes(
             url=self.manifest["source_url"],
             content=self.raw,
-            retrieved_at=datetime.fromisoformat(self.manifest["retrieved_at"]),
+            retrieved_at=datetime.fromisoformat(retrieved),
             content_type=self.manifest.get("content_type"),
         )
 
@@ -102,8 +107,13 @@ def load_fixture(directory: Path) -> Fixture:
         )
     with gzip.open(raw_path, "rb") as fh:
         raw = fh.read()
-    if sha256_hex(raw) != manifest["raw_sha256"]:
-        raise RuntimeError(f"{directory}: raw bytes do not match manifest raw_sha256")
+    digest = sha256_hex(raw)
+    if digest != manifest["raw_sha256"]:
+        sidecar = directory / RESTORED_NAME
+        restored = json.loads(sidecar.read_text(encoding="utf-8")) if sidecar.exists() else None
+        if not restored or restored.get("raw_sha256") != digest:
+            raise RuntimeError(f"{directory}: raw bytes do not match manifest raw_sha256")
+        return Fixture(directory=directory, manifest=manifest, raw=raw, restored=restored)
     return Fixture(directory=directory, manifest=manifest, raw=raw)
 
 

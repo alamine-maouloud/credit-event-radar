@@ -16,7 +16,7 @@ from radar.llm.provider import ExtractionRequest, ExtractionResponse, LLMProvide
 from radar.llm.schemas import GUIDANCE_SCHEMA_VERSION
 
 RunStatus = Literal[
-    "ok", "cached", "budget_refused", "schema_failure", "provider_error", "truncated"
+    "ok", "cached", "cache_miss", "budget_refused", "schema_failure", "provider_error", "truncated"
 ]
 
 
@@ -52,6 +52,7 @@ def run_extraction(
     doc_id: str,
     event_id: str | None = None,
     schema_version: str = GUIDANCE_SCHEMA_VERSION,
+    cache_only: bool = False,
 ) -> ExtractionRun:
     key = cache_key(
         document_hash=document_hash,
@@ -120,6 +121,24 @@ def run_extraction(
             cache_key=key,
             llm_call_id=call_id,
         )
+
+    if cache_only:
+        # a replay never reaches the budget nor the provider: the document is reported as a
+        # cache miss, nothing is spent, nothing is called
+        message = "CACHE_MISS: no cached answer for this document, model, prompt and schema"
+        db.audit(
+            AuditEntry(
+                step="llm_extract",
+                doc_id=doc_id,
+                event_id=event_id,
+                inputs_hash=inputs_hash,
+                model_id=request.model_id,
+                prompt_version=prompt_version,
+                status="skipped",
+                message=message,
+            )
+        )
+        return ExtractionRun(status="cache_miss", cached=False, error=message, cache_key=key)
 
     try:
         reservation = budget.reserve(
